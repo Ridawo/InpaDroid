@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inpa_bg"
+    android:orientation="vertical">
+
+    <include layout="@layout/inpa_header" />
+
+    <TextView
+        android:id="@+id/ecu_heading"
+        style="@style/InpaHeading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="2dp"
+        android:singleLine="true"
+        android:ellipsize="end" />
+
+    <ScrollView
+        android:id="@+id/ecu_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/ecu_results"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="6dp" />
+    </ScrollView>
+
+    <include layout="@layout/inpa_busy" />
+
+    <include layout="@layout/inpa_fkeys" />
+</LinearLayout>

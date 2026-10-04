@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App icon: blue square with a white "I" and a diagnostic plug outline. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+  <path android:fillColor="#1C69D4" android:pathData="M6,2h36a4,4 0,0 1,4 4v36a4,4 0,0 1,-4 4h-36a4,4 0,0 1,-4 -4v-36a4,4 0,0 1,4 -4z" />
+  <path android:fillColor="#FFFFFF" android:pathData="M10,12h6v24h-6z" />
+  <path android:fillColor="#FFFFFF" android:pathData="M21,14h17a2,2 0,0 1,2 2v10a2,2 0,0 1,-2 2h-17a2,2 0,0 1,-2 -2v-10a2,2 0,0 1,2 -2z" />
+  <path android:fillColor="#1C69D4" android:pathData="M23,18h3v3h-3zM28,18h3v3h-3zM33,18h3v3h-3zM25,23h3v3h-3zM31,23h3v3h-3z" />
+  <path android:fillColor="#FFFFFF" android:pathData="M28,28h3v8h-3z" />
+</vector>

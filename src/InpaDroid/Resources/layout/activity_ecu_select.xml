@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inpa_bg"
+    android:orientation="vertical">
+
+    <include layout="@layout/inpa_header" />
+
+    <EditText
+        android:id="@+id/ecu_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:fontFamily="monospace"
+        android:hint="Buscar centralita (p. ej. D_MOTOR, DME, EGS…)"
+        android:imeOptions="actionSearch"
+        android:inputType="textCapCharacters|textNoSuggestions"
+        android:singleLine="true" />
+
+    <TextView
+        android:id="@+id/ecu_count"
+        style="@style/InpaMono"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textSize="12sp" />
+
+    <ListView
+        android:id="@+id/ecu_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/inpa_panel"
+        android:divider="#B0B0B0"
+        android:dividerHeight="1dp"
+        android:fastScrollEnabled="true" />
+
+    <include layout="@layout/inpa_fkeys" />
+</LinearLayout>

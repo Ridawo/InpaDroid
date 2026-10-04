@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/inpa_bg"
+    android:orientation="vertical">
+
+    <include layout="@layout/inpa_header" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <TextView
+                style="@style/InpaLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="0dp"
+                android:text="Interfaz de diagnóstico" />
+
+            <RadioGroup
+                android:id="@+id/set_adapter_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/set_adapter_usb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cable USB K+DCAN (FTDI)" />
+
+                <RadioButton
+                    android:id="@+id/set_adapter_enet"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ENET (cable Ethernet, series F/G)" />
+
+                <RadioButton
+                    android:id="@+id/set_adapter_elmbt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ELM327 Bluetooth" />
+
+                <RadioButton
+                    android:id="@+id/set_adapter_elmwifi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ELM327 WiFi" />
+            </RadioGroup>
+
+            <LinearLayout
+                android:id="@+id/set_bt_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/InpaLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dispositivo Bluetooth (emparejado)" />
+
+                <TextView
+                    android:id="@+id/set_bt_selected"
+                    style="@style/InpaMono"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/set_bt_refresh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Buscar dispositivos emparejados"
+                    android:textAllCaps="false" />
+
+                <LinearLayout
+                    android:id="@+id/set_bt_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/inpa_panel"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/set_enet_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/InpaLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Host ENET (IP o &quot;auto&quot;)" />
+
+                <EditText
+                    android:id="@+id/set_enet_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:hint="auto"
+                    android:inputType="textUri"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/set_wifi_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/InpaLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Host ELM327 WiFi (IP:puerto)" />
+
+                <EditText
+                    android:id="@+id/set_wifi_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:hint="192.168.0.10:35000"
+                    android:inputType="textUri"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/InpaLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Carpeta ECU (.prg / .grp)" />
+
+            <EditText
+                android:id="@+id/set_ecu_path"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:inputType="textUri|textNoSuggestions"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/set_ecu_pick"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Elegir…"
+                    android:textAllCaps="false" />
+
+                <Button
+                    android:id="@+id/set_ecu_default"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Por defecto"
+                    android:textAllCaps="false" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/set_ecu_info"
+                style="@style/InpaMono"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/set_save"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Guardar"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:id="@+id/set_status"
+                style="@style/InpaMono"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <include layout="@layout/inpa_fkeys" />
+</LinearLayout>

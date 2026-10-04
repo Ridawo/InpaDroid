@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selector de jobs (F5/F6/F7): buscador + lista. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="4dp">
+
+    <EditText
+        android:id="@+id/job_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:fontFamily="monospace"
+        android:hint="Filtrar jobs…"
+        android:inputType="textCapCharacters|textNoSuggestions"
+        android:singleLine="true" />
+
+    <TextView
+        android:id="@+id/job_count"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="@color/inpa_text_dim"
+        android:textSize="12sp" />
+
+    <ListView
+        android:id="@+id/job_list"
+        android:layout_width="match_parent"
+        android:layout_height="360dp"
+        android:divider="#B0B0B0"
+        android:dividerHeight="1dp" />
+</LinearLayout>

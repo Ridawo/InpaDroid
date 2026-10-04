@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cabecera común INPA: barra de título azul + línea Batería / Encendido. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/inpa_blue"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:id="@+id/inpa_title"
+            style="@style/InpaTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="InpaDroid" />
+
+        <TextView
+            android:id="@+id/inpa_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:ellipsize="start"
+            android:maxWidth="220dp"
+            android:singleLine="true"
+            android:textColor="#DDE8FF"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/inpa_status_bg"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp">
+
+        <TextView
+            style="@style/InpaMono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Batería:" />
+
+        <View
+            android:id="@+id/inpa_batt_led"
+            style="@style/InpaLed" />
+
+        <TextView
+            android:id="@+id/inpa_batt_text"
+            style="@style/InpaMono"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="--" />
+
+        <TextView
+            style="@style/InpaMono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Encendido:" />
+
+        <View
+            android:id="@+id/inpa_ign_led"
+            style="@style/InpaLed" />
+
+        <TextView
+            android:id="@+id/inpa_ign_text"
+            style="@style/InpaMono"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="--" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#808080" />
+</LinearLayout>
