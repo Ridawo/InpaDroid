@@ -1,0 +1,135 @@
+﻿using PsdzClient.Core;
+using System;
+
+namespace PsdzClient.Utility
+{
+    internal class VehicleHelper
+    {
+        internal static bool HasSA(IVehicleRuleEvaluation vehicle, string checkSA)
+        {
+            if (vehicle.FA == null)
+            {
+                return false;
+            }
+
+            IFARuleEvaluation iFARuleEvaluation = ((vehicle.TargetFA != null) ? vehicle.TargetFA : vehicle.FA);
+            if (iFARuleEvaluation.SA != null)
+            {
+                foreach (string item in iFARuleEvaluation.SA)
+                {
+                    if (string.Compare(item, checkSA, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        return true;
+                    }
+
+                    if (item.Length == 4 && string.Compare(item.Substring(1), checkSA, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            if (iFARuleEvaluation.E_WORT != null)
+            {
+                foreach (string item2 in iFARuleEvaluation.E_WORT)
+                {
+                    if (string.Compare(item2, checkSA, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            if (iFARuleEvaluation.HO_WORT != null)
+            {
+                foreach (string item3 in iFARuleEvaluation.HO_WORT)
+                {
+                    if (string.Compare(item3, checkSA, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal static IIdentEcu GetECUbyTITLE_ECUTREE(IVehicleRuleEvaluation vehicle, string grobName)
+        {
+            if (string.IsNullOrEmpty(grobName) || vehicle == null || vehicle.ECU == null)
+            {
+                return null;
+            }
+
+            foreach (IIdentEcu item in vehicle.ECU)
+            {
+                if (string.Compare(item.TITLE_ECUTREE, grobName, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+
+        internal static IIdentEcu GetECUbyECU_SGBD(IVehicleRuleEvaluation vehicle, string ECU_SGBD)
+        {
+            if (string.IsNullOrEmpty(ECU_SGBD) || vehicle == null || vehicle.ECU == null)
+            {
+                return null;
+            }
+
+            string[] array = ECU_SGBD.Split('|');
+            foreach (string b in array)
+            {
+                foreach (IIdentEcu item in vehicle.ECU)
+                {
+                    if (string.Equals(item.ECU_SGBD, b, StringComparison.OrdinalIgnoreCase) || string.Equals(item.VARIANTE, b, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return item;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        internal static IIdentEcu GetECUbyECU_GRUPPE(IVehicleRuleEvaluation vehicle, string ECU_GRUPPE)
+        {
+            if (string.IsNullOrEmpty(ECU_GRUPPE) || vehicle == null || vehicle.ECU == null)
+            {
+                return null;
+            }
+
+            foreach (IIdentEcu item in vehicle.ECU)
+            {
+                if (string.IsNullOrEmpty(item.ECU_GRUPPE))
+                {
+                    continue;
+                }
+
+                string[] array = ECU_GRUPPE.Split('|');
+                string[] array2 = item.ECU_GRUPPE.Split('|');
+                foreach (string a in array2)
+                {
+                    string[] array3 = array;
+                    foreach (string b in array3)
+                    {
+                        if (string.Equals(a, b, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return item;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal static bool GetISTACharacteristics(decimal id, out string value, long datavalueId)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

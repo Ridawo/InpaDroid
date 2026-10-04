@@ -1,0 +1,73 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Psdz\PsdzClientLibrary\PreserveSourceAttribute.cs" Link="PreserveSourceAttribute.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\Encryption.cs" Link="Encryption.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\EventIdCatalog.cs" Link="EventIdCatalog.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\EventKind.cs" Link="EventKind.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\Extensions.cs" Link="Extensions.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\ICSEventId.cs" Link="ICSEventId.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\Logger.cs" Link="Logger.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\LogLevel.cs" Link="LogLevel.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\MachineIdentifier.cs" Link="MachineIdentifier.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\SecureStringHelper.cs" Link="SecureStringHelper.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\TokenObject.cs" Link="TokenObject.cs" />
+    <Compile Include="..\Psdz\PsdzClientLibrary\Utility\WMIInfo.cs" Link="WMIInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\CarSimulator\TestCert\rootCA_EC.pfx" Link="rootCA_EC.pfx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <PackageReference Include="log4net" Version="3.4.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
+    <PackageReference Include="System.Management" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\EdiabasLib\EdiabasLib\EdiabasLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+</Project>

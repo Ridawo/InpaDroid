@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AssemblyTitle>ExtractEcuFunctions</AssemblyTitle>
+    <Product>ExtractEcuFunctions</Product>
+    <Copyright>Copyright ©  2019</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Nullable>disable</Nullable>
+    <Authors>Ulrich Holeschak</Authors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\EdiabasLib\BmwFileReader\EcuFunctionStructs.cs">
+      <Link>EcuFunctionStructs.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Psdz\PsdzClientLibrary\Core\VehicleCharacteristic.cs" Link="VehicleCharacteristic.cs" />
+    <Compile Include="..\..\Psdz\PsdzClientLibrary\Core\VehicleCharacteristicAbstract.cs">
+      <Link>VehicleCharacteristicAbstract.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Psdz\PsdzClientLibrary\PreserveSourceAttribute.cs" Link="PreserveSourceAttribute.cs" />
+    <Compile Include="..\Common\DatabaseFunctions.cs">
+      <Link>DatabaseFunctions.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.12" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3mc" Version="2.1.11" />
+    <PackageReference Include="SQLitePCLRaw.core" Version="3.0.5" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+</Project>

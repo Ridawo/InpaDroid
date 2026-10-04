@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <ProjectGuid>{A210DA60-5EFE-4373-A553-7C7F746BDD81}</ProjectGuid>
+    <TargetFramework>net481</TargetFramework>
+    <AssemblyTitle>EdiabasLib interface wrapper</AssemblyTitle>
+    <Product>EdiabasLib</Product>
+    <Description>EdiabasLib interface wrapper</Description>
+    <Copyright>Ulrich Holeschak</Copyright>
+    <AssemblyVersion>7.6.0.500</AssemblyVersion>
+    <FileVersion>7.6.0.500</FileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\apiInternal\ApiInternal.csproj" />
+  </ItemGroup>
+</Project>

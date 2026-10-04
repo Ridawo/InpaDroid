@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "PsdzRpcServer": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false
+    },
+    "PsdzRpcServerSsl": {
+      "commandName": "Project",
+      "commandLineArgs": "-p 0 -s -l \"C:\\Users\\Ulrich\\PsdcRpcServer.log\""
+    },
+    "PsdzRpcServerSslVM-WIN11": {
+      "commandName": "Project",
+      "commandLineArgs": "-p 0 -s -l \"C:\\Users\\Ulrich\\PsdcRpcServer.log\"",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "VM-WIN11",
+      "authenticationMode": "Windows",
+      "nativeDebugging": false
+    }
+  }
+}

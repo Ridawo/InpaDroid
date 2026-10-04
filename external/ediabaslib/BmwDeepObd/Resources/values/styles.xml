@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <style name="MyTheme" parent="Theme.AppCompat">
+    <item name="dropDownListViewStyle">@style/SpinnerDividerStyle</item>
+    <item name="android:dropDownListViewStyle">@style/SpinnerDividerStyle</item>
+    <item name="captionBackgroundColor">@color/colorCaptionBackground</item>
+    <item name="captionTextColor">@color/colorCaptionText</item>
+    <item name="balloonBackgroundColor">@color/colorBalloonBackground</item>
+    <item name="balloonTextColor">@color/colorBalloonText</item>
+    <item name="dragBackgroundColor">@color/colorBackgroundDrag</item>
+    <item name="gaugePointStartColor">@color/colorGaugePoint</item>
+    <item name="gaugePointEndColor">@color/colorGaugePoint</item>
+    <item name="gaugeStrokeColor">@color/colorGaugeStroke</item>
+    <item name="gaugeDividerColor">@color/colorGaugeDivider</item>
+  </style>
+  <style name="MyThemeLight" parent="Theme.AppCompat.Light">
+    <item name="dropDownListViewStyle">@style/SpinnerDividerStyle</item>
+    <item name="android:dropDownListViewStyle">@style/SpinnerDividerStyle</item>
+    <item name="captionBackgroundColor">@color/colorCaptionBackgroundLight</item>
+    <item name="captionTextColor">@color/colorCaptionTextLight</item>
+    <item name="balloonBackgroundColor">@color/colorBalloonBackgroundLight</item>
+    <item name="balloonTextColor">@color/colorBalloonTextLight</item>
+    <item name="dragBackgroundColor">@color/colorBackgroundDragLight</item>
+    <item name="gaugePointStartColor">@color/colorGaugePointLight</item>
+    <item name="gaugePointEndColor">@color/colorGaugePointLight</item>
+    <item name="gaugeStrokeColor">@color/colorGaugeStrokeLight</item>
+    <item name="gaugeDividerColor">@color/colorGaugeDividerLight</item>
+  </style>
+  <style name="SpinnerDividerStyle" parent="Widget.AppCompat.ListView.DropDown">
+    <item name="android:divider">?attr/dividerHorizontal</item>
+    <item name="android:dividerHeight">3px</item>
+  </style>
+  <style name="ListViewNoDividerStyle" parent="Widget.AppCompat.ListView">
+    <item name="android:divider">?attr/android:colorBackground</item>
+    <item name="android:dividerHeight">0px</item>
+  </style>
+  <style name="TextViewInnerCaption" parent="TextAppearance.AppCompat">
+    <item name="android:background">?attr/captionBackgroundColor</item>
+    <item name="android:textColor">?attr/captionTextColor</item>
+  </style>
+  <style name="TextViewListCaption" parent="TextAppearance.AppCompat">
+    <item name="android:textColor">?attr/captionTextColor</item>
+  </style>
+  <style name="Theme.Transparent" parent="Theme.AppCompat">
+    <item name="android:windowIsTranslucent">true</item>
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowContentOverlay">@null</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:windowIsFloating">true</item>
+    <item name="android:backgroundDimEnabled">false</item>
+    <item name="android:windowAnimationStyle">@null</item>
+  </style>
+  <style name="Divider">
+    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_height">1dp</item>
+    <item name="android:background">?android:attr/listDivider</item>
+  </style>
+</resources>

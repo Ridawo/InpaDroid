@@ -1,0 +1,474 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppRestartRequired" xml:space="preserve">
+    <value>Application restart required.</value>
+  </data>
+  <data name="BackupDataRestored" xml:space="preserve">
+    <value>Backup data restored.</value>
+  </data>
+  <data name="BatteryVoltage" xml:space="preserve">
+    <value>Battery voltage: {0:0.00}V</value>
+  </data>
+  <data name="BatteryVoltageError" xml:space="preserve">
+    <value>Error:
+The battery voltage {0:0.00}V is out of valid range:
+{1:0.00}V - {2:0.00}V.
+Please connect a certified charger for the whole coding session.
+Do you want to retry the operation?</value>
+  </data>
+  <data name="BatteryVoltageInfo" xml:space="preserve">
+    <value>Information:
+The battery voltage {0:0.00}V is inside the valid range:
+{1:0.00}V - {2:0.00}V.
+Please connect a certified charger for the whole coding session.</value>
+  </data>
+  <data name="BatteryVoltageWarn" xml:space="preserve">
+    <value>Warning:
+The battery voltage {0:0.00}V is out of valid range:
+{1:0.00}V - {2:0.00}V.
+Please connect a certified charger for the whole coding session.</value>
+  </data>
+  <data name="ContextMissing" xml:space="preserve">
+    <value>Context not found.</value>
+  </data>
+  <data name="CreateBackupPathFailed" xml:space="preserve">
+    <value>Creating backup path failed.</value>
+  </data>
+  <data name="DbInfo" xml:space="preserve">
+    <value>Database version: {0}, date: {1}</value>
+  </data>
+  <data name="DetectingInstalledEcus" xml:space="preserve">
+    <value>Detecting installed ECUs ...</value>
+  </data>
+  <data name="DetectInstalledEcusFailed" xml:space="preserve">
+    <value>Detecting installed ECUs failed.</value>
+  </data>
+  <data name="ExceptionMsg" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="ExecutingBackupTal" xml:space="preserve">
+    <value>Executing backup TAL ...</value>
+  </data>
+  <data name="ExecutingRestoreTal" xml:space="preserve">
+    <value>Executing restore TAL ...</value>
+  </data>
+  <data name="ExecutingTal" xml:space="preserve">
+    <value>Executing TAL ...</value>
+  </data>
+  <data name="ExecutingVehicleFunc" xml:space="preserve">
+    <value>Executing operation ...</value>
+  </data>
+  <data name="ExecutingVehicleFuncFinished" xml:space="preserve">
+    <value>Operation finished.</value>
+  </data>
+  <data name="FaBackupWriteFailed" xml:space="preserve">
+    <value>FA backup write failed.</value>
+  </data>
+  <data name="FaBackupWritten" xml:space="preserve">
+    <value>FA backup written.</value>
+  </data>
+  <data name="FaWriteFailed" xml:space="preserve">
+    <value>FA write failed.</value>
+  </data>
+  <data name="FaWritten" xml:space="preserve">
+    <value>FA written.</value>
+  </data>
+  <data name="GenerateInfoFilesFailed" xml:space="preserve">
+    <value>Generating vehicle info files failed.</value>
+  </data>
+  <data name="GeneratingInfoFiles" xml:space="preserve">
+    <value>Generating vehicle info files.</value>
+  </data>
+  <data name="HostStarted" xml:space="preserve">
+    <value>Service host started.</value>
+  </data>
+  <data name="HostStartFailed" xml:space="preserve">
+    <value>Starting host failed.</value>
+  </data>
+  <data name="HostStarting" xml:space="preserve">
+    <value>Starting service host ...</value>
+  </data>
+  <data name="HostStopped" xml:space="preserve">
+    <value>Service host stopped.</value>
+  </data>
+  <data name="HostStopping" xml:space="preserve">
+    <value>Stopping service host ...</value>
+  </data>
+  <data name="HwReplaceContinue" xml:space="preserve">
+    <value>A hardware replacement operation is active.
+Do you want to continue the last hardware replace operation?</value>
+  </data>
+  <data name="ILevelBackupFailed" xml:space="preserve">
+    <value>ILevel backup failed.</value>
+  </data>
+  <data name="ILevelBackupUpdated" xml:space="preserve">
+    <value>ILevel backup updated.</value>
+  </data>
+  <data name="ILevelUpdated" xml:space="preserve">
+    <value>ILevel updated.</value>
+  </data>
+  <data name="ILevelUpdateFailed" xml:space="preserve">
+    <value>ILevel update failed.</value>
+  </data>
+  <data name="NcdFailures" xml:space="preserve">
+    <value>Detected Ncd failures.</value>
+  </data>
+  <data name="NcdOnlineCalculation" xml:space="preserve">
+    <value>NCD online calculation required.
+Probably you have selected a chargeable option.</value>
+  </data>
+  <data name="NoNcdRequestFile" xml:space="preserve">
+    <value>NCD request file missing.</value>
+  </data>
+  <data name="NoTargetILevel" xml:space="preserve">
+    <value>No target ILevel present.</value>
+  </data>
+  <data name="NoVehiceLicense" xml:space="preserve">
+    <value>Not valid license for vehicle present.</value>
+  </data>
+  <data name="PiaMasterUpdated" xml:space="preserve">
+    <value>PIA master updated.</value>
+  </data>
+  <data name="PiaMasterUpdateFailed" xml:space="preserve">
+    <value>PIA master update failed.</value>
+  </data>
+  <data name="PrgCounterCheckFailed" xml:space="preserve">
+    <value>Check programming counter failed.</value>
+  </data>
+  <data name="PrgCounters" xml:space="preserve">
+    <value>Programming counters: {0}</value>
+  </data>
+  <data name="ReadFaFailed" xml:space="preserve">
+    <value>Reading FA failed.</value>
+  </data>
+  <data name="ReadILevelFailed" xml:space="preserve">
+    <value>Reading ILevel failed.</value>
+  </data>
+  <data name="ReadVinFailed" xml:space="preserve">
+    <value>Reading VIN failed.</value>
+  </data>
+  <data name="RequestEcuContextFailed" xml:space="preserve">
+    <value>Requesting ECU context failed.</value>
+  </data>
+  <data name="RequestedPlannedConstructionFailed" xml:space="preserve">
+    <value>Requesting planned construction failed.</value>
+  </data>
+  <data name="RequestingEcuContext" xml:space="preserve">
+    <value>Requesting ECU context ...</value>
+  </data>
+  <data name="SoftwareFailures" xml:space="preserve">
+    <value>Detected {0} software failures.</value>
+  </data>
+  <data name="SwiVersion" xml:space="preserve">
+    <value>SWI Version: {0}</value>
+  </data>
+  <data name="SwtAction" xml:space="preserve">
+    <value>Requesting SWT action ...</value>
+  </data>
+  <data name="SwtActionCount" xml:space="preserve">
+    <value>SWT actions: {0}</value>
+  </data>
+  <data name="SwtActionFailed" xml:space="preserve">
+    <value>Request SWT action failed.</value>
+  </data>
+  <data name="TalBackupFaChanged" xml:space="preserve">
+    <value>The FA has changed since the last backup.
+Do you want to restore the settings of the last backup?</value>
+  </data>
+  <data name="TalBackupGenerating" xml:space="preserve">
+    <value>Generating backup TAL ...</value>
+  </data>
+  <data name="TalBackupGenerationFailed" xml:space="preserve">
+    <value>Backup TAL generation failed.</value>
+  </data>
+  <data name="TalDisableFlash" xml:space="preserve">
+    <value>Do you want to disable all flash operations for this session?</value>
+  </data>
+  <data name="TalExecuteAgain" xml:space="preserve">
+    <value>Do you want to execute the main TAL again (slow)?</value>
+  </data>
+  <data name="TalExecuteError" xml:space="preserve">
+    <value>TAL execution finished with errors.</value>
+  </data>
+  <data name="TalExecuteErrorContinue" xml:space="preserve">
+    <value>Problems have occured in the preparation phase.
+No liability in case of failure or problems after coding!
+Do you still want to continue with TAL execution?</value>
+  </data>
+  <data name="TalExecuteLastSkipped" xml:space="preserve">
+    <value>The last time the TAL execution has been skipped.</value>
+  </data>
+  <data name="TalExecuteLastSuccess" xml:space="preserve">
+    <value>The last time the TAL has been executed successfully.</value>
+  </data>
+  <data name="TalExecuteOk" xml:space="preserve">
+    <value>TAL execution finished ok.</value>
+  </data>
+  <data name="TalExecuteOkContinue" xml:space="preserve">
+    <value>Preparation has been finished successfully.
+No liability in case of failure or problems after coding!
+Do you want to continue with TAL execution?</value>
+  </data>
+  <data name="TalExecuteWarning" xml:space="preserve">
+    <value>TAL execution finished with warnings.</value>
+  </data>
+  <data name="TalExecutionFailMessage" xml:space="preserve">
+    <value>TAL execution failed.
+Do you want to retry TAL execution with the same settings later?</value>
+  </data>
+  <data name="TalExecutionHint" xml:space="preserve">
+    <value>Make sure that the ignition is switched on, the motor is stopped and a certified charger is connected to the vehicle.
+Don't close or minimize this page, because this will interrupt vehicle communication!
+Do you want to continue?</value>
+  </data>
+  <data name="TalExecutionOkMessage" xml:space="preserve">
+    <value>The TAL execution has been finished successfully.
+Do you want to keep the backup data?</value>
+  </data>
+  <data name="TalFlashOperation" xml:space="preserve">
+    <value>The TAL contains flash operations but flashing is disabled for safety reasons.
+Possibly the software is not consistent in all ECUs.</value>
+  </data>
+  <data name="TalGenerating" xml:space="preserve">
+    <value>Generating TAL ...</value>
+  </data>
+  <data name="TalGenerationFailed" xml:space="preserve">
+    <value>TAL generation failed.</value>
+  </data>
+  <data name="TalHwDeinstallFinished" xml:space="preserve">
+    <value>After replacement select the replaced ECUs at the category 'after the exchange'.</value>
+  </data>
+  <data name="TalIdrGenerating" xml:space="preserve">
+    <value>Generating individual data TAL ...</value>
+  </data>
+  <data name="TalMissing" xml:space="preserve">
+    <value>TAL not present.</value>
+  </data>
+  <data name="TalOperationContinue" xml:space="preserve">
+    <value>A backup of the last TAL is present.
+Do you want to execute the last TAL again?
+The last settings have to stay unmodified in this case.</value>
+  </data>
+  <data name="TalRestoreGenerationFailed" xml:space="preserve">
+    <value>Restore TAL generation failed.</value>
+  </data>
+  <data name="TalRestoreGenrating" xml:space="preserve">
+    <value>Generating restore TAL ...</value>
+  </data>
+  <data name="TestModuleDataMissing" xml:space="preserve">
+    <value>Test module data not present.</value>
+  </data>
+  <data name="TestModuleFailures" xml:space="preserve">
+    <value>Test module generation failures: {0}</value>
+  </data>
+  <data name="TestModuleNotCompleted" xml:space="preserve">
+    <value>Test module generation not completed: {0}%</value>
+  </data>
+  <data name="TestModuleProgress" xml:space="preserve">
+    <value>{0}%, Failures: {1}</value>
+  </data>
+  <data name="TslUpdated" xml:space="preserve">
+    <value>TSL updated.</value>
+  </data>
+  <data name="TslUpdateFailed" xml:space="preserve">
+    <value>TSL update failed.</value>
+  </data>
+  <data name="UpdateVehicleDataFailed" xml:space="preserve">
+    <value>Updating vehicle data failed.</value>
+  </data>
+  <data name="VehicleConnected" xml:space="preserve">
+    <value>Vehicle connected.</value>
+  </data>
+  <data name="VehicleConnecting" xml:space="preserve">
+    <value>Connecting vehicle ...</value>
+  </data>
+  <data name="VehicleDatabaseInvalid" xml:space="preserve">
+    <value>Vehicle database invalid or too old.</value>
+  </data>
+  <data name="VehicleDetecting" xml:space="preserve">
+    <value>Detecting vehicle ...</value>
+  </data>
+  <data name="VehicleDetectingProgress" xml:space="preserve">
+    <value>Detecting vehicle: {0}%</value>
+  </data>
+  <data name="VehicleDetectionFailed" xml:space="preserve">
+    <value>Vehicle detection failed.</value>
+  </data>
+  <data name="VehicleDisconnected" xml:space="preserve">
+    <value>Vehicle disconnected.</value>
+  </data>
+  <data name="VehicleDisconnecting" xml:space="preserve">
+    <value>Disconnecting vehicle ...</value>
+  </data>
+  <data name="VehicleInfo" xml:space="preserve">
+    <value>VIN={0}, Series={1}
+ILevel ship={2} current={3}</value>
+  </data>
+  <data name="VehicleNoTargetSelector" xml:space="preserve">
+    <value>Target selector not detected.</value>
+  </data>
+  <data name="VehicleNotConnected" xml:space="preserve">
+    <value>Vehicle not connected.</value>
+  </data>
+  <data name="VehicleSeriesInvalid" xml:space="preserve">
+    <value>Detected vehicle series : {0}.
+Coding is available only for F series or higher.</value>
+  </data>
+  <data name="VehicleSeriesNotDetected" xml:space="preserve">
+    <value>Vehicle series not detected.</value>
+  </data>
+  <data name="RequestedFlashSetupFailed" xml:space="preserve">
+    <value>Requesting planned development failed.</value>
+  </data>
+  <data name="CertificatesNotPresent" xml:space="preserve">
+    <value>Certificates for secure connection missing.</value>
+  </data>
+  <data name="BatteryVoltageReadError" xml:space="preserve">
+    <value>Battery voltage reading failed.</value>
+  </data>
+  <data name="DirectoryWriteProtected" xml:space="preserve">
+    <value>The directory is write protected: '{0}'</value>
+  </data>
+  <data name="DirectoryMissing" xml:space="preserve">
+    <value>The directory is missing: '{0}'</value>
+  </data>
+  <data name="VehicleConnectionFailed" xml:space="preserve">
+    <value>Vehicle connection failed.</value>
+  </data>
+  <data name="AdapterLicensed" xml:space="preserve">
+    <value>Licensed OBD adapter detected.</value>
+  </data>
+  <data name="AdapterNotLicensed" xml:space="preserve">
+    <value>No licensed OBD adapter detected.</value>
+  </data>
+  <data name="VehicleLicensed" xml:space="preserve">
+    <value>Vehicle licensed.</value>
+  </data>
+  <data name="VehicleNotLicensed" xml:space="preserve">
+    <value>Vehicle not licensed.</value>
+  </data>
+  <data name="DuplicateVinDetected" xml:space="preserve">
+    <value>Another instance with the same VIN is already active.
+Please try again later.</value>
+  </data>
+  <data name="OperationAborted" xml:space="preserve">
+    <value>Operation aborted</value>
+  </data>
+</root>

@@ -1,0 +1,12 @@
+/bin/
+/obj/
+/WebPsdzNetClient.csproj.user
+/User.config
+/User.log
+/.vs/
+/ILLink/
+/Views/
+/Data/
+/publish/
+*.csproj.user
+/Web.BindingRedirects.config

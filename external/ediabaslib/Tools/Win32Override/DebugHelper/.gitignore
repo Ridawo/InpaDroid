@@ -1,0 +1,8 @@
+/.vs/
+/Release/
+*.vcxproj.user
+*.sdf
+*.suo
+/Debug/
+/ipch/
+/ReleaseUnicode/

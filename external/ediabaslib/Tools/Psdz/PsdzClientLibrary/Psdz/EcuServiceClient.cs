@@ -1,0 +1,54 @@
+﻿using BMW.Rheingold.Psdz.Model;
+using BMW.Rheingold.Psdz.Model.Ecu;
+using PsdzClient;
+using System.Collections.Generic;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
+
+namespace BMW.Rheingold.Psdz.Client
+{
+    [PreserveSource(Removed = true)]
+    internal sealed class EcuServiceClient : PsdzClientBase<IEcuService>, IEcuService
+    {
+        internal EcuServiceClient(Binding binding, EndpointAddress remoteAddress)
+            : base(binding, remoteAddress)
+        {
+        }
+
+        public IPsdzStandardSvt RequestSvt(IPsdzConnection connection)
+        {
+            return CallFunction((IEcuService m) => m.RequestSvt(connection));
+        }
+
+        public IPsdzStandardSvt RequestSvt(IPsdzConnection connection, IEnumerable<IPsdzEcuIdentifier> installedEcus)
+        {
+            return CallFunction((IEcuService m) => m.RequestSvt(connection, installedEcus));
+        }
+
+        public IPsdzSvt RequestSvtWithSmacs(IPsdzConnection connection, IEnumerable<IPsdzEcuIdentifier> installedEcus)
+        {
+            return CallFunction((IEcuService m) => m.RequestSvtWithSmacs(connection, installedEcus));
+        }
+
+        public IPsdzSvt RequestSVTwithSmAcAndMirror(IPsdzConnection connection, IEnumerable<IPsdzEcuIdentifier> installedEcus)
+        {
+            return CallFunction((IEcuService m) => m.RequestSVTwithSmAcAndMirror(connection, installedEcus));
+        }
+
+        public IEnumerable<IPsdzEcuContextInfo> RequestEcuContextInfos(IPsdzConnection connection, IEnumerable<IPsdzEcuIdentifier> installedEcus)
+        {
+            return CallFunction((IEcuService m) => m.RequestEcuContextInfos(connection, installedEcus));
+        }
+
+        public IPsdzResponse UpdatePiaPortierungsmaster(IPsdzConnection connection, IPsdzSvt svt)
+        {
+            return CallFunction((IEcuService m) => m.UpdatePiaPortierungsmaster(connection, svt));
+        }
+
+        [PreserveSource(Hint = "Dummy")]
+        public IPsdzSvt RequestSVTReference(IPsdzConnection connection, IEnumerable<IPsdzEcuIdentifier> installedEcus)
+        {
+            return CallFunction((IEcuService m) => m.RequestSVTReference(connection, installedEcus));
+        }
+    }
+}

@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ProjectGuid>{1FC28DE0-43C8-444F-AF00-CF9B0DFF4AE4}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0-windows;net481</TargetFrameworks>
+    <DefaultTargetFramework>net481</DefaultTargetFramework>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <AssemblyTitle>AssemblyPatcher</AssemblyTitle>
+    <Product>AssemblyPatcher</Product>
+    <Copyright>Copyright ©  2022</Copyright>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ScriptyContinueOnError>false</ScriptyContinueOnError>
+  </PropertyGroup>
+    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+        <Reference Include="System.Windows.Forms" />
+        <Reference Include="System.Data.DataSetExtensions" />
+        <Reference Include="Microsoft.CSharp" />
+        <Reference Include="System.Net.Http" />
+    </ItemGroup>
+  <ItemGroup>
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="CodegenCSOutput" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\dnpatch\dnpatch.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="dnlib" Version="4.5.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.12" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="User.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <DependentUpon>User.csx</DependentUpon>
+    </None>
+    <None Update="User.log">
+      <DependentUpon>User.csx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Data\License.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="User.csx">
+      <Generator>CodegenCS</Generator>
+      <LastGenOutput>User.log</LastGenOutput>
+    </Content>
+  </ItemGroup>
+</Project>

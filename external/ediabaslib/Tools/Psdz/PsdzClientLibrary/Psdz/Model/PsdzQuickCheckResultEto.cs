@@ -1,0 +1,13 @@
+﻿namespace BMW.Rheingold.Psdz.Model.Kds
+{
+    public enum PsdzQuickCheckResultEto
+    {
+        MASTER_INVALID_CLIENT_INVALID,
+        MASTER_INVALID_CLIENT_OK,
+        MASTER_OK_CLIENT_INVALID,
+        MASTER_UNKNOWN_CLIENT_NOT_PAIRED,
+        MASTER_NOT_PAIRED_CLIENT_UNKNOWN,
+        MASTER_UNKNOWN_CLIENT_TIMEOUT,
+        MASTER_ERROR_CLIENT_ERROR
+    }
+}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="PsdzClient"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+	<security>
+	  <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+		<requestedExecutionLevel level="asInvoker" uiAccess="false" />
+	  </requestedPrivileges>
+	</security>
+  </trustInfo>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+	<application>
+	  <!-- Windows 10 / Windows 11 -->
+	  <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+	</application>
+  </compatibility>
+
+  <!-- Nur fuer .NET Framework: Die DPI-Awareness muss beim Prozessstart festgelegt werden,
+	   da Application.SetHighDpiMode dort nicht zur Verfuegung steht. Andernfalls wird sie
+	   beim Laden der ISTA Testmodule durch die WPF Initialisierung nachtraeglich auf
+	   System-Aware umgestellt, wodurch die Darstellung kleiner wird. -->
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+	<windowsSettings>
+	  <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware>
+	</windowsSettings>
+  </application>
+
+  <!-- Designs fuer allgemeine Windows-Steuerelemente und -Dialogfelder (Windows XP und hoeher) aktivieren -->
+  <dependency>
+	<dependentAssembly>
+	  <assemblyIdentity
+		  type="win32"
+		  name="Microsoft.Windows.Common-Controls"
+		  version="6.0.0.0"
+		  processorArchitecture="*"
+		  publicKeyToken="6595b64144ccf1df"
+		  language="*"
+		/>
+	</dependentAssembly>
+  </dependency>
+</assembly>

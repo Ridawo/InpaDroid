@@ -1,0 +1,43 @@
+;ECU:Test groupfile
+;ORIGIN:Holeschak
+;REVISION:1.000
+;AUTHOR:Ulrich
+;ECUCOMMENT:Test group file
+
+INITIALISIERUNG#
+;    JOBNAME:INITIALISIERUNG
+;    JOBCOMMENT:Initialisierung und Kommunikationsparameter
+;    RESULT:DONE
+;    RESULTTYPE:int
+;    RESULTCOMMENT:1, wenn Okay
+;
+					clear		S0
+					pary		S0
+					jnz			initpar
+					clear		S0
+					move		S0,"CMD_IDENT_INIT"
+initpar:
+					shmset		"ID",S0
+					ergi		"DONE",#$1.I
+					eoj
+					eoj
+
+IDENTIFIKATION#
+;    JOBNAME:IDENTIFIKATION
+;    JOBCOMMENT:Identifikation der Variante
+;    RESULT:VARIANTE
+;    RESULTTYPE:string
+;    RESULTCOMMENT:Name der SGBD
+;
+					clear		S0
+					pary		S0
+					jnz			identpar
+					clear		S0
+					move		S0,"CMD_IDENT_IDENT"
+identpar:
+					shmset		"ID",S0
+					ergs		"VARIANTE","cmd_test1"
+					ergs		"FAMILIE","Family_Cmd_Test1"
+					eoj
+					eoj
+

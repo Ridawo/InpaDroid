@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:id="@+id/listLayout"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+        <ListView
+            android:id="@+id/resultList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            style="@style/ListViewNoDividerStyle"/>
+    </LinearLayout>
+    <org.apmem.tools.layouts.FlowLayout
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/button_error_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onErrorResetClick"
+            android:text="@string/button_error_reset" />
+        <Button
+            android:id="@+id/button_error_reset_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onErrorResetAllClick"
+            android:text="@string/button_error_reset_all" />
+        <Button
+            android:id="@+id/button_error_select"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onErrorSelectClick"
+            android:text="@string/button_error_select_all" />
+        <Button
+            android:id="@+id/button_copy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="onCopyErrorsClick"
+            android:text="@string/button_copy" />
+    </org.apmem.tools.layouts.FlowLayout>
+</LinearLayout>

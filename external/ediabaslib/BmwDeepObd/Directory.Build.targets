@@ -1,0 +1,8 @@
+﻿<Project>
+   <PropertyGroup>
+     <DefineConstants>$(DefineConstants);ANDROID_AUTO</DefineConstants>
+   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <AndroidUseAssemblyStore>False</AndroidUseAssemblyStore>
+  </PropertyGroup>
+</Project>

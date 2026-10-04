@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <PathDelim Value="\"/>
+    <General>
+      <Title Value="UpdateLoader"/>
+      <ResourceType Value="res"/>
+      <UseXPManifest Value="True"/>
+      <Icon Value="0"/>
+    </General>
+    <i18n>
+      <EnableI18N LFM="False"/>
+    </i18n>
+    <VersionInfo>
+      <UseVersionInfo Value="True"/>
+      <MajorVersionNr Value="2"/>
+      <MinorVersionNr Value="2"/>
+      <RevisionNr Value="4"/>
+      <BuildNr Value="1"/>
+      <Language Value="0407"/>
+      <StringTable Comments="UpdateLoader für FastBoot V2.1 von Peter Dannegger" CompanyName="Leo-Andres Hofmann" FileDescription="UpdateLoader für FastBoot V2.1" InternalName="UpdateLoader" LegalCopyright="Copyright (C) 2012-2013 Leo-Andres Hofmann" ProductName="UpdateLoader" ProductVersion="2.2"/>
+    </VersionInfo>
+    <BuildModes Active="Release">
+      <Item Name="Release" Default="True"/>
+      <Item Name="Debug">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <PathDelim Value="\"/>
+          <Target>
+            <Filename Value="..\bin\UpdateLoader-$(TargetOS)"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir)"/>
+            <OtherUnitFiles Value="..\lib;..\lib\synaser"/>
+            <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <Parsing>
+            <SyntaxOptions>
+              <CStyleOperator Value="False"/>
+              <IncludeAssertionCode Value="True"/>
+              <AllowLabel Value="False"/>
+              <CPPInline Value="False"/>
+            </SyntaxOptions>
+          </Parsing>
+          <CodeGeneration>
+            <SmartLinkUnit Value="True"/>
+            <Checks>
+              <IOChecks Value="True"/>
+              <RangeChecks Value="True"/>
+              <OverflowChecks Value="True"/>
+              <StackChecks Value="True"/>
+            </Checks>
+            <TargetCPU Value="i386"/>
+            <TargetOS Value="win32"/>
+            <Optimizations>
+              <OptimizationLevel Value="0"/>
+            </Optimizations>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseValgrind Value="True"/>
+            </Debugging>
+            <LinkSmart Value="True"/>
+            <Options>
+              <Win32>
+                <GraphicApplication Value="True"/>
+              </Win32>
+            </Options>
+          </Linking>
+          <Other>
+            <Verbosity>
+              <ShowDebugInfo Value="True"/>
+              <ShowHintsForUnusedUnitsInMainSrc Value="True"/>
+              <ShowHintsForSenderNotUsed Value="True"/>
+            </Verbosity>
+          </Other>
+        </CompilerOptions>
+      </Item>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes>
+        <Mode Name="default"/>
+      </Modes>
+    </RunParams>
+    <RequiredPackages>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+    </RequiredPackages>
+    <Units>
+      <Unit>
+        <Filename Value="UpdateLoader.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <CursorPos Y="13"/>
+        <UsageCount Value="229"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainWindow"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="533"/>
+        <CursorPos X="39" Y="556"/>
+        <UsageCount Value="229"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="tools.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="105"/>
+        <CursorPos X="73" Y="35"/>
+        <UsageCount Value="229"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="protocol.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="14"/>
+        <CursorPos X="13" Y="34"/>
+        <UsageCount Value="212"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus\lcl\grids.pas"/>
+        <TopLine Value="8645"/>
+        <CursorPos Y="8675"/>
+        <UsageCount Value="2"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\lib\synaser\synaser.pas"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="1143"/>
+        <CursorPos X="12" Y="1158"/>
+        <UsageCount Value="102"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus\lcl\include\progressbar.inc"/>
+        <TopLine Value="167"/>
+        <CursorPos Y="183"/>
+        <UsageCount Value="7"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\lib\synaser\synafpc.pas"/>
+        <TopLine Value="55"/>
+        <CursorPos X="63" Y="80"/>
+        <UsageCount Value="7"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus\fpc\2.6.2\source\rtl\objpas\sysutils\sysutilh.inc"/>
+        <TopLine Value="75"/>
+        <CursorPos X="4" Y="104"/>
+        <UsageCount Value="2"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus\fpc\2.6.2\source\rtl\objpas\classes\classesh.inc"/>
+        <TopLine Value="689"/>
+        <CursorPos X="3" Y="714"/>
+        <UsageCount Value="7"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\lib\synaser\synautil.pas"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="1928"/>
+        <CursorPos Y="1925"/>
+        <UsageCount Value="25"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\Programs\lazarus\components\lazutils\translations.pas"/>
+        <UnitName Value="Translations"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="958"/>
+        <CursorPos X="23" Y="978"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="442" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="435" Column="52" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="446" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="443" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="446" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="444" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="446" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="444" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="446" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="444" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="455" TopLine="437"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="442" Column="55" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="447" Column="24" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="446" TopLine="428"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="518" Column="60" TopLine="508"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="563" TopLine="548"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="557" Column="85" TopLine="543"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="552" Column="44" TopLine="543"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="557" Column="24" TopLine="543"/>
+      </Position>
+      <Position>
+        <Filename Value="C:\Programs\lazarus\components\lazutils\translations.pas"/>
+        <Caret Line="152" Column="23" TopLine="146"/>
+      </Position>
+      <Position>
+        <Filename Value="C:\Programs\lazarus\components\lazutils\translations.pas"/>
+        <Caret Line="982" Column="15" TopLine="964"/>
+      </Position>
+      <Position>
+        <Filename Value="C:\Programs\lazarus\components\lazutils\translations.pas"/>
+        <Caret Line="1705" Column="43" TopLine="1701"/>
+      </Position>
+      <Position>
+        <Filename Value="C:\Programs\lazarus\components\lazutils\translations.pas"/>
+        <Caret Line="42" Column="80" TopLine="32"/>
+      </Position>
+      <Position>
+        <Filename Value="C:\Programs\lazarus\components\lazutils\translations.pas"/>
+        <Caret Line="156" Column="75" TopLine="138"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="559" Column="34" TopLine="537"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="556" Column="39" TopLine="533"/>
+      </Position>
+      <Position>
+        <Filename Value="..\lib\synaser\synautil.pas"/>
+        <Caret Line="609" Column="60" TopLine="607"/>
+      </Position>
+      <Position>
+        <Filename Value="..\lib\synaser\synaser.pas"/>
+        <Caret Line="1042" Column="12" TopLine="1016"/>
+      </Position>
+      <Position>
+        <Filename Value="..\lib\synaser\synaser.pas"/>
+        <Caret Line="1158" Column="12" TopLine="1143"/>
+      </Position>
+      <Position>
+        <Filename Value="..\lib\synaser\synautil.pas"/>
+        <Caret Line="2063" Column="49" TopLine="2035"/>
+      </Position>
+    </JumpHistory>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="..\bin\UpdateLoader-$(TargetOS)"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\lib;..\lib\synaser"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Parsing>
+      <SyntaxOptions>
+        <CStyleOperator Value="False"/>
+        <AllowLabel Value="False"/>
+        <CPPInline Value="False"/>
+      </SyntaxOptions>
+    </Parsing>
+    <CodeGeneration>
+      <SmartLinkUnit Value="True"/>
+      <Checks>
+        <IOChecks Value="True"/>
+        <RangeChecks Value="True"/>
+        <OverflowChecks Value="True"/>
+      </Checks>
+      <TargetOS Value="win32"/>
+      <Optimizations>
+        <OptimizationLevel Value="3"/>
+      </Optimizations>
+    </CodeGeneration>
+    <Linking>
+      <Debugging>
+        <GenerateDebugInfo Value="False"/>
+        <DebugInfoType Value="dsDwarf3"/>
+        <UseLineInfoUnit Value="False"/>
+        <StripSymbols Value="True"/>
+      </Debugging>
+      <LinkSmart Value="True"/>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <WriteFPCLogo Value="False"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Watches>
+      <Item>
+        <Expression Value="fileversion"/>
+      </Item>
+      <Item>
+        <Expression Value="edtVersionInfo"/>
+      </Item>
+      <Item>
+        <Expression Value="MainWindow.Caption"/>
+      </Item>
+    </Watches>
+    <Exceptions>
+      <Item>
+        <Name Value="EAbort"/>
+      </Item>
+      <Item>
+        <Name Value="ECodetoolError"/>
+      </Item>
+      <Item>
+        <Name Value="EFOpenError"/>
+      </Item>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

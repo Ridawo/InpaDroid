@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:id="@+id/menu_xml_tool_config_ecu"
+        android:title="@string/menu_xml_config_ecu" />
+  <item android:id="@+id/menu_xml_tool_move_top"
+        android:title="@string/menu_xml_tool_move_top" />
+  <item android:id="@+id/menu_xml_tool_move_up"
+        android:title="@string/menu_xml_tool_move_up" />
+  <item android:id="@+id/menu_xml_tool_move_down"
+        android:title="@string/menu_xml_tool_move_down" />
+  <item android:id="@+id/menu_xml_tool_move_bottom"
+        android:title="@string/menu_xml_tool_move_bottom" />
+  <item android:id="@+id/menu_xml_tool_ediabas_tool"
+        android:title="@string/menu_xml_tool_ediabas_tool" />
+  <item android:id="@+id/menu_xml_tool_bmw_actuator"
+        android:title="@string/menu_xml_tool_bmw_actuator" />
+  <item android:id="@+id/menu_xml_tool_bmw_service"
+        android:title="@string/menu_xml_tool_bmw_service" />
+  <item android:id="@+id/menu_xml_tool_vag_coding"
+        android:title="@string/menu_xml_tool_vag_coding"/>
+  <item android:id="@+id/menu_xml_tool_vag_coding2"
+        android:title="@string/menu_xml_tool_vag_coding2"/>
+  <item android:id="@+id/menu_xml_tool_vag_adaption"
+        android:title="@string/menu_xml_tool_vag_adaption"/>
+  <item android:id="@+id/menu_xml_tool_vag_login"
+        android:title="@string/menu_xml_tool_vag_login"/>
+  <item android:id="@+id/menu_xml_tool_vag_sec_access"
+        android:title="@string/menu_xml_tool_vag_sec_access"/>
+</menu>

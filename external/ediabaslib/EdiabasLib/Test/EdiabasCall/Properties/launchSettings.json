@@ -1,0 +1,46 @@
+{
+  "profiles": {
+    "BlockLesen": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"ENET\" --cfg=\"RemoteHost=127.0.0.1\" -s \"C:\\EDIABAS\\Ecu\\d_motor.grp\" -j \"IDENT\" -j \"STATUS_MOTORDREHZAHL\" -j \"STATUS_REGENERATION_CSF\" -j \"FS_LESEN_DETAIL#0x4232#F_ART_ANZ;F_UW_ANZ\" -j \"STATUS_MESSWERTBLOCK_LESEN#JA;IUBAT;ITKUM;CTSCD_tClntLin;ITKRS;ILMKG;ILMMG;SLMMG;ITUMG;IPLAD;SPLAD;ITLAL;IPUMG;IPRDR;SPRDR;ITAVO;ITAVP1;IPDIP;IDSLRE;IREAN;EGT_st;ISRBF;ISOED\""
+    },
+    "MBBlockLesen": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"EDIC\" --cfg=\"ObdComPort=BLUETOOTH:COM6;IfhTrace=2\" -s \"D:\\Projects\\EdiabasLib\\Logs\\Stanislav\\Ecu\\Mot_01\" -j \"Steuergeraeteversion_abfragen2\" -j \"Fahrgestellnr_abfragen\" -j \"MotorOderSystemnr_abfragen\" -j \"UnterstFunktionen_abfragen\" -j \"FlashStatus_abfragen\" -j \"Messwerteblock_lesen#26;START\" -j \"Messwerteblock_lesen#28;LESEN\" -j \"Messwerteblock_lesen#31;LESEN\" -j \"Messwerteblock_lesen#57;LESEN\" -j \"Messwerteblock_lesen#57;STOP\" -j \"Messwerteblock_lesen#100;START\" -j \"Messwerteblock_lesen#101;START\" -j \"Messwerteblock_lesen#102;START\" -j \"Messwerteblock_lesen#103;START\" -j \"Messwerteblock_lesen#104;START\" -j \"Fehlerspeicher_abfragen\" -j \"FehlerspeicherSAE_abfragen\" -j \"status_abfragen\""
+    },
+    "StatusCsf": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"ENET\" -s \"C:\\EDIABAS\\Ecu\\d_motor.grp\" -j \"IDENT\" -j \"FS_LESEN\" -j \"STATUS_REGENERATION_CSF\""
+    },
+    "TmodeEnet": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"ENET\" --cfg=\"RemoteHost=127.0.0.1\" --continue -s \"C:\\EDIABAS\\Ecu\\tmode.prg\" -j \"INFO\" -j \"SETZE_SG_PARAMETER_ALLG#|0F01000000C20100B0040000140000000A0000000200000088130000\" -j \"SETZE_ANTWORTLAENGE#|00000000\" -j \"SENDE_TELEGRAMM#|8212F11A80\" -j \"LESE_SPANNUNG_KL15\" -j \"LESE_SPANNUNG_KL30\""
+    },
+    "StatusICOM": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"RPLUS:ICOM_P:Remotehost=192.168.201.2;Port=6801\" --unit=\"ABC\" --hidelastrespbyte -s \"C:\\EDIABAS\\Ecu\\d_motor.grp\" -j \"IDENT\" -j \"FS_LESEN\" -j \"FS_LESEN_DETAIL#0x4232#F_ART_ANZ;F_UW_ANZ\" -j \"STATUS_RAILDRUCK_IST\" -j \"STATUS_MOTORTEMPERATUR\" -j \"STATUS_LMM_MASSE\" -j \"STATUS_MOTORDREHZAHL\""
+    },
+    "TmodeICOM": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"RPLUS:ICOM_P:Remotehost=192.168.201.2;Port=6801\" --unit=\"ABC\" --continue -s \"C:\\EDIABAS\\Ecu\\tmode.prg\" -j \"INFO\" -j \"LESE_INTERFACE_VERSION\" -j \"LESE_INTERFACE_TYP\" -j \"LESE_SPANNUNG_KL15\" -j \"LESE_SPANNUNG_KL30\" -j \"HOLE_INTERFACE_STATUS\" -j \"HOLE_KEYBYTES\" -j \"LESE_PORT\" -j \"SETZE_PORT#|0102030405\" -j \"SETZE_SG_PARAMETER_ALLG#|0F01000000C20100B0040000140000000A0000000200000088130000\" -j \"SETZE_ANTWORTLAENGE#|00000000\" -j \"SENDE_TELEGRAMM#|8212F11A80\" -j \"SENDE_TELEGR_WIEDERHOLT#|8212F11A80\" -j \"HOLE_ANTWORT_TELEGR\" -j \"STOPPE_WIEDERH_ANFORDERUNG\" -j \"SETZE_PROGRAMMIERSPANNUNG#|B004\" -j \"SETZE_SIA_RELAIS#|E803\" -j \"SETZE_SG_PARAMETER_EIDBSS#|01010101\" -j \"SETZE_SG_PARAM_ZURUECK\" -j \"REICHE_AN_INTERFACE_DURCH#|00000000\" -j \"TESTE_DIAGNOSELEITUNG\" -j \"SETZE_INTERFACE_ZURUECK\""
+    },
+    "CreateTLSCert": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"ENET\" --cfg=\"ApiTrace=1;IfhTrace=3;IfhnTrace=3;SystemTraceIfh=7;RemoteHost=192.168.150.10;SSLPort=3496;Authentication=S29;NetworkProtocol=SSL\" -s \"C:\\EDIABAS\\Ecu\\F01\" -j \"IDENT\""
+    },
+    "VM-CreateTLSCert": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"ENET\" --cfg=\"ApiTrace=1;IfhTrace=3;IfhnTrace=3;SystemTraceIfh=7;RemoteHost=192.168.150.10;SSLPort=3496;Authentication=S29;NetworkProtocol=SSL\" -p \"C:\\Program Files\\BMW\\ISPI\\TRIC\\ISTA\\Ediabas\\BIN\" -s \"C:\\Program Files\\BMW\\ISPI\\TRIC\\ISTA\\Ecu\\F01\" -j \"IDENT\"",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "VM-WIN11",
+      "authenticationMode": "Windows"
+    },
+    "VM-AuthMode": {
+      "commandName": "Project",
+      "commandLineArgs": "--ifh=\"ENET\" --cfg=\"ApiTrace=1;IfhTrace=3;IfhnTrace=3;SystemTraceIfh=7;RemoteHost=192.168.150.10;SSLPort=3496;Authentication=S29;NetworkProtocol=SSL;selectCertificate=S29-WBAJM71000B055940\" -p \"C:\\Program Files\\BMW\\ISPI\\TRIC\\ISTA\\Ediabas\\BIN\" -s \"C:\\Program Files\\BMW\\ISPI\\TRIC\\ISTA\\Ecu\\IPB_APP2\" -j \"STATUS_LESEN#ARG;SEC4DIAG_READ_AUTH_MODE\" -j \"STATUS_VCM_GET_FA\" -j \"STATUS_LESEN#ARG;STATUS_VCM_GET_ECU_LIST_ALL\" -j \"STATUS_LESEN#ARG;VCM_DID_ISTUFE\" -j \"SVK_LESEN\"",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "VM-WIN11",
+      "authenticationMode": "Windows"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+    <TextView
+        android:text="@string/tool_job_jobs"
+        android:id="@+id/textViewJobs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/TextViewInnerCaption" />
+    <Spinner
+        android:id="@+id/spinnerJobs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:prompt="@string/tool_job_jobs_prompt" />
+    <TextView
+        android:text="@string/tool_job_arguments"
+        android:id="@+id/textViewArgs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/TextViewInnerCaption" />
+    <CheckBox
+        android:id="@+id/checkBoxBinArgs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/tool_job_bin_args" />
+    <EditText
+        android:id="@+id/editTextArgs"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text|textNoSuggestions"
+        android:imeOptions="actionDone"
+        android:maxLines="1" />
+    <Button
+        android:id="@+id/buttonArgAssist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tool_job_arg_assist"
+        android:layout_gravity="left" />
+    <TextView
+        android:text="@string/tool_job_results"
+        android:id="@+id/textViewResukts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/TextViewInnerCaption" />
+    <Spinner
+        android:id="@+id/spinnerResults"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:text="@string/tool_job_infos"
+        android:id="@+id/textViewInfos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/TextViewInnerCaption" />
+    <ListView
+        android:id="@+id/infoList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        style="@style/ListViewNoDividerStyle" />
+</LinearLayout>

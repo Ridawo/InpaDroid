@@ -1,0 +1,12 @@
+﻿using System.Collections.Generic;
+using BMW.Rheingold.Psdz.Model.Ecu;
+
+namespace BMW.Rheingold.Psdz.Model.Sfa
+{
+    public interface IPsdzReadSecureEcuModeResultCto
+    {
+        IDictionary<IPsdzEcuIdentifier, PsdzSecureEcuModeEtoEnum> SecureEcuModes { get; }
+
+        IEnumerable<IPsdzEcuFailureResponseCto> FailureResponse { get; }
+    }
+}

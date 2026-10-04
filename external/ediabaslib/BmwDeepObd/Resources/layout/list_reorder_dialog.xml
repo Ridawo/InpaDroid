@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp">
+    <TextView
+        android:id="@+id/textViewMessage"
+        android:textAppearance="@android:style/TextAppearance.DialogWindowTitle"
+        android:text="Message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop ="10dp"
+        android:paddingBottom ="10dp" />
+    <TextView
+        android:id="@+id/textViewMessageDetail"
+        android:text="Message detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="italic"/>
+    <View
+        style="@style/Divider"
+        android:id="@+id/item_divider_list_top"
+        android:layout_height="4dp" />
+    <com.woxthebox.draglistview.DragListView
+        android:id="@+id/listViewItems"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+    <View
+        style="@style/Divider"
+        android:id="@+id/item_divider_list_bottom"
+        android:layout_height="4dp" />
+    <org.apmem.tools.layouts.FlowLayout
+        android:id="@+id/layoutButtons"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="right">
+        <Button
+            android:id="@+id/buttonAbort"
+            android:text="@string/button_abort"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?android:attr/buttonBarButtonStyle"/>
+        <Button
+            android:id="@+id/buttonExtra"
+            android:text="Extra"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?android:attr/buttonBarButtonStyle"/>
+        <Button
+            android:id="@+id/buttonOk"
+            android:text="@string/button_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?android:attr/buttonBarButtonStyle"/>
+    </org.apmem.tools.layouts.FlowLayout>
+</LinearLayout>

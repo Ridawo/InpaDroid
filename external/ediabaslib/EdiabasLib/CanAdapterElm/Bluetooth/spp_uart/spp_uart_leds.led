@@ -1,0 +1,18 @@
+// Copyright (C) Cambridge Silicon Radio Limited 2005-2009
+// Part of BlueLab 4.1-Release
+
+pio 1 LED1
+pio 8 LED2
+pio 9 LED3
+
+pattern LED_CONNECTED RPT
+	LED1 LED3 ON 0
+	LED2 ON 100
+    LED2 OFF 100
+    LED2 ON 100
+	LED2 OFF 2000
+
+pattern LED_DISCONNECTED RPT
+    LED3 OFF 0
+	LED1 LED2 ON 100
+	LED1 LED2 OFF 100

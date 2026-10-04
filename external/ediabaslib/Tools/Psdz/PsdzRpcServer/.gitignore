@@ -1,0 +1,4 @@
+/artifacts/
+*.csproj.user
+/User.config
+/User.log

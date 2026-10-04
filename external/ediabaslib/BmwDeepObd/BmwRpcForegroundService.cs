@@ -1,0 +1,427 @@
+﻿using System;
+using System.Diagnostics;
+using System.Threading;
+using Android.Content;
+using Android.OS;
+using AndroidX.Core.App;
+
+namespace BmwDeepObd
+{
+    [Android.App.Service(
+        Label = "@string/app_name",
+        DirectBootAware = true,
+        Name = ActivityCommon.AppNameSpace + "." + nameof(BmwRpcForegroundService),
+        ForegroundServiceType = Android.Content.PM.ForegroundService.TypeConnectedDevice
+    )]
+    public class BmwRpcForegroundService : Android.App.Service
+    {
+#if DEBUG
+        private static readonly string Tag = typeof(BmwRpcForegroundService).FullName;
+#endif
+        public const int ServiceRunningNotificationId = 10001;
+        public const string ActionStartService = "BmwRpcForegroundService.action.START_SERVICE";
+        public const string ActionStopService = "BmwRpcForegroundService.action.STOP_SERVICE";
+        public const string ActionShowCodingActivity = "BmwRpcForegroundService.action.SHOW_CODING_ACTIVITY";
+        public const string ActionCloseCodingActivity = "BmwRpcForegroundService.action.CLOSE_CODING_ACTIVITY";
+        public const string ExtraNotificationMessage = "message";
+        public const string ExtraNotificationProgress = "progress";
+        public const string ExtraNotificationProgressIndeterminate = "progress_indeterminate";
+        public const string ExtraNotificationDelayed = "delayed";
+        private const int NotificationUpdateDelay = 2000;
+        private const int NotificationTimerDelay = 3000;
+
+        private bool _isStarted;
+        private ActivityCommon _activityCommon;
+        private Context _resourceContext;
+        private Handler _stopHandler;
+        private Handler _notificationHandler;
+        private UpdateNotificationRunnable _notificationRunnable;
+        private long _notificationUpdateTime;
+        private string _notificationMessage;
+        private int _notificationProgress = -1;
+        private bool _notificationProgressIndeterminate;
+        private Timer _notificationUpdateTimer;
+        private readonly object _notificationLockObject = new object();
+
+        public override void OnCreate()
+        {
+            base.OnCreate();
+#if DEBUG
+            Android.Util.Log.Info(Tag, "OnCreate: the service is initializing.");
+#endif
+            _stopHandler = new Handler(Looper.MainLooper);
+            _notificationHandler = new Handler(Looper.MainLooper);
+            _notificationRunnable = new UpdateNotificationRunnable(this);
+            _activityCommon = new ActivityCommon(this, null, BroadcastReceived);
+            _activityCommon?.SetLock(ActivityCommon.LockType.Cpu);
+            _resourceContext = ActivityCommon.GetLocaleContext(this);
+            _notificationUpdateTime = DateTime.MinValue.Ticks;
+            lock (_notificationLockObject)
+            {
+                _notificationMessage = string.Empty;
+                _notificationProgress = -1;
+                _notificationProgressIndeterminate = false;
+            }
+
+            _activityCommon?.StartMtcService();
+        }
+
+        public override Android.App.StartCommandResult OnStartCommand(Intent intent, Android.App.StartCommandFlags flags, int startId)
+        {
+            if (intent?.Action == null)
+            {
+                return Android.App.StartCommandResult.RedeliverIntent;
+            }
+
+            switch (intent.Action)
+            {
+                case ActionStartService:
+                {
+#if DEBUG
+                    Android.Util.Log.Info(Tag, "OnStartCommand: The service is starting.");
+#endif
+                    HandleMessageBroadcast(intent);
+                    RegisterForegroundService();
+
+                    if (_notificationUpdateTimer == null)
+                    {
+                        _notificationUpdateTimer = new Timer(state =>
+                        {
+                            PostUpdateNotification(true);
+                        }, null, NotificationTimerDelay, NotificationTimerDelay);
+                    }
+
+                    _isStarted = true;
+                    break;
+                }
+
+                case ActionStopService:
+                {
+#if DEBUG
+                    Android.Util.Log.Info(Tag, "OnStartCommand: The service is stopping.");
+#endif
+                    StopService();
+                    DisposeNotificationTimer();
+
+                    lock (_notificationLockObject)
+                    {
+                        _notificationMessage = string.Empty;
+                        _notificationProgress = -1;
+                        _notificationProgressIndeterminate = false;
+                    }
+                    break;
+                }
+            }
+
+            // This tells Android not to restart the service if it is killed to reclaim resources.
+            return Android.App.StartCommandResult.RedeliverIntent;
+        }
+
+        public override IBinder OnBind(Intent intent)
+        {
+            // Return null because this is a pure started service. A hybrid service would return a binder.
+            return null;
+        }
+
+        public override void OnDestroy()
+        {
+#if DEBUG
+            Android.Util.Log.Info(Tag, "OnDestroy: Service is shutting down");
+#endif
+            DisposeNotificationTimer();
+
+            // Remove the notification from the status bar.
+            if (_notificationHandler != null)
+            {
+                try
+                {
+                    _notificationHandler.RemoveCallbacksAndMessages(null);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+                _notificationHandler = null;
+            }
+
+#if DEBUG
+            Android.Util.Log.Info(Tag, "OnDestroy: Removing notifications");
+#endif
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.From(this);
+            notificationManager.Cancel(ServiceRunningNotificationId);
+
+            if (_activityCommon != null)
+            {
+                _activityCommon.StopMtcService();
+                _activityCommon.SetLock(ActivityCommon.LockType.None);
+                _activityCommon.Dispose();
+                _activityCommon = null;
+            }
+            _isStarted = false;
+
+            if (_stopHandler != null)
+            {
+                try
+                {
+                    _stopHandler.RemoveCallbacksAndMessages(null);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+                _stopHandler = null;
+            }
+
+            base.OnDestroy();
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416: Validate platform compatibility")]
+        private void StopService()
+        {
+            if (_isStarted)
+            {
+                try
+                {
+                    if (Build.VERSION.SdkInt >= BuildVersionCodes.N)
+                    {
+                        StopForeground(Android.App.StopForegroundFlags.Remove);
+                    }
+                    else
+                    {
+#pragma warning disable CS0618
+#pragma warning disable CA1422
+                        StopForeground(true);
+#pragma warning restore CA1422
+#pragma warning restore CS0618
+                    }
+
+                    StopSelf();
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
+                _isStarted = false;
+            }
+        }
+
+        private Android.App.Notification GetNotification()
+        {
+            string message;
+            int progress;
+            bool progressIndeterminate;
+            lock (_notificationLockObject)
+            {
+                message = _notificationMessage;
+                progress = _notificationProgress;
+                progressIndeterminate = _notificationProgressIndeterminate;
+            }
+
+            if (string.IsNullOrEmpty(message))
+            {
+                message = _resourceContext.GetString(Resource.String.bmw_rpc_coding_srv_disconnected);
+            }
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ActivityCommon.NotificationChannelCommunication)
+                .SetContentTitle(_resourceContext.GetString(Resource.String.app_name))
+                .SetContentText(message)
+                .SetSmallIcon(Resource.Drawable.ic_stat_obd)
+                .SetContentIntent(BuildIntentToShowCodingActivity())
+                .SetOnlyAlertOnce(true)
+                .SetOngoing(true)
+                .SetPriority(NotificationCompat.PriorityLow)
+                .SetCategory(NotificationCompat.CategoryService);
+
+            // optional progress bar
+            if (progressIndeterminate)
+            {
+                builder.SetProgress(0, 0, true);
+            }
+            else if (progress >= 0)
+            {
+                builder.SetProgress(100, progress, false);
+            }
+
+            NotificationCompat.Action action = BuildStopCodingAction();
+            if (action != null)
+            {
+                builder.AddAction(action);
+            }
+
+            return builder.Build();
+        }
+
+        private void UpdateNotification(bool delayUpdate = false)
+        {
+            try
+            {
+                if (delayUpdate)
+                {
+                    if (Stopwatch.GetTimestamp() - _notificationUpdateTime < NotificationUpdateDelay * ActivityCommon.TickResolMs)
+                    {
+                        return;
+                    }
+                }
+
+                Android.App.Notification notification = GetNotification();
+                NotificationManagerCompat notificationManager = _activityCommon.NotificationManagerCompat;
+                notificationManager?.Notify(ServiceRunningNotificationId, notification);
+
+                _notificationUpdateTime = Stopwatch.GetTimestamp();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+
+        private void PostUpdateNotification(bool delayUpdate = false)
+        {
+            if (_notificationHandler == null)
+            {
+                return;
+            }
+
+            ActivityCommon.PostRunnable(_notificationHandler, _notificationRunnable, () =>
+            {
+                _notificationRunnable.DelayUpdate = delayUpdate;
+            });
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416: Validate platform compatibility")]
+        private void RegisterForegroundService()
+        {
+            try
+            {
+                Android.App.Notification notification = GetNotification();
+                // Enlist this instance of the service as a foreground service
+                ServiceCompat.StartForeground(this, ServiceRunningNotificationId, notification, (int) Android.Content.PM.ForegroundService.TypeConnectedDevice);
+            }
+#pragma warning disable CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
+            catch (Exception ex)
+#pragma warning restore CS0168 // Variable ist deklariert, wird jedoch niemals verwendet
+            {
+                // ignored
+#if DEBUG
+                Android.Util.Log.Info(Tag, string.Format("RegisterForegroundService exception: {0}", ex.Message));
+#endif
+            }
+        }
+
+        private void DisposeNotificationTimer()
+        {
+            if (_notificationUpdateTimer != null)
+            {
+                _notificationUpdateTimer.Dispose();
+                _notificationUpdateTimer = null;
+            }
+        }
+
+        /// <summary>
+        /// Builds a PendingIntent that will display the coding activity of the app. This is used when the 
+        /// user taps on the notification; it will take them to the coding activity of the app.
+        /// </summary>
+        /// <returns>The content intent.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416: Validate platform compatibility")]
+        private Android.App.PendingIntent BuildIntentToShowCodingActivity()
+        {
+            Intent showCodingActivityIntent = new Intent(this, typeof(BmwRpcCodingActivity));
+            showCodingActivityIntent.SetAction(ActionShowCodingActivity);
+            showCodingActivityIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop);
+            Android.App.PendingIntentFlags intentFlags = Android.App.PendingIntentFlags.UpdateCurrent;
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.S)
+            {
+                intentFlags |= Android.App.PendingIntentFlags.Immutable;
+            }
+            Android.App.PendingIntent pendingIntent = Android.App.PendingIntent.GetActivity(this, 0, showCodingActivityIntent, intentFlags);
+            return pendingIntent;
+        }
+
+        /// <summary>
+        /// Builds the Notification.Action that will allow the user request to stop coding via the
+        /// notification in the status bar
+        /// </summary>
+        /// <returns>The stop coding action.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416: Validate platform compatibility")]
+        private NotificationCompat.Action BuildStopCodingAction()
+        {
+            string message = _resourceContext.GetString(Resource.String.bmw_rpc_coding_abort_action);
+            Intent closeCodingIntent = new Intent(this, typeof(BmwRpcCodingActivity));
+            closeCodingIntent.SetAction(ActionCloseCodingActivity);
+            closeCodingIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop);
+            Android.App.PendingIntentFlags intentFlags = Android.App.PendingIntentFlags.UpdateCurrent;
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.S)
+            {
+                intentFlags |= Android.App.PendingIntentFlags.Immutable;
+            }
+            Android.App.PendingIntent closeCodingPendingIntent = Android.App.PendingIntent.GetActivity(this, 1, closeCodingIntent, intentFlags);
+
+            NotificationCompat.Action.Builder builder = new NotificationCompat.Action.Builder(Resource.Drawable.ic_stat_cancel, message, closeCodingPendingIntent);
+            return builder.Build();
+        }
+
+        private void BroadcastReceived(Context context, Intent intent)
+        {
+            if (intent == null)
+            {
+                return;
+            }
+            string action = intent.Action;
+            switch (action)
+            {
+                case ActivityCommon.BmwRpcCodingMessageAction:
+                {
+                    HandleMessageBroadcast(intent);
+                    break;
+                }
+            }
+        }
+
+        private void HandleMessageBroadcast(Intent intent)
+        {
+            string message = intent.GetStringExtra(ExtraNotificationMessage);
+            if (message == null)
+            {
+                return;
+            }
+
+            int progress = intent.GetIntExtra(ExtraNotificationProgress, -1);
+            bool progressIndeterminate = intent.GetBooleanExtra(ExtraNotificationProgressIndeterminate, false);
+            bool delayed = intent.GetBooleanExtra(ExtraNotificationDelayed, false);
+            lock (_notificationLockObject)
+            {
+                _notificationMessage = message;
+                _notificationProgress = progress;
+                _notificationProgressIndeterminate = progressIndeterminate;
+            }
+
+            PostUpdateNotification(delayed);
+        }
+
+        public class UpdateNotificationRunnable : Java.Lang.Object, Java.Lang.IRunnable
+        {
+            private BmwRpcForegroundService _foregroundService;
+
+            public bool DelayUpdate { get; set; }
+
+            public UpdateNotificationRunnable(BmwRpcForegroundService foregroundService)
+            {
+                _foregroundService = foregroundService;
+                DelayUpdate = false;
+            }
+
+            public void Run()
+            {
+                try
+                {
+                    _foregroundService?.UpdateNotification(DelayUpdate);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
+        }
+    }
+}

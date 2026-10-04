@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fitsSystemWindows="true">
+    <LinearLayout
+        android:id="@+id/layoutXmlToolEcu"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/textViewPageNameTitle"
+            android:text="@string/xml_tool_ecu_page_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <EditText
+            android:id="@+id/editTextPageName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1" />
+        <TextView
+            android:id="@+id/textViewEcuNameTitle"
+            android:text="@string/xml_tool_ecu_ecu_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <EditText
+            android:id="@+id/editTextEcuName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1" />
+        <TextView
+            android:id="@+id/textViewDisplayType"
+            android:text="@string/xml_tool_ecu_display_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxDisplayTypeGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/xml_tool_ecu_display_type_grid" />
+        <TextView
+            android:id="@+id/textViewFontSizeTitle"
+            android:text="@string/xml_tool_ecu_font_size"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <Spinner
+            android:id="@+id/spinnerFontSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/textViewGridCount"
+            android:text="@string/xml_tool_ecu_grid_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <LinearLayout
+            android:id="@+id/layoutGridCount"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:id="@+id/layoutGridCountPortrait"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical">
+                <TextView
+                    android:id="@+id/textViewGridCountPortraitValue"
+                    android:text="@string/xml_tool_ecu_grid_count_portrait_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical" />
+                <EditText
+                    android:id="@+id/editTextGridCountPortraitValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:inputType="number"
+                    android:maxLines="1" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/layoutGridCountLandscape"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical">
+                <TextView
+                    android:id="@+id/textViewGridCountLandscapeValue"
+                    android:text="@string/xml_tool_ecu_grid_count_landscape_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical" />
+                <EditText
+                    android:id="@+id/editTextGridCountLandscapeValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:inputType="number"
+                    android:maxLines="1" />
+            </LinearLayout>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/textViewJobsTitle"
+            android:text="@string/xml_tool_ecu_jobs_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <Spinner
+            android:id="@+id/spinnerJobs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <CheckBox
+            android:id="@+id/checkBoxShowAllJobs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/xml_tool_ecu_show_all_jobs" />
+        <LinearLayout
+            android:id="@+id/layoutJobConfig"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/textViewJobCommentsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <TextView
+                android:id="@+id/textViewJobComments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/textViewJobResults"
+                android:text="@string/xml_tool_ecu_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <Spinner
+                android:id="@+id/spinnerJobResults"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/checkBoxShowAllResults"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/xml_tool_ecu_show_all_results" />
+            <TextView
+                android:id="@+id/textViewArgLimitTitle"
+                android:text="@string/xml_tool_ecu_arg_limit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <Spinner
+                android:id="@+id/spinnerArgLimit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/textViewResultCommentsTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <TextView
+                android:id="@+id/textViewResultComments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/textViewDisplayTextTitle"
+                android:text="@string/xml_tool_ecu_display_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <EditText
+                android:id="@+id/editTextDisplayText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1" />
+            <TextView
+                android:id="@+id/textViewDisplayOrderTitle"
+                android:text="@string/xml_tool_ecu_display_order"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <EditText
+                android:id="@+id/editTextDisplayOrder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLines="1" />
+            <TextView
+                android:id="@+id/textViewGridType"
+                android:text="@string/xml_tool_ecu_grid_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <LinearLayout
+                android:id="@+id/layoutGridType"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <Spinner
+                    android:id="@+id/spinnerGridType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <LinearLayout
+                    android:id="@+id/layoutMinValue"
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical">
+                    <TextView
+                        android:id="@+id/textViewMinValue"
+                        android:text="@string/xml_tool_ecu_min_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical" />
+                    <EditText
+                        android:id="@+id/editTextMinValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:inputType="number|numberDecimal|numberSigned"
+                        android:maxLines="1" />
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/layoutMaxValue"
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical">
+                    <TextView
+                        android:id="@+id/textViewMaxValue"
+                        android:text="@string/xml_tool_ecu_max_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical" />
+                    <EditText
+                        android:id="@+id/editTextMaxValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:inputType="number|numberDecimal|numberSigned"
+                        android:maxLines="1" />
+                </LinearLayout>
+            </LinearLayout>
+            <TextView
+                android:id="@+id/textViewLogTagTitle"
+                android:text="@string/xml_tool_ecu_log_tag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <EditText
+                android:id="@+id/editTextLogTag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1" />
+            <TextView
+                android:id="@+id/textViewFormat"
+                android:text="@string/xml_tool_ecu_format"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <LinearLayout
+                android:id="@+id/layoutFormat"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="right">
+                <EditText
+                    android:id="@+id/editTextFormat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:minEms="6"
+                    android:inputType="text|textNoSuggestions"
+                    android:maxLines="1" />
+                <LinearLayout
+                    android:id="@+id/layoutSpinner"
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical">
+                    <Spinner
+                        android:id="@+id/spinnerFormatPos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <Spinner
+                        android:id="@+id/spinnerFormatLength1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/textViewFormatDot"
+                        android:text="."
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom" />
+                    <Spinner
+                        android:id="@+id/spinnerFormatLength2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <Spinner
+                        android:id="@+id/spinnerFormatType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+            <TextView
+                android:id="@+id/textViewTestFormat"
+                android:text="@string/xml_tool_ecu_test_format"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <LinearLayout
+                android:id="@+id/layoutTestFormat"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="left">
+                <Button
+                    android:id="@+id/buttonTestFormat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/xml_tool_button_test_format" />
+                <TextView
+                    android:id="@+id/textViewTestFormatOutput"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:minLines="1"
+                    android:maxLines="2" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/textViewAddFunctions"
+                android:text="@string/xml_tool_ecu_add_functions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <org.apmem.tools.layouts.FlowLayout
+                android:id="@+id/layoutAddFunctions"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="left">
+                <Button
+                    android:id="@+id/buttonEdiabasTool"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_ediabas_tool" />
+                <Button
+                    android:id="@+id/buttonBmwActuator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_bmw_actuator" />
+                <Button
+                    android:id="@+id/buttonBmwCoding"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_bmw_coding" />
+                <Button
+                    android:id="@+id/buttonBmwService"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_bmw_service" />
+                <Button
+                    android:id="@+id/buttonCoding"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_coding" />
+                <Button
+                    android:id="@+id/buttonCoding2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_coding2" />
+                <Button
+                    android:id="@+id/buttonAdaption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_adaption" />
+                <Button
+                    android:id="@+id/buttonLogin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_login" />
+                <Button
+                    android:id="@+id/buttonSecurityAccess"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/xml_tool_button_sec_access" />
+            </org.apmem.tools.layouts.FlowLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

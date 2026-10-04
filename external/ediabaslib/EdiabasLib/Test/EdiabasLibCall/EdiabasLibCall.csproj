@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <ProjectGuid>{9AB90187-7B38-4A26-B06E-1F8B5C998F86}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net481</TargetFramework>
+    <AssemblyTitle>EdiabasLibCall</AssemblyTitle>
+    <Product>EdiabasLibCall</Product>
+    <Copyright>Copyright ©  2014</Copyright>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\EdiabasCall\Program.cs" Link="Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\apiNET\apiNET464.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NDesk.Options.Core" Version="1.2.8" />
+    <PackageReference Include="Ranges" Version="1.0.5" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+{
+  "profiles": {
+    "PsdzRpcClient": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false
+    },
+    "PsdzRpcClientProxy": {
+      "commandName": "Project",
+      "commandLineArgs": "--vehicleproxy"
+    },
+    "PsdzRpcClientSslProxy": {
+      "commandName": "Project",
+      "commandLineArgs": "--vehicleproxy -p 0 -s"
+    },
+    "PsdzRpcClientSslProxyVmIsta": {
+      "commandName": "Project",
+      "commandLineArgs": "--vehicleproxy -h vm-ista.local.holeschak.de -p 0 -s"
+    },
+    "VM-WIN11": {
+      "commandName": "Project",
+      "commandLineArgs": "-i \"192.168.150.10\"",
+      "remoteDebugEnabled": true,
+      "remoteDebugMachine": "VM-WIN11",
+      "authenticationMode": "Windows",
+      "nativeDebugging": false
+    }
+  }
+}

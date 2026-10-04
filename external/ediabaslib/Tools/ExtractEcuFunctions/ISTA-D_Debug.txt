@@ -1,0 +1,812 @@
+Debugging of ISTA-D:
+====================
+
+Decompile ISTA-D:
+=================
+[For the current IST version this is not required any more.]
+
+git clone --recursive https://github.com/0xd4d/de4dot.git
+Build de4dot.netframework.sln as Release
+The binary is in the subfolder: Release\net45\de4dot-x64.exe
+
+Copy files from "TesterGUI\bin\Release" to "TesterGUI\bin\ReleaseMod"
+de4dot-x64 -r "TesterGUI\bin\Release" -ru -ro "TesterGUI\bin\ReleaseMod" --dont-rename
+The files in "TesterGUI\bin\Release" are not modified, "TesterGUI\bin\ReleaseMod" now contains the deobfuscated files.
+
+Optional:
+Copy files from "PSdZ\hostx64" to "PSdZ\hostx64Org"
+de4dot-x64 -r "PSdZ\hostx64Org" -ru -ro "PSdZ\hostx64" --dont-rename
+The files in "PSdZ\hostx64Org" are not modified, "PSdZ\hostx64" now contains the deobfuscated files.
+
+Optional:
+Copy files from "PSdZ\host" to "PSdZ\hostOrg"
+de4dot-x64 -r "PSdZ\hostOrg" -ru -ro "PSdZ\host" --dont-rename
+The files in "PSdZ\hostOrg" are not modified, "PSdZ\host" now contains the deobfuscated files.
+
+Optional:
+Copy files from "Testmodule" to "TestmoduleOrg"
+de4dot-x64 -r "TestmoduleOrg" -ru -ro "Testmodule" --dont-rename
+The files in "TestmoduleOrg" are not modified, "Testmodule" now contains the deobfuscated files.
+
+Download dnSpyEx NET Framework.
+==============================
+Uncheck Debug Option: System.Diagnostis.Debugger
+Check Debug Option: Show Hidden compiler generated ...
+
+Disable ISTAGUI.exe hash check:
+===============================
+Modify RheingoldCoreFramework.dll (Edit -> Edit class, remove all references to other ISTA-D version first):
+BMW.Rheingold.CoreFramework.InteropHelper:
+public static bool VerifyStrongName(Type t, bool force)
+At the end of the function add: flag = true;
+-------------------------------------------------------------------------------------
+			flag = true;
+			if (!flag)
+			{
+				throw new Exception(string.Format("Assembly signature of {0} cannot be verified", ""));
+			}
+			return flag;
+-------------------------------------------------------------------------------------
+
+public class IstaIcsServiceClient (not required):
+ValidateHost()
+-------------------------------------------------------------------------------------
+...
+if (process == null)
+{
+	throw new InvalidOperationException("Host not found.");
+}
+return;
+(remove code below)
+-------------------------------------------------------------------------------------
+
+File -> Save module
+If file is blocked, terminate IstaServicesHost.exe first!
+
+Disable ISTAGUI.exe memory check:
+================================
+or use:
+<add key="BMW.Rheingold.ISTAGUI.disableCheckSystemRequirements" value="true" />
+Modify ISTAGUI.exe (Edit -> Edit class, remove all references to other ISTA-D version first):
+BMW.Rheingold.ISTAGUI.Controller:
+public Dictionary<InsufficientSystemRequirement, int[]> CheckSystemRequirements(bool isProgammingEnabled)
+add: memoryCapacityInMBytes = num;
+-------------------------------------------------------------------------------------
+memoryCapacityInMBytes = num;
+if (memoryCapacityInMBytes < num)
+-------------------------------------------------------------------------------------
+File -> Save module
+If file is blocked, terminate IstaServicesHost.exe first!
+
+Fix ICOM apiInitExt:
+====================
+Modify RheingoldVehicleCommunication.dll (Edit -> Edit class, remove all references to other ISTA-D version first):
+Function: public bool ECUKom.InitVCI(IVciDevice device, bool logging)
+case VCIDeviceType.ICOM:
+if (TesterGUI.PreferEthernet)
+Change:
+-------------------------------------------------------------------------------------
+flag = this.api.apiInitExt("ENET::remotehost=" + device.IPAddress, "_", "Rheingold", string.Empty, logging);
+
+133	021A	ldarg.0
+134	021B	ldfld	class BMW.Rheingold.VehicleCommunication.Ediabas.API BMW.Rheingold.VehicleCommunication.ECUKom::api
+135	0220	ldstr	"ENET::remotehost="
+136	0225	ldarg.1
+137	0226	callvirt	instance string [RheingoldCoreContracts]BMW.Rheingold.CoreFramework.Contracts.Vehicle.IVciDevice::get_IPAddress()
+138	022B	call	string [mscorlib]System.String::Concat(string, string)
+139	0230	ldstr	"_"
+140	0235	ldstr	"Rheingold"
+141	023A	ldsfld	string [mscorlib]System.String::Empty
+142	023F	ldarg.2
+143	0240	callvirt	instance bool BMW.Rheingold.VehicleCommunication.Ediabas.API::apiInitExt(string, string, string, string, bool)
+144	0245	stloc.1
+-------------------------------------------------------------------------------------
+to:
+-------------------------------------------------------------------------------------
+flag = this.api.apiInitExt("ENET", "_", "Rheingold", "RemoteHost=" + device.IPAddress + ";DiagnosticPort=50160;ControlPort=50161", logging);
+
+123	01FE	ldarg.0
+124	01FF	ldfld	class BMW.Rheingold.VehicleCommunication.Ediabas.API BMW.Rheingold.VehicleCommunication.ECUKom::api
+125	0204	ldstr	"ENET"
+126	0209	ldstr	"_"
+127	020E	ldstr	"Rheingold"
+128	0213	ldstr	"RemoteHost="
+129	0218	ldarg.1
+130	0219	callvirt	instance string [RheingoldCoreContracts]BMW.Rheingold.CoreFramework.Contracts.Vehicle.IVciDevice::get_IPAddress()
+131	021E	ldstr	";DiagnosticPort=50160;ControlPort=50161"
+132	0223	call	string [mscorlib]System.String::Concat(string, string, string)
+133	0228	ldarg.2
+134	0229	callvirt	instance bool BMW.Rheingold.VehicleCommunication.Ediabas.API::apiInitExt(string, string, string, string, bool)
+135	022E	stloc.3
+-------------------------------------------------------------------------------------
+If file is blocked, terminate IstaServicesHost.exe first!
+
+Debug ISTA-D with dnSpy-x86:
+============================
+Modify IstaOperationController.dll (Edit -> Edit class, remove all references to other ISTA-D version first):
+in IstaOperationStarter.Start() add at the end of the function:
+-------------------------------------------------------------------------------------
+	if (Debugger.IsAttached)
+	{
+		System.Windows.Forms.MessageBox.Show(new System.Windows.Forms.Form { TopMost = true},
+			"IstaOperation started. Attach to IstaOperation.exe now.", "ISTAGUI", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Asterisk);
+	}
+
+74	00E5	call	bool [mscorlib]System.Diagnostics.Debugger::get_IsAttached()
+75	00EA	brfalse.s	86 (010B) ldloc.s V_4 (4)
+76	00EC	newobj	instance void [System.Windows.Forms]System.Windows.Forms.Form::.ctor()
+77	00F1	dup
+78	00F2	ldc.i4.1
+79	00F3	callvirt	instance void [System.Windows.Forms]System.Windows.Forms.Form::set_TopMost(bool)
+80	00F8	ldstr	"IstaOperation started. Attach to IstaOperation.exe now."
+81	00FD	ldstr	"ISTAGUI"
+82	0102	ldc.i4.0
+83	0103	ldc.i4.s	0x40
+84	0105	call	valuetype [System.Windows.Forms]System.Windows.Forms.DialogResult [System.Windows.Forms]System.Windows.Forms.MessageBox::Show(class [System.Windows.Forms]System.Windows.Forms.IWin32Window, string, string, valuetype [System.Windows.Forms]System.Windows.Forms.MessageBoxButtons, valuetype [System.Windows.Forms]System.Windows.Forms.MessageBoxIcon)
+85	010A	pop
+
+	return istaOperation;
+
+86	010B	ldloc.s	V_4 (4)
+87	010D	ret
+
+-------------------------------------------------------------------------------------
+File -> Save module
+
+Disable (not required): ISTAGUI.App.CheckFreeDiskSpace()
+
+ISTA+ config settings:
+======================
+ISTAGUI.exe.config:
+<add key="BMW.Rheingold.ISTAGUI.disableCheckSystemRequirements" value="true" />
+<add key="BMW.Rheingold.ISTAGUI.enableENETprogramming" value="true" />
+ModifyEdiabasIni is not required after the "Fix ICOM apiInitExt" patch!
+<add key="BMW.Rheingold.VehicleCommunication.ECUKom.ModifyEdiabasIni" value="true" />
+For slow systems increase host ide timeout:
+<add key="BMW.Rheingold.Programming.PsdzService.HostIdleTimeout" value="100000" />
+More Debug info:
+<add key="BMW.Rheingold.Programming.Prodias.LogLevel" value="TRACE" />
+<add key="DebugLevel" value="5" />
+<add key="TesterGUI.PreferEthernet" value="true" />
+<add key="BMW.Rheingold.xVM.ICOM.Dirtyflag.Detection" value="false" />
+
+This could be automated with (backup ReleaseMod before):
+AssemblyPatcher.exe "TesterGUI\bin\ReleaseMod"
+
+Make sure the EDIABAS.INI settings has default values in case ModifyEdiabasIni is true:
+[Configuration]
+SystemTraceSec   = 7
+SystemTraceIfh   = 7
+SystemTraceNet   = 7
+
+[S29]
+SelectCertificate = <CertPath>
+
+[XEthernet]
+RemoteHost       = Autodetect
+TesterAddress    = F4,F5
+ControlPort      = 6811
+DiagnosticPort   = 6801
+TimeoutConnect   = 2000
+
+Remove Environment variable: COMPLUS_MDA
+If the dealer number is 0 execute RCleanerV4.4.exe once.
+Export before if required:
+[HKEY_LOCAL_MACHINE\SOFTWARE\BMWGroup]
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\BMWGroup]
+[HKEY_CURRENT_USER\SOFTWARE\BMWGroup\ISPI\Rheingold]
+
+Copy ISTA-D Installation:
+========================
+Disable sleep states:
+https://www.dell.com/community/en/conversations/xps-desktops/xps-8940-solution-to-freezing-when-idle/6682096b83d4d23a6f10db24
+- C-States
+- Block Sleep
+
+Install and register Admin client.
+
+Copy directories:
+C:\Program Files\BMW
+C:\ProgramData\BMW\ISPI\data\TRIC\ISTA
+
+Exclude directories (allow write access for all users):
+C:\Program Files\BMW\ISPI\data\TRIC\ISTA\Logs\*
+C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\Temp\*
+C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\Transactions\*
+C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\FASTAOut\*
+
+Create directories (and allow write access for all users):
+C:\ProgramData\BMW\ISPI\logs\TRIC\FscValidation\
+C:\ProgramData\BMW\ISPI\logs\TRIC\ISTA\
+C:\ProgramData\BMW\ISPI\logs\TRIC\ISTALauncher\
+C:\ProgramData\BMW\ISPI\logs\TRIC\PsdzServiceHost\
+
+Allow write access for all users in:
+C:\Program Files\BMW\ISPI\data\TRIC\ISTA\Logs
+
+Copy Registry:
+[HKEY_LOCAL_MACHINE\SOFTWARE\BMWGroup]
+[HKEY_LOCAL_MACHINE\SOFTWARE\BMW]
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\BMWGroup]
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\BMW]
+[HKEY_CURRENT_USER\Software\BMWGroup]
+
+Debugging:
+=================
+Disable debugger detection in dnSpy (uncheck System.Diagnostics.Debugger option)!
+After message box has been shown, attach to process IstaOperation.exe
+
+Interesting breakpoints in RheingoldDiagnostics.dll:
+BMW.Rheingold.RheingoldSessionController.Logic.StartVehicleTest() or
+BMW.Rheingold.Diagnostics.VehicleIdent.DoVehicleIdentStep1() and BMW.Rheingold.Diagnostics.VehicleIdent.DoVehicleIdentStep2()
+BMW.Rheingold.Diagnostics.VehicleIdent.ExecuteEdiabasJobsForVehicleIdentification()
+BMW.Rheingold.RheingoldSessionController.EcuFunctions.EcuTest.Perform()
+BMW.Rheingold.Diagnostics.VehicleIdent.doECUReadFS()
+BMW.Rheingold.Diagnostics.VehicleIdent.doECUReadFS_Functional()
+BMW.Rheingold.Diagnostics.VehicleIdent.HandleRelevanceFlagAndFaultCode()
+BMW.Rheingold.Diagnostics.VehicleIdent.GetDtcRelevance()
+BMW.Rheingold.Diagnostics.VehicleIdent.doECUReadFSDetails()
+BMW.Rheingold.Diagnostics.VehicleIdent.SetDTCDetailValues()
+BMW.Rheingold.Diagnostics.VehicleIdent.PerformJobIstufeLesen()
+BMW.Rheingold.Diagnostics.VehicleIdent.ReadILevelBn2020()
+BMW.Rheingold.RheingoldSessionController.EcuFunctions.EcuFunctionService.PerformEcuFunctionServices()
+BMW.Rheingold.RheingoldSessionController.EcuFunctions.EcuFunctionService.RetrieveFunctionDefinition()
+BMW.Rheingold.RheingoldSessionController.EcuFunctions.EcuFunctionsReadStatus.DoReadStatus()
+BMW.Rheingold.RheingoldSessionController.EcuFunctions.EcuFunctionsReadStatus.DoReadStatusSingleShot()
+BMW.Rheingold.RheingoldSessionController.EcuFunctions.EcuFunctionComponentTrigger.DoTriggerComponent()
+View:
+ISTAGUI.interaction/views/interactionecufunctions.baml
+BMW.Rheingold.ISTAGUI.Interaction.ViewModels.InteractionEcuFunctionsViewModel
+Sort:
+1: SortOrderNullAtEnd (NULL == decimal.MaxValue)
+2: Title
+
+BMW.Rheingold.Programming.PsdzServiceStarter.ProgrammingService.StartPsdzServiceHost()
+BMW.Rheingold.Psdz.Client.PsdzServiceStarter.IsServerInstanceRunning()
+BMW.Rheingold.Psdz.Client.PsdzServiceClient()
+BMW.Rheingold.Programming.StartHostIfNotRunning()
+BMW.Rheingold.Programming.PsdzConfig.CreateServiceArgs()
+BMW.Rheingold.Programming.Common.ProgrammingUtils.NormalizeXmlText()
+
+PsdzServiceHost:
+BMW.Rheingold.Psdz.Services.ConfigurationService.RequestBaureihenverbund()
+BMW.Rheingold.Programming.ConnectToCar()
+BMW.Rheingold.Programming.ConnectToProject()
+BMW.Rheingold.Programming.ProgrammingEngine.States.ConnectToBn2020VehicleState.Handle(ProgrammingSession session)
+BMW.Rheingold.Programming.ProgrammingEngine.States.RetrieveTargetSelectorsState.Handle(ProgrammingSession session)
+BMW.Rheingold.Programming.ProgrammingEngine.States.RetrieveActualSwtEnablingCodesState.Handle(ProgrammingSession session)
+BMW.Rheingold.Programming.Common.TargetSelectorChooser.GetNewestTargetSelectorByMainSeries();
+BMW.Rheingold.Programming.ProgrammingEngine.SetSwtAction()
+BMW.Rheingold.Programming.ProgrammingEngine.States.RetrieveActualFaState()
+BMW.Rheingold.Psdz.PsdzObjectBuilder.BuildFa()
+BMW.Rheingold.Programming.Common.ProgrammingUtils.CreateTalFilter()
+BMW.Rheingold.Programming.TherapyPlan.ResetTargetFa() PsdzContext.FaActual -> PsdzContext.FaTarget
+BMW.Rheingold.Programming.ProgrammingEngine.SetFaTarget()
+ECU Filter:
+BMW.Rheingold.Programming.ProgrammingEngine.States.Handle()
+BMW.Rheingold.Programming.ProgrammingEngine.States.RetrieveSollverbauungState.GetSollverbauTalFilter()
+BMW.Rheingold.Programming.ProgrammingEngine.ProgrammingSession.Execute()
+BMW.Rheingold.Programming.ProgrammingEngine.ProgrammingSession.UpdateTalFilterForSelectedEcus()
+BMW.Rheingold.Programming.TherapyPlan.SwiActionTalFilterInfoObjectProgramming.Execute()
+BMW.Rheingold.Programming.ProgrammingEngine.States.ExecuteMPBState.Handle():
+session.UpdateTalFilterForAllEcus(ProgrammingUtils.EnabledTaCategories, TalFilterOptions.MustNot);
+session.UpdateTalFilterForAllEcus(new TaCategories[] { TaCategories.IdBackup}, TalFilterOptions.Allowed);
+
+BMW.Rheingold.Programming.ProgrammingEngine.States.StartEscalationState.Handle()
+session.UpdateTalFilterForSelectedEcus(new TaCategories[]{ TaCategories.CdDeploy}, list.ToArray(), TalFilterOptions.Must);
+session.UpdateTalFilterForSelectedEcus(new TaCategories[] {TaCategories.FscDeploy, TaCategories.FscDeployPrehwd}, list.ToArray(), TalFilterOptions.MustNot);
+ABL_LIF_DISABLE_FSC_AKTION_ALL_SG:
+TaCategories[] taCategories = new TaCategories[] { TaCategories.FscBackup };
+TalFilterOptions talFilterOptions = TalFilterOptions.MustNot;
+programmingSession.UpdateTalFilterForAllEcus(taCategories, talFilterOptions);
+
+TaCategories[] taCategories2 = new TaCategories[] { TaCategories.FscDeploy };
+TalFilterOptions talFilterOptions2 = TalFilterOptions.MustNot;
+programmingSession2.UpdateTalFilterForAllEcus(taCategories2, talFilterOptions2);
+
+TaCategories[] taCategories3 = new TaCategories[] { TaCategories.FscDeployPrehwd };
+TalFilterOptions talFilterOptions3 = TalFilterOptions.MustNot;
+programmingSession3.UpdateTalFilterForAllEcus(taCategories3, talFilterOptions3);
+
+BMW.Rheingold.Module.ISTA.ABL_LIF_REMOVE_ELEMENTS_FROM_VO.Start() -> SetFaTarget()
+BMW.Rheingold.Module.ISTA.ABL_LIF_REMOVE_ELEMENTS_FROM_VO.run()
+BMW.Rheingold.Module.ISTA.ABL_LIF_ADD_ELEMENTS_TO_VO.run()
+BMW.Rheingold.Module.ISTA.ABL_AUS_RETROFITPROTECTIONOFFOOTWEARACTIVATION.Change_FA()
+BMW.Rheingold.Module.ISTA.ABL_AUS_RETROFITFOOTWELLTEMPACTIVATION.Change_FA()
+BMW.Rheingold.Module.ISTA.ABL_AUS_RETROFITSEATBELTWARNAKTIVATION.Change_FA()
+BMW.Rheingold.Module.ISTA.ABL_AUS_RETROFITSETOILINTERVALTOSA8KB_S.Change_FA()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetOverallVehicleTestModules()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.SelectXepInfoObjects()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetSwiActionsForRegister()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetSwiActionsForEcuVariant()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetServiceProgramsForSwiAction()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetSwiActionsLinkedToSwiActionId()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetEcuProgrammingVariantByName();
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetSwiActionsForEcuProgrammingVariant()
+BMW.Rheingold.Programming.ProgrammingEngine.States.FillTherapyPlanState.AddServiceProgrammsToSwiAction()
+BMW.Rheingold.Programming.Controller.SecureCoding.SecureCodingManager.RequestOnlineNcdCalculation()
+BMW.Rheingold.Programming.Controller.SecureCoding.RequestOnlineNcdCalculationViaIsta()
+BMW.Rheingold.Programming.Controller.SecureCoding.SecureCodingLogic.ReturnNcdsToBeCalculated()
+BMW.Rheingold.Programming.Controller.SecureCoding.SecureCodingLogic.GenerateRequestFileForNcdCalculation()
+BMW.Rheingold.Programming.Controller.SecureCoding.SecureCodingLogic.GetCafdCalculatedInSCB()
+BMW.Rheingold.Programming.ProgrammingEngine.States.CheckSoftwareAvailabilityState.Handle(ProgrammingSession session)
+BMW.Rheingold.Programming.ProgrammingEngine.States.ExecuteIndividualDataBackupTalState.Handle(ProgrammingSession session)
+BMW.Rheingold.Programming.TherapyPlan.UpdateMsmTslUpdate.UpdateTsl()
+BMW.Rheingold.Module.ISTA.ModuleBootstrapLoader.CompileOnTheFly()
+BMW.Rheingold.Programming.TherapyPlan.TherapyPlanModel.CompareFa()
+BMW.Rheingold.Programming.TherapyPlan.VehicleConversionManager.ReadVehicleModifactionRegisters()
+
+Tab Change:
+IstaNavigationTabController.NavigateTo()
+EcuExchangePreExchangeViewModel.HandleSelectEcuPreExchange()
+
+InParameter:
+"faElementsToAdd": +MFSG
+"faElementsToAdd": +ATEF
+"faElementsToAdd": $8KB
+"faElementsToRem": $8KA $8KC $8KD $8KE $8KF $8KG $8KH $8KK $8KL $8KM $8KN $8KP $984 $988 $8ST
+
+Base:         {G031#0317*JM71%0300&BYAT$1CA$1CB$205$230$23F$255$2VB$302$320$3AA$420$423$428$488$494$4K8$4T8$4UR$508$534$548$552$575$5A1$5AC$5AT$609$650$676$6AC$6AE$6AK$6AM$6AN$6AP$6NW$6WD$7XP$801$851$879$8KA$8R9$8TF$9AA$9BD-A090}
+              {G031#0317*JM71%0300&BYAT$1CA$1CB$205$230$23F$255$2VB$302$320$3AA$420$423$428$488$494$4K8$4T8$4UR$508$534$548$552$575$5A1$5AC$5AT$609$650$676$6AC$6AE$6AK$6AM$6AN$6AP$6NW$6WD$7XP$801$851$879$8KA$8R9$8TF$9AA$9BD-A090+MFSG}
+Salapas:
+Oil 12/8000:  {G031#0317*JM71%0300&BYAT$1CA$1CB$205$230$23F$255$2VB$302$320$3AA$420$423$428$488$494$4K8$4T8$4UR$508$534$548$552$575$5A1$5AC$5AT$609$650$676$6AC$6AE$6AK$6AM$6AN$6AP$6NW$6WD$7XP$801$851$879$8R9$8TF$9AA$9BD$8KP-A090}
+Oil 12/12000: {G031#0317*JM71%0300&BYAT$1CA$1CB$205$230$23F$255$2VB$302$320$3AA$420$423$428$488$494$4K8$4T8$4UR$508$534$548$552$575$5A1$5AC$5AT$609$650$676$6AC$6AE$6AK$6AM$6AN$6AP$6NW$6WD$7XP$801$851$879$8R9$8TF$9AA$9BD$8KM-A090}
+Oil 12/15000: {G031#0317*JM71%0300&BYAT$1CA$1CB$205$230$23F$255$2VB$302$320$3AA$420$423$428$488$494$4K8$4T8$4UR$508$534$548$552$575$5A1$5AC$5AT$609$650$676$6AC$6AE$6AK$6AM$6AN$6AP$6NW$6WD$7XP$801$851$879$8R9$8TF$9AA$9BD$8KL-A090}
+Oil 18/15000: {G031#0317*JM71%0300&BYAT$1CA$1CB$205$230$23F$255$2VB$302$320$3AA$420$423$428$488$494$4K8$4T8$4UR$508$534$548$552$575$5A1$5AC$5AT$609$650$676$6AC$6AE$6AK$6AM$6AN$6AP$6NW$6WD$7XP$801$851$879$8R9$8TF$9AA$9BD$8KK-A090}
+Oil 18/20000: {G031#0317*JM71%0300&BYAT$1CA$1CB$205$230$23F$255$2VB$302$320$3AA$420$423$428$488$494$4K8$4T8$4UR$508$534$548$552$575$5A1$5AC$5AT$609$650$676$6AC$6AE$6AK$6AM$6AN$6AP$6NW$6WD$7XP$801$851$879$8R9$8TF$9AA$9BD$8KH-A090}
+Oil 24/25000: {G031#0317*JM71%0300&BYAT$1CA$1CB$205$230$23F$255$2VB$302$320$3AA$420$423$428$488$494$4K8$4T8$4UR$508$534$548$552$575$5A1$5AC$5AT$609$650$676$6AC$6AE$6AK$6AM$6AN$6AP$6NW$6WD$7XP$801$851$879$8R9$8TF$9AA$9BD$8KB-A090}
+
+this.addedElements:
+HOWords:
+Base: -A090
+EWords:
+M-Performence: +MFSG
+Footwell lower temp: +ATEF
+Optic belt warning: +RSBR
+Alternate freq: +AFFO
+Evaporator min temp: +TEMP
+Ventilation after clamp change: +OFME
+Motion sensor key activate: +AMSI
+Break strong: +TRBR
+Break weak: +TRB2
+Light sensitive: +FLCE
+Light insensitive: +FLCU
+Fan auto: +AKSD
+Rear Window heat always: +DHFK
+Air circulation memory: +EULM
+Salapas:
+Oil Standard: $8KA
+Oil 12/8000:  $8KP
+Oil 12/12000: $8KM
+Oil 18/15000: $8KK
+Oil 18/20000: $8KH
+Oil 24/25000: $8KB
+
+Service program mapping:
+-------------------------------------------------------------------------------------
+SWI action 'FZA_CU_RETROFITAFFOLLOWING_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITAFFOLLOWING(1)]}]
+SWI action 'FZA_CU_RETROFITVAPORMINTEMPERATUREADD_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITVAPORMINTEMPERATUREADD(1)]}]
+SWI action 'FZA_CU_RETROFITFANSPEEDAUTOMATICOPERATIONENABLING_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITFANSPEEDAUTOMATICOPERATIONENABLING(1)]}]
+SWI action 'FZA_CU_RETROFITAIRMEMORYHOTCOUNTRYACTIVATION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITAIRMEMORYHOTCOUNTRYACTIVATION_S15A(1)]}]
+SWI action 'FZA_CU_RETROFITOFFMEMORYACTIVATION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITOFFMEMORYACTIVATION(1)]}]
+SWI action 'FZA_CU_RETROFITCONTINUOUSHEATINGFUNCTION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITCONTINUOUSHEATINGFUNCTION(1)]}]
+SWI action 'FZA_CU_RETROFITRLSTHRESHOLDSENSITIVE_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITRLSTHRESHOLDSENSITIVE_F025(1)]}]
+SWI action 'FZA_CU_RETROFITRLSTHRESHOLDNOTSENSITIVE_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITRLSTHRESHOLDNOTSENSITIVE_F025(1)]}]
+SWI action 'FZA_CU_RETROFITSEATBELTWARNAKTIVATION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITSEATBELTWARNAKTIVATION(1)]}]
+SWI action 'FZA_CU_RETROFITDSCDRYBRAKINGSTRONG_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITDSCDRYBRAKINGSTRONG_F020(1)]}]
+SWI action 'FZA_CU_RETROFITDSCDRYBRAKINGWEAK_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITDSCDRYBRAKINGWEAK(1)]}]
+SWI action 'FZA_CU_RETROFITKEYMOTIONSENSOR_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITKEYMOTIONSENSOR(1)]}]
+SWI action 'FZA_CU_RETROFITSETOILINTERVALTOSA8KP_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1),ABL-MNF-AG6100_CBS_PROGNOSERESET_OEL_UDS(2)]},{AUS[ABL-AUS-RETROFITSETOILINTERVALTOSA8KP_S1(1)]}]
+SWI action 'FZA_CU_RETROFITSETOILINTERVALTOSA8KM_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1),ABL-MNF-AG6100_CBS_PROGNOSERESET_OEL_UDS(2)]},{AUS[ABL-AUS-RETROFITSETOILINTERVALTOSA8KM_S(1)]}]
+SWI action 'FZA_CU_RETROFITSETOILINTERVALTOSA8KL_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1),ABL-MNF-AG6100_CBS_PROGNOSERESET_OEL_UDS(2)]},{AUS[ABL-AUS-RETROFITSETOILINTERVALTOSA8KL_S(1)]}]
+SWI action 'FZA_CU_RETROFITSETOILINTERVALTOSA8KK_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1),ABL-MNF-AG6100_CBS_PROGNOSERESET_OEL_UDS(2)]},{AUS[ABL-AUS-RETROFITSETOILINTERVALTOSA8KK_S(1)]}]
+SWI action 'FZA_CU_RETROFITSETOILINTERVALTOSA8KB_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1),ABL-MNF-AG6100_CBS_PROGNOSERESET_OEL_UDS(2)]},{AUS[ABL-AUS-RETROFITSETOILINTERVALTOSA8KB_S(1)]}]
+SWI action 'FZA_CU_RETROFITSETOILINTERVALTOSA8KH_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1),ABL-MNF-AG6100_CBS_PROGNOSERESET_OEL_UDS(2)]},{AUS[ABL-AUS-RETROFITSETOILINTERVALTOSA8KH_S(1)]}]
+SWI action 'FZA_UR_RETROFITSPORTBREAKADD_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITSPORTBREAKADD_S15A(1)]}]
+SWI action 'FZA_UR_RETROFITOPENHATCHWITHOUTUNLOCKACTIVATION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETR_OP_HATCH_ONLY_UNLOCK_ACTIV(1)]}]
+SWI action 'FZA_UR_RETROFITTEMPERATUREOFFSETMINUS1K_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITTEMPERATUREOFFSETMINUS1K_F010(1)]}]
+SWI action 'FZA_UR_RETROFITTEMPERATUREOFFSETMINUS2K_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITTEMPERATUREOFFSETMINUS2K_F010(1)]}]
+SWI action 'FZA_UR_RETROFITTEMPERATUREOFFSETMINUS3K_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITTEMPERATUREOFFSETMINUS3K_F010(1)]}]
+SWI action 'FZA_UR_RETROFITTEMPERATUREOFFSETPLUS1K_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITTEMPERATUREOFFSETPLUS1K(1)]}]
+SWI action 'FZA_UR_RETROFITTEMPERATUREOFFSETPLUS2K_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITTEMPERATUREOFFSETPLUS2K_F010(1)]}]
+SWI action 'FZA_UR_RETROFITTEMPERATUREOFFSETPLUS3K_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITTEMPERATUREOFFSETPLUS3K_F010(1)]}]
+SWI action 'FZA_UR_RETROFITDEACTIVATIONOFAUTOMATICRECIRCULATIONCONTROL_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITAUTOMATICAIRCIRCULATIONDEACTIVATION(1)]}]
+SWI action 'FZA_UR_RETROFIT_DEACTIVATION_HD_TELEPHONY_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITDEACTIVATIONHDTELEFONIE(1)]}]
+SWI action 'FZA_UR_RETROFITPRELCICLIMATCOMFORT_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITPRELCICLIMATCOMFORT(1)]}]
+SWI action 'FZA_NR_RETROFITADDDRIVEBACKCAMERA_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITADDDRIVEBACKCAMERA(1)]}]
+SWI action 'FZA_NR_RETROFITMULTIFUNKTIONALESINSTRUMENTENDISPLAY_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITMULTIFUNKTIONALESINSTRUMENTENDISPLAY_S15A(1)]}]
+SWI action 'FZA_NR_RETROFITAUXILIARYHEATER_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITSTANDINGHEATERADD(1)]}]
+SWI action 'FZA_NR_RETROFITHITCHELECTRICALLYROTATABLEADD_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITHITCHELECTRICALLYROTATABLEADD(1)]}]
+SWI action 'FZA_NR_RETROFITHITCHREMOVEABLE_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITHITCHREMOVEABLE_F025(1)]}]
+SWI action 'FZA_NR_RETROFITSTEERINGWHEELHEATING_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITSTEERINGWHEELHEATING(1)]}]
+SWI action 'FZA_NR_RETROFITDRIVEWITHROCKERSWITCH',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITDRIVEWITHROCKERSWITCH(1)]}]
+SWI action 'FZA_NR_RETROFITSPORTAUTOMATIKDRIVEROCKERSWITCH_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITSPORTAUTOMATIKDRIVEROCKERSWITCH(1)]}]
+SWI action 'FZA_NR_RETROFITLASERLIGHTS2_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITLASERLIGHTS(1)]}]
+SWI action 'FZA_NR_RETROFITMSEATS_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITMSEATS(1)]}]
+SWI action 'FZA_CU_RETROFITREFRIGERANTCIRCULATIONDEACTIVATION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITREFRIGERANTCIRCULATIONDEACTIVATION(1)]}]
+SWI action 'FZA_CU_RETROFITTELEMATICDEACTIVATIONADD_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITTELEMATICDEACTIVATIONADD(1)]}]
+SWI action 'FZA_CU_RETROFITDRIVERSEATBELTREMINDERDEACTIVATION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITDRIVERSEATBELTREMINDERDEACTIVATION(1)]}]
+SWI action 'FZA_CU_RETROFITPASSENGERSEATBELTREMINDERDEACTIVATION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITPASSENGERSEATBELTREMINDERDEACTIVATION(1)]}]
+SWI action 'FZA_CU_RETROFITRECIRCULATIONMODEAUTOMATICDEACTIVATION_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITRECIRCULATIONMODEAUTOMATICDEACTIVATION(1)]}]
+SWI action 'FZA_CU_RETROFITCADEACTIVATE_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITCADEACTIVATE(1)]}]
+SWI action 'FZA_CU_RETROFITROWDEACTIVATE_S15A',  linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITROWDEACTIVATE(1)]}]
+SWI action 'FZA_CU_RETROFITPROTECTIONOFFOOTWEARACTIVATION_S15A',  keep linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITPROTECTIONOFFOOTWEARACTIVATION(1)]}]
+SWI action 'FZA_CU_RETROFITREDUCTIONFOOTWELLTEMPERATURACTIVATE_S15A',  keep linked service programms: [{MNF[ABL-MNF-ALIGN_VEHICLE_ORDER(1)]},{AUS[ABL-AUS-RETROFITFOOTWELLTEMPACTIVATION(1)]}]
+-------------------------------------------------------------------------------------
+
+ENET VoltageCheck:
+BMW.Rheingold.Diagnostics.Common.VoltageUtils.CheckVoltageForEthernetConnection()
+"G_MOTOR", "STATUS_LESEN", "ARG;MESSWERTE_IBS2015" -> STAT_SPANNUNG_IBS2015_WERT
+"G_MOTOR", "STATUS_MESSWERTE_IBS" -> Result: STAT_U_BATT_WERT
+
+Patch for fixed voltage
+--------------------------------
+if (num == null)
+{
+	num = new double?(14.0);
+}
+--------------------------------
+
+BMW.Rheingold.xVM:
+VCIEnetHsfzService.ZGWBroadcastSendCyclic(), ReceiveCallback(),
+VciDeviceService.CyclicBroadcastDeviceRequest(), VciDeviceService.ReceiveData(), VciDeviceService.CreateVciDevices()
+SLP.ScanDeviceFromAttrList()
+Match: "(DevId=),(Service=),(Serial=),(MacAddress=),(DevType=ENET),(ImageVersionBoot=),(ImageVersionApplication=),(ImageVersionPackage=),(Color=#ffffff),(Counter=),(State=4),(Owner=),(Kl15Voltage=),(Kl30Voltage=),(SignalStrength=),(VIN=),(Gateway=),(AccuCapacity=),(PowerSupply=0),(VciChannels=[0?;1?;2?;3+]),(Netmask=),(NetworkType=),(UUID=),(Port=6801),(ControlPort=),(PwfState=)"
+"(DevId=WBA3X11010GV35856),(Service=),(Serial=DIAGADR10BMWMAC001A375355E5BMWVINWBA3X11010GV35856),(MacAddress=001A375355E5),(DevType=ENET),(ImageVersionBoot=),(ImageVersionApplication=),(ImageVersionPackage=),(Color=#ffffff),(Counter=),(State=4),(Owner=),(Kl15Voltage=),(Kl30Voltage=),(SignalStrength=),(VIN=WBA3X11010GV35856),(Gateway=),(AccuCapacity=),(PowerSupply=0),(VciChannels=[0?;1?;2?;3+]),(Netmask=),(NetworkType=),(UUID=),(Port=6801),(ControlPort=),(PwfState=)"
+BMW.Rheingold.CoreFramework.DatabaseProvider
+VCIDevice.GetClamp30(), VCIDevice.GetClamp15()
+
+Checks for ISTA-D Update:
+=========================
+Export the source of the following modules:
+- RheingoldCoreFramework.dll
+- RheingoldPresentationFramework.dll
+- RheingoldSessionController.dll
+- RheingoldDiagnostics.dll
+
+Update XML files in EdiabasLib\BmwDeepObd\VehicleInfo from: RheingoldDiagnostics\Diagnostics\EcuCharacteristics\Xml
+Compare: RheingoldDiagnostics\Diagnostics\VehicleLogistics.cs: GetCharacteristics(), MRXEcuCharacteristics()
+
+Read status processing:
+=======================
+EcuFunctionsReadStatus.DoReadStatus()
+EcuFunctionsReadStatus.DoReadStatusSingleShot()
+- ecuReadingTaskData.FixedFunctions: list of functions
+- function.Jobs: list of jobs for function
+- execute job: ECUKom.apiJob()
+EcuFunctionsReadStatus.ProcessJobResults()
+EcuFunctionsReadStatus.ConvertResultValue():
+ value valid: value = value * (ecuResult.Multiplikator ?? 1m) + (ecuResult.Offset ?? 0m);
+ value not valid: FindMatchingValue() or ConvertToString()
+
+Get ECU function info (DiagDocDb.sqlite: Open with SQLiteStudio type=System.Data.SQLite)
+EcuFunctionService.RetrieveFunctionDefinition()
+ - GetEcuFunctionStructure()
+ - SQL XEP_ECUGROUPS: GetEcuGroupByName(), match name (e.g. "d_ehc" id=1036022155)
+ - SQL XEP_ECUGROUPFUNCTIONS: GetEcuGroupFunctionsByEcuGroupId(), match ecugroupid (e.g. ecugroupid=1036022155 -> id=2000000263355)
+ - SQL XEP_ECUVARFUNCTIONS: GetEcuVariantFunctionByNameAndEcuGroupFunctionId(), match name and ecugroupfunctionid (e.g. name="ehc_e65" id=2000000263355 -> id=2000000264079)
+ - SQL XEP_REFECUFUNCSTRUCTS: match all ids with ecuvariantfunctionid (e.g. id=2000000264079 -> ecufuncstructid=2000001159839, 2000001162603, 2000001179895, 2000001182931 ...)
+ - SQL XEP_ECUFUNCSTRUCTURES: GetEcuFunctionStructureById(), match ecuFunctionstructureid
+ - SQL XEP_ECUVARIANTS: GetEcuVariantByName(), match name (e.g. "ehc_e65" -> id=1036031243, ecugroupid=1036022155)
+ - SQL XEP_REFECUVARIANTS: match id from XEP_ECUVARIANTS (e.g. 1036031243 -> id=2000000264079)
+ - SQL XEP_ECUFIXEDFUNCTIONS: GetEcuFixedFunctionsByParentId(), match parentid from XEP_REFECUVARIANTS (e.g. 2000001182931 -> 2000001222439, 2000001222443)
+ - SQL XEP_NODECLASSES: name="ECUFixedFunctionReadingIdentification" -> id=7164418
+ - SQL GetFixedFunctionEcuJobsByNodeClass(), match nodeClass (e.g. nodeClass=7164418)
+ - SQL XEP_ECUJOBS or XEP_REFECUJOBS: GetEcuJobsWithParameters(), match nodeClass and ecuFixedFunctionId (e.g. 2000001222439 -> id=2000001356499 name="LESEN_ANALOGWERTE")
+
+DPF Regeneration:
+=================
+ABL_DIT_AS1365_BX7_DPFREG.Regeneration()
+DPFREG.xml:
+configurationContainer.AddRunOverride("/Run/Group/G_MOTOR/VirtualVariantJob/ABGLEICH_CSF_PROG/Argument/ECUGroupOrVariant");
+EDIABASAdapter.DoParameterization();
+ECUKom.apiJob("D83BX7C0", "ABGLEICH_CSF_PROG", "EEPROM;QFL;200")
+ServiceFilter: BMW.Rheingold.ISTAGUI.Interaction.ViewModels.InteractionFilterSettingsViewModel, SetAll(), ExecuteSetDefaultSettings(), OnCommit()
+Filter: BMW.Rheingold.CoreFramework.DatabaseProvider.InfoObjFilter CompareDefaultWithCurrent()
+BMW.Rheingold.CoreFramework.DatabaseProvider.InfoBrowserTree.InfoBrowserTreeDiagnosisObjectsTreeAdapter.GetDiagnosisObjectChildren(), FindSearchStartNode()
+BMW.Rheingold.CoreFramework.DatabaseProvider.DatabaseTree.DiagnosisObjectsTreeNode.IsNodeValid()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetInfoObjectsByDiagObjectControlId(), IsInfoObjectValid(), GetInfoObjectObjectId()
+BMW.Rheingold.DatabaseProvider.SQLiteConnector.GetDiagObjectsByNodeclassName("DiagnosticObjectServicefunctionRoot");
+
+SaLaPa:
+=======
+doECUReadFA()
+BN2000:
+ D_CAS/D_LM/D_KBM C_FA_LESEN -> FA_STREAM2STRUCT -> STANDARD_FA -> SA_ANZ, SA_X, HO_WORT_ANZ, HO_WORT_X, E_WORT_ANZ, E_WORT_X, ZUSBAU_ANZ, ZUSBAU_X ->  UpdateFA(SA, HO, E, ZUSBAU)
+
+BN2020:
+ G_ZGW/ZGW_01 STATUS_VCM_GET_FA -> STAT_SALAPA, STAT_HO_WORTE, STAT_E_WORTE -> UpdateFA(SA, HO, E)
+ G_CAS STATUS_FAHRZEUGAUFTRAG -> FA_STREAM2STRUCT -> STANDARD_FA -> SA_ANZ, SA_X, HO_WORT_ANZ, HO_WORT_X, E_WORT_ANZ, E_WORT_X, ZUSBAU_ANZ, ZUSBAU_X ->  UpdateFA(SA, HO, E, ZUSBAU)
+ BACKUP:
+ - G_FRM:
+   G_FRM STATUS_LESEN ARG;VCM_DID_FA1 -> STAT_FAHRZEUGAUFTRAG_TEIL_1_DATA
+   G_FRM STATUS_LESEN ARG;VCM_DID_FA2 -> STAT_FAHRZEUGAUFTRAG_TEIL_2_DATA
+   DecodeVCMBackupFA()
+ - G_KOMBI:
+   G_KOMBI STATUS_VCM_BACKUP_FAHRZEUGAUFTRAG_LESEN ->STAT_FAHRZEUGAUFTRAG_TEIL_1_WERT, STAT_FAHRZEUGAUFTRAG_TEIL_2_WERT
+   DecodeVCMBackupFA()
+
+ UpdateFA:
+  prodArt = GetProdArt(vecInfo);
+  GetSaLaPaByProductTypeAndSalesKey(prodArt, saKey) -> SetSpecialEquipment, SetHOWordList, SetEWordList, 
+
+Log files:
+==========
+ISTA creates a log file xxxIcomLogs*.tgz, this file is protected with the password: 3DkDxnKQZ1
+obd.log contains the api and ifh log.
+
+BMW ICOM:
+=========
+Get IP from ISTA+ search dialog or iToolRadar:
+Standard settings:
+X.X.X.X:58000
+
+Firmware update:
+X.X.X.X:60080
+Name: root
+PW: NZY11502 (A1) or NZY1150263 (A2)
+
+Firmware Images:
+C:\ProgramData\BMW\ISPI\data\TRIC\ICOM\ICOM-Image-XXXX
+
+At startup ICOM requires an ident broadcast to port 7811 from the ZGW.
+Afterwarts it requests the ECU port configuration with: C3 DF F1 22 17 2A F6
+
+For testing two network adapters are required
+Disable: seletive supend, enery efficient ethernet, all protocols that are not required
+1. LAN: Fix IP 192.168.201.1 / 255.255.255.0
+2. OBD: DHCP
+
+Soap Reserve (Port 5302):
+=========================
+POST /ivm/services/ConnectorService HTTP/1.1
+Content-Type: text/xml; charset=utf-8
+SOAPAction: "http://www.bmw.com/services/ivm/Connector/v1/IVMConnector/reserveDevice"
+Host: 192.168.10.221:5302
+Content-Length: 260
+Expect: 100-continue
+Accept-Encoding: gzip, deflate
+Connection: Keep-Alive
+
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><reserveDevice xmlns="http://www.bmw.com/services/ivm/Connector/v1"><deviceId>ICOM1120134</deviceId><owner>PCULRICHHOME3</owner><hostLock>0</hostLock></reserveDevice></s:Body></s:Envelope>HTTP/1.0 200 OK
+Content-Type: text/xml;charset="utf-8"
+Content-Length: 429
+content-length: 429
+Connection: Keep-Alive
+Keep-Alive: timeout=5, max=5
+
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+	<S:Body>
+	<ns2:reserveDeviceResponse xmlns="http://connector.auriga.nubix.com" xmlns:ns2="http://www.bmw.com/services/ivm/Connector/v1" xmlns:ns3="http://manager.auriga.nubix.com" xmlns:ns4="http://www.bmw.com/ibase/beans">
+		<ns2:out>
+			<error>0</error>
+			<handle>132288249274725464</handle>
+		</ns2:out>
+	</ns2:reserveDeviceResponse>
+	</S:Body>
+</S:Envelope>
+
+No host:
+========
+POST /nVm HTTP/1.1
+User-Agent: Jakarta Commons-HttpClient/3.1
+Host: 192.168.10.221:5302
+Content-Length: 838
+Content-Type: multipart/form-data; boundary=B_IZiIUcUrMpbqvNWoNhZO5BBpMvPyYAB
+
+--B_IZiIUcUrMpbqvNWoNhZO5BBpMvPyYAB
+Content-Disposition: form-data; name="FunctionName"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+
+nvmAllocateDevice
+--B_IZiIUcUrMpbqvNWoNhZO5BBpMvPyYAB
+Content-Disposition: form-data; name="com.nubix.nvm.commands.Allocate"; filename="com.nubix.nvm.commands.Allocate"
+Content-Type: application/octet-stream; charset=ISO-8859-1
+Content-Transfer-Encoding: binary
+
+<?xml version='1.0'?><!DOCTYPE wddxPacket SYSTEM 'http://www.openwddx.org/downloads/dtd/wddx_dtd_10.txt'><wddxPacket version='1.0'><header/><data><struct><var name='DeviceOwner'><string>EXPERT</string></var><var name='IfhClientIpAddr'><string>ANY_HOST</string></var><var name='IfhClientTcpPorts'><string>IP_PORT_ANY</string></var></struct></data></wddxPacket>
+--B_IZiIUcUrMpbqvNWoNhZO5BBpMvPyYAB--
+HTTP/1.0 200 OK
+Content-Type: text/html
+Content-Length: 379
+content-length: 379
+Connection: Close
+
+<?xml version='1.0'?>
+<!DOCTYPE wddxPacket SYSTEM 'wddx_dtd_10.dtd'>
+<wddxPacket version="1.0">
+<header><comment>nVmAllocateDevice</comment></header>
+<data>
+<struct>
+<var name="Status"><struct><var name="code"><number>0</number></var><var name="msg"><number>0</number></var><var name="params"><array length="1"><null /></array></var></struct></var></struct></data>
+</wddxPacket>
+
+Soap Release (Port 5302):
+=========================
+Request:
+POST /ivm/services/ConnectorService HTTP/1.1
+Content-Type: text/xml; charset=utf-8
+SOAPAction: "http://www.bmw.com/services/ivm/Connector/v1/IVMConnector/releaseDevice"
+Host: 192.168.10.221:5302
+Content-Length: 245
+Expect: 100-continue
+Accept-Encoding: gzip, deflate
+Connection: Keep-Alive
+
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><releaseDevice xmlns="http://www.bmw.com/services/ivm/Connector/v1"><deviceId>ICOM1120134</deviceId><handle>132288249274725464</handle></releaseDevice></s:Body></s:Envelope>HTTP/1.0 200 OK
+Content-Type: text/xml;charset="utf-8"
+Content-Length: 389
+content-length: 389
+Connection: Keep-Alive
+Keep-Alive: timeout=5, max=5
+
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+	<S:Body>
+	<ns2:releaseDeviceResponse xmlns="http://connector.auriga.nubix.com" xmlns:ns2="http://www.bmw.com/services/ivm/Connector/v1" xmlns:ns3="http://manager.auriga.nubix.com" xmlns:ns4="http://www.bmw.com/ibase/beans">		<ns2:out>
+			<error>0</error>
+		</ns2:out>
+	</ns2:releaseDeviceResponse>
+	</S:Body>
+</S:Envelope>
+
+No host:
+========
+POST /nVm HTTP/1.1
+User-Agent: Jakarta Commons-HttpClient/3.1
+Host: 192.168.10.221:5302
+Content-Length: 727
+Content-Type: multipart/form-data; boundary=vArme02j6FQ28vlwaBozTtKMAEta8F3WgKjibB
+
+--vArme02j6FQ28vlwaBozTtKMAEta8F3WgKjibB
+Content-Disposition: form-data; name="FunctionName"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+
+nvmReleaseDevice
+--vArme02j6FQ28vlwaBozTtKMAEta8F3WgKjibB
+Content-Disposition: form-data; name="com.nubix.nvm.commands.Release"; filename="com.nubix.nvm.commands.Release"
+Content-Type: application/octet-stream; charset=ISO-8859-1
+Content-Transfer-Encoding: binary
+
+<?xml version='1.0'?><!DOCTYPE wddxPacket SYSTEM 'http://www.openwddx.org/downloads/dtd/wddx_dtd_10.txt'><wddxPacket version='1.0'><header/><data><struct><var name='DeviceOwner'><string>EXPERT</string></var></struct></data></wddxPacket>
+--vArme02j6FQ28vlwaBozTtKMAEta8F3WgKjibB--
+HTTP/1.0 200 OK
+Content-Type: text/xml;charset="utf-8"
+Content-Length: 178
+content-length: 178
+Connection: Close
+
+<?xml version='1.0'?>
+<!DOCTYPE wddxPacket SYSTEM 'wddx_dtd_10.dtd'>
+<wddxPacket version="1.0">
+<header><comment>nvmReleaseDevice</comment></header>
+<data>
+</data>
+</wddxPacket>
+
+Free windows reserved ports:
+============================
+List ports:
+netsh interface ipv4 show excludedportrange protocol=tcp
+Exclude port 3496:
+Reboot in safe mode (restart + shift)
+netsh int ipv4 add excludedportrange protocol=tcp startport=3496 numberofports=1
+
+Sync the folders:
+=================
+\\Vm-win11\c\Program Files\BMW -> C:\Program Files\BMW
+\\Vm-win11\c\ProgramData\BMW\ISPI\data\TRIC\ISTA -> C:\ProgramData\BMW\ISPI\data\TRIC\ISTA
+Sync Filter:
+\ISPI\TRIC\ISTA\Logs\*
+\Temp\*
+\Transactions\*
+\FASTAOut\*
+
+Allow all user to access folders after ISTA copy:
+=================================================
+C:\Program Files\BMW\ISPI\TRIC\ISTA\Ediabas\Security\S29
+C:\Program Files\BMW\ISPI\TRIC\ISTA\Logs
+C:\ProgramData\BMW\ISPI\logs\TRIC\[All Subfolders]
+C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\[All Subfolders except: Microsoft*]
+
+After update delete all content in (allow write access for folders in C:\ProgramData\BMW\ISPI\data\TRIC\ISTA):
+(Create folders if missing)
+===================================
+C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\FASTAOut
+C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\Transactions
+C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\Temp\[All files and folders except ncd]
+
+RPLUS:ICOM_P Telegram encoding:
+===============================
+Header:
+
+Action blocks:
+<ActionLen L> <ActionLen H> <Action Type L> <Action Type H> <Data>
+Action types:
+01: IDENTIFICATION <Len H> <Len L> <string>
+02: CHECKCOMPATIBILITY (version 0x0100) 00 01 00 00
+03: COMPATIBILITY (ok) 01 00
+
+NMPLen: Complete length of all NMP telegram bytes
+NMPCnt: NMP tel counter, echoed in response (starts with 1)
+
+4E 4D 50 40 <NMPLen L> <NMPLen H> <NMP Head length L 14> <NMP Head length H 0> 00 02 <ActionBlocks L> <ActionBlocks H> <NMPCnt L> <NMPCnt H> 00 00 <NMPLen L> <NMPLen H> 00 00
+
+status_code:
+0: IFHREADY
+1: IFHBUSY
+2: IFHERROR
+
+Content:
+DataType:
+04: int
+07: string
+08: binary
+09: structure
+
+DataSubtype:
+00: Normal
+01: Config parameter
+
+54 4D <Data Len LL> <Data Len L> <Data Len H> <Data Len HH> 10 02 00 00 <Channel L> <Channel H> <NMPCnt L> <NMPCnt H> 00 01 00 00 <IfhCmd L> <IfhCmd H> 00 00 <NumDataBlocks L> <NumDataBlocks H>
+Block: <DataType> 00 <DataSubtype> 00 <Content Len LL> <Content Len L> <Content Len H> <Content Len HH> <Content>
+
+Param content:
+<Param id> 00 <Param type> 00 <Param value 1> <Param value 2>
+Param type string: Param value 1 / 2 : FF FF
+Block 3 (string): <DataType = 07> 00 <DataSubtype = 00> 00 <Content Len LL> <Content Len L> <Content Len H> <Content Len HH> <Content>
+
+ifhInit: request 3 blocks (int <1> / string <unit> / string <application>), response 1 block (int <error_code>)
+ifhNotifyConfig: request 2 / 3 blocks (string <name> / config param <ifh param> / (string <path>)), response 1 block (int <error_code>)
+ifhConnect: request 1 block (string <sgbd>), response 1 block (int <error_code>)
+ifhOpenChannel: request 0 blocks, response 2 blocks (int <error_code>, int<channel>)
+ifhGetIfhStatus: not transmitted
+ifhRequestState: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<state>)
+ifhVersion: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<version>)
+ifhInterfaceType: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<name>)
+ifhIgnition: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<voltage ulong mV>)
+ifhGetPort: request 1 block (binary <port index>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<port value>)
+ifhSetPort: request 1 block (binary <1 byte port index, 2 byte data, 00 00>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+ifhSetProgVoltage: request 1 block (binary <2 byte voltage>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+ifhSwitchSiRelais: request 1 block (binary <2 byte time>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+ifhLoopTest: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<status>)
+ifhRawMode: request 1 block (binary <request>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<response>)
+ifhReset: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+ifhWarmStart: request 1 block (binary <00 00 00 00>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+ifhRequestKeyBytes: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<data>)
+ifhPowerSupply: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<voltage ulong mV>)
+ifhPassGetConfig: request 1 block (string <name>), response 4 blocks (int <error_code>, int<valid=1>, string<name>, config param<ifh param>)
+ifhStopFreqTelegram: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+ifhSendTelegramFreq: request 1 block (binary <request data>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+IfhRequTelegramFreq: request 0 blocks, response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<response data>)
+ifhSetParameter: request 1 block (binary <data>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+ifhSetTelPreface: request 1 block (binary <data>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<empty>)
+ifhGetPowerState: not transmitted
+ifhSendTelegram: request 1 block (binary <request data>), response 4 blocks (int <0>, int<status_code>, int<error_code>, binary<response data>)
+ifhGetResult: not transmitted
+ifhCloseChannel: request 0 blocks, response 1 block (int <error_code>)
+ifhEnd: request 0 blocks, response 1 block (int <error_code>)
+
+Fix for IIS after installing KB5066835:
+https://stackoverflow.com/questions/79790827/localhost-applications-failing-after-installing-2025-10-cumulative-update-for-w
+HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\HTTP\Parameters
+EnableHttp2Tls=0
+EnableHttp2Cleartext=0
+
+Powershell:
+-----------
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+Install-Module -Name PSWindowsUpdate -Force -SkipPublisherCheck
+Import-Module PSWindowsUpdate
+Hide-WindowsUpdate -KBArticleID KB5066835 -Verbose
+Get-WindowsUpdate -IsHidden
+
+Server access ports:
+====================
+3306, 33060: (MySQL, created by installer)
+8008: (http)
+8443: (https)
+
+IIS: Access rights:
+IIS_IUSRS requires read, view and execute on wwwroot

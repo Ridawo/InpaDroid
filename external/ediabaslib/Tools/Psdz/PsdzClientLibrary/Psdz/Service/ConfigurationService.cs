@@ -1,0 +1,164 @@
+﻿using BMW.Rheingold.Psdz;
+using PsdzClient.Core;
+using PsdzClient;
+using RestSharp;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+
+namespace BMW.Rheingold.Psdz
+{
+    internal class ConfigurationService : IConfigurationService
+    {
+        private readonly IWebCallHandler _webCallHandler;
+        private readonly IHttpServerService _httpServerService;
+        private readonly string _endpointService = "configuration";
+        public ConfigurationService(IWebCallHandler webCallHandler, IHttpServerService httpServerService)
+        {
+            _webCallHandler = webCallHandler;
+            _httpServerService = httpServerService;
+        }
+
+        public bool IsReady()
+        {
+            try
+            {
+                _webCallHandler.IgnorePrepareExecuteRequest = true;
+                return _webCallHandler.ExecuteRequest<bool>(_endpointService, "isready", HttpMethod.Get).Data;
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+                throw;
+            }
+            finally
+            {
+                _webCallHandler.IgnorePrepareExecuteRequest = false;
+            }
+        }
+
+        public RootDirectorySetupResultModel GetRootDirectorySetupResult()
+        {
+            try
+            {
+                _webCallHandler.IgnorePrepareExecuteRequest = true;
+                return _webCallHandler.ExecuteRequest<RootDirectorySetupResultModel>(_endpointService, "rootdirectorysetupresultmodel", HttpMethod.Get).Data;
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+                throw;
+            }
+            finally
+            {
+                _webCallHandler.IgnorePrepareExecuteRequest = false;
+            }
+        }
+
+        public string GetPsdzVersion()
+        {
+            try
+            {
+                return _webCallHandler.ExecuteRequest<string>(_endpointService, "getpsdzversion", HttpMethod.Get).Data;
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+                throw;
+            }
+        }
+
+        public string GetRootDirectory()
+        {
+            try
+            {
+                return _webCallHandler.ExecuteRequest<string>(_endpointService, "getrootdirectory", HttpMethod.Get).Data;
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+                throw;
+            }
+        }
+
+        public bool ImportPdx(string pathToPdxContainer, string projectName)
+        {
+            try
+            {
+                PsdzHelper.CheckString("pathToPdxContainer", pathToPdxContainer);
+                PsdzHelper.CheckString("projectName", projectName);
+                List<string> pathToPdxContainer2 = new List<string>
+                {
+                    Path.GetFullPath(pathToPdxContainer)
+                };
+                string rootDirectory = GetRootDirectory();
+                ImportPdxRequestModel requestBodyObject = new ImportPdxRequestModel
+                {
+                    RootDirectory = rootDirectory,
+                    PathToPdxContainer = pathToPdxContainer2,
+                    ProjectName = projectName
+                };
+                _webCallHandler.ExecuteRequest(_endpointService, "importpdx", HttpMethod.Post, requestBodyObject);
+                SetRootDirectory(rootDirectory);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+                return false;
+            }
+        }
+
+        public string RequestBaureihenverbund(string baureihe)
+        {
+            try
+            {
+                return _webCallHandler.ExecuteRequest<string>(_endpointService, "requestbaureihenverbund/" + baureihe, HttpMethod.Get).Data;
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+                throw;
+            }
+        }
+
+        public void SetRootDirectory(string rootDir)
+        {
+            try
+            {
+                SetRootDirectoryRequestModel requestBodyObject = new SetRootDirectoryRequestModel
+                {
+                    RootDirectoryPath = rootDir
+                };
+                _webCallHandler.ExecuteRequest(_endpointService, "setrootdirectory", HttpMethod.Post, requestBodyObject);
+                _httpServerService.Start();
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+                throw;
+            }
+        }
+
+        public void UnsetRootDirectory()
+        {
+            try
+            {
+                _httpServerService.Stop();
+                _webCallHandler.ExecuteRequest(_endpointService, "unsetrootdirectory", HttpMethod.Post);
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+                throw;
+            }
+        }
+
+        [PreserveSource(Added = true)]
+        public string GetExpectedPsdzVersion()
+        {
+            return GetPsdzVersion();
+        }
+    }
+}

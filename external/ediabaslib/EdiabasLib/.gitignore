@@ -1,0 +1,11 @@
+Package
+*.suo
+*.opensdf
+*.sdf
+*.VC.opendb
+/*.zip
+/.vs/
+*.VC.db
+/packages/
+*.sln.DotSettings.user
+/x64/

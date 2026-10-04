@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+   <EnableAndroidTargets>false</EnableAndroidTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,82 @@
+using System;
+using System.Linq;
+using System.Reflection;
+using System.Security.Authentication;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace PsdzRpcServer.Shared
+{
+    public static class PsdzRpcServiceConstants
+    {
+        public const string PipeName = "PsdzJsonRpcPipe";
+        public const string DealerId = "40626";
+        public const string Localhost = "127.0.0.1";
+        public const int InterfaceVersion = 1;
+        public const int DefaultTcpPort = 9090;
+        public const SslProtocols DefaultSslProtocols = SslProtocols.Tls13;
+        public const string ServerCnName = "PsdzRpcServer";
+        public const string CertDir = "Certificates";
+        public const string CaCertFile = "PsdzRpcCa.crt";
+        public const string CaPfxFile = "PsdzRpcCa.pfx";
+        public const string ServerPfxFile = "PsdzRpcServer.pfx";
+        public const string ClientPfxFile = "PsdzRpcClient.pfx";
+        public const string CaCnName = "PsdzRpc-CA";
+        public const string ClientCnName = "PsdzRpcClient";
+
+        /// <summary>
+        /// Berechnet eine Signatur aller Methoden des Interfaces.
+        /// Ändert sich automatisch bei Methoden-Hinzufügungen, -Entfernungen oder Signaturänderungen.
+        /// </summary>
+        public static string ComputeInterfaceSignature(Type interfaceType)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            MethodInfo[] methods = interfaceType
+                .GetMethods()
+                .OrderBy(m => m.Name)
+                .ThenBy(m => string.Join(",", m.GetParameters().Select(p => GetTypeName(p.ParameterType))))
+                .ToArray();
+
+            foreach (MethodInfo method in methods)
+            {
+                sb.Append(GetTypeName(method.ReturnType));
+                sb.Append(' ');
+                sb.Append(method.Name);
+                sb.Append('(');
+                sb.Append(string.Join(",", method.GetParameters()
+                    .Select(p => GetTypeName(p.ParameterType))));
+                sb.Append(')');
+                sb.Append(';');
+            }
+
+            string signature = sb.ToString();
+
+            using SHA256 sha256 = SHA256.Create();
+            byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(signature));
+            return BitConverter.ToString(hash, 0, 8).Replace("-", string.Empty).ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Framework-unabhängige Typbezeichnung ohne Assembly-Informationen.
+        /// </summary>
+        private static string GetTypeName(Type type)
+        {
+            if (!type.IsGenericType)
+            {
+                return type.Name;
+            }
+
+            // z.B. "Task`1[Boolean]" statt assembly-qualifiziertem Namen
+            string genericName = type.Name; // "Task`1"
+            string typeArgs = string.Join(",", type.GetGenericArguments().Select(GetTypeName));
+            return $"{genericName}[{typeArgs}]";
+        }
+
+        public static string ServiceInterfaceSignature =>
+            ComputeInterfaceSignature(typeof(IPsdzRpcService));
+
+        public static string CallbackInterfaceSignature =>
+            ComputeInterfaceSignature(typeof(IPsdzRpcServiceCallback));
+    }
+}

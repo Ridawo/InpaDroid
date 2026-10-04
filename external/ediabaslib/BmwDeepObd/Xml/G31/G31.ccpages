@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<fragment xmlns="http://www.holeschak.de/BmwDeepObd"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.holeschak.de/BmwDeepObd ../BmwDeepObd.xsd">
+  <pages>
+    <include filename="Axis.ccpage"/>
+    <include filename="Kafas.ccpage"/>
+    <include filename="Errors.ccpage"/>
+    <include filename="Test1.ccpage"/>
+    <include filename="Test2.ccpage"/>
+    <include filename="Test3.ccpage"/>
+    <include filename="Test4.ccpage"/>
+    <include filename="Test5.ccpage"/>
+    <include filename="Test6.ccpage"/>
+    <include filename="Test7.ccpage"/>
+    <include filename="Test8.ccpage"/>
+  </pages>
+</fragment>

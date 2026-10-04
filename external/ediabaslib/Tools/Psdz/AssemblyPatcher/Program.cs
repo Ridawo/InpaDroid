@@ -1,0 +1,2450 @@
+﻿using CommandLine;
+using dnlib.DotNet;
+using dnlib.DotNet.Emit;
+using dnpatch;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+
+// switch to artifacs directory layout:
+// create dotnet new buildprops --use-artifacts
+namespace AssemblyPatcher
+{
+    internal class Program
+    {
+        public const long FileVersion450 = (4 << 24) + (50 << 16) + 0;
+        public const long FileVersion456 = (4 << 24) + (56 << 16) + 0;
+        public const long FileVersion459 = (4 << 24) + (59 << 16) + 0;
+        public const long FileVersion460 = (4 << 24) + (60 << 16) + 0;
+        public const long FileVersion461 = (4 << 24) + (61 << 16) + 0;
+
+        public class Options
+        {
+            public Options()
+            {
+                InputDir = string.Empty;
+                DebugOpt = DebugOption.None;
+                NoIcomCheck = false;
+            }
+
+            public enum DebugOption
+            {
+                None,
+                MsgBox,
+                Break,
+            }
+
+            [Option('i', "inputdir", Required = true, HelpText = "Input directory.")]
+            public string InputDir { get; set; }
+
+            [Option('d', "debug", Required = false, HelpText = "Option for debug code injection (MsgBox, Break)")]
+            public DebugOption DebugOpt { get; set; }
+
+            [Option('o', "overwrite_config", Required = false, HelpText = "Overwrite already patched config file")]
+            public bool OverwriteConfig { get; set; }
+
+            [Option('c', "no_icom_check", Required = false, HelpText = "Disable ICOM version check")]
+            public bool NoIcomCheck { get; set; }
+
+            [Option('v', "verification_mode", Required = false, HelpText = "Enable verification mode")]
+            public bool VerificationMode { get; set; }
+
+            [Option('b', "disable_backend", Required = false, HelpText = "Disable backend access")]
+            public bool DisableBackend { get; set; }
+        }
+
+        static int Main(string[] args)
+        {
+            try
+            {
+                string inputDir = null;
+                Options.DebugOption debugOpt = Options.DebugOption.None;
+                bool overwriteConfig = false;
+                bool noIcomVerCheck = true;
+                bool verificationMode = false;
+                bool disableBackend = false;
+                bool hasErrors = false;
+                Parser parser = new Parser(with =>
+                {
+                    //ignore case for enum values
+                    with.CaseInsensitiveEnumValues = true;
+                    with.EnableDashDash = true;
+                    with.HelpWriter = Console.Out;
+                });
+
+                parser.ParseArguments<Options>(args)
+                    .WithParsed<Options>(o =>
+                    {
+                        inputDir = o.InputDir;
+                        debugOpt = o.DebugOpt;
+                        overwriteConfig = o.OverwriteConfig;
+                        noIcomVerCheck = o.NoIcomCheck;
+                        verificationMode = o.VerificationMode;
+                        disableBackend = o.DisableBackend;
+                    })
+                    .WithNotParsed(errs =>
+                    {
+                        string errors = string.Join("\n", errs);
+                        Console.WriteLine("Option parsing errors:\n{0}", string.Join("\n", errors));
+                        if (errors.IndexOf("BadFormatConversion", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            Console.WriteLine("Valid debug options are: {0}", string.Join(", ", Enum.GetNames(typeof(Options.DebugOption)).ToList()));
+                        }
+
+                        hasErrors = true;
+                    });
+
+                if (hasErrors)
+                {
+                    return 1;
+                }
+
+                if (string.IsNullOrEmpty(inputDir) || !Directory.Exists(inputDir))
+                {
+                    Console.WriteLine("Directory not existing: {0}", inputDir);
+                    return 1;
+                }
+
+                Console.WriteLine("Input directory: '{0}'", inputDir);
+                Console.WriteLine("Debug option: '{0}'", debugOpt.ToString());
+                Console.WriteLine("Overwrite config: '{0}'", overwriteConfig.ToString());
+                Console.WriteLine("Disable ICOM version check: '{0}'", noIcomVerCheck.ToString());
+                Console.WriteLine("Verification mode: '{0}'", verificationMode.ToString());
+                Console.WriteLine("Disable backend access: '{0}'", disableBackend.ToString());
+
+                string patchCtorNamespace = ConfigurationManager.AppSettings["PatchCtorNamespace"];
+                if (string.IsNullOrEmpty(patchCtorNamespace))
+                {
+                    Console.WriteLine("*** PatchCtorNamespace not configured");
+                    return 1;
+                }
+
+                string patchCtorClass = ConfigurationManager.AppSettings["PatchCtorClass"];
+                if (string.IsNullOrEmpty(patchCtorClass))
+                {
+                    Console.WriteLine("*** PatchCtorClass not configured");
+                    return 1;
+                }
+
+                string patchMethod1Namespace = ConfigurationManager.AppSettings["PatchMethod1Namespace"];
+                if (string.IsNullOrEmpty(patchMethod1Namespace))
+                {
+                    Console.WriteLine("*** PatchMethod1Namespace not configured");
+                    return 1;
+                }
+
+                string patchMethod1Class = ConfigurationManager.AppSettings["PatchMethod1Class"];
+                if (string.IsNullOrEmpty(patchMethod1Class))
+                {
+                    Console.WriteLine("*** PatchMethod1Class not configured");
+                    return 1;
+                }
+
+                string patchMethod1Name = ConfigurationManager.AppSettings["PatchMethod1Name"];
+                if (string.IsNullOrEmpty(patchMethod1Name))
+                {
+                    Console.WriteLine("*** PatchMethod1Name not configured");
+                    return 1;
+                }
+
+                string patchMethod1Name2 = ConfigurationManager.AppSettings["PatchMethod1Name2"];
+                if (string.IsNullOrEmpty(patchMethod1Name2))
+                {
+                    Console.WriteLine("Warning: PatchMethod1Name2 not configured");
+                }
+
+                string patchMethod2Namespace = ConfigurationManager.AppSettings["PatchMethod2Namespace"];
+                if (string.IsNullOrEmpty(patchMethod2Namespace))
+                {
+                    Console.WriteLine("*** PatchMethod2Namespace not configured");
+                    return 1;
+                }
+
+                string patchMethod2Class = ConfigurationManager.AppSettings["PatchMethod2Class"];
+                if (string.IsNullOrEmpty(patchMethod2Class))
+                {
+                    Console.WriteLine("*** PatchMethod2Class not configured");
+                    return 1;
+                }
+
+                string patchMethod2Name = ConfigurationManager.AppSettings["PatchMethod2Name"];
+                if (string.IsNullOrEmpty(patchMethod2Name))
+                {
+                    Console.WriteLine("*** PatchMethod2Name not configured");
+                    return 1;
+                }
+
+                string licFileName = ConfigurationManager.AppSettings["LicFileName"];
+                if (string.IsNullOrEmpty(licFileName))
+                {
+                    Console.WriteLine("*** LicFileName not configured");
+                    return 1;
+                }
+
+                string appDir = AssemblyDirectory;
+                if (string.IsNullOrEmpty(appDir))
+                {
+                    Console.WriteLine("*** Assembly location not found");
+                    return 1;
+                }
+
+                // Stored in HKEY_CURRENT_USER\Software\BMWGroup\ISPI\Rheingold\License
+                string licFileSrc = Path.Combine(appDir, "Data", licFileName);
+                string licFileDst = Path.Combine(inputDir, licFileName);
+                if (File.Exists(licFileSrc) && !File.Exists(licFileDst))
+                {
+                    try
+                    {
+                        File.Copy(licFileSrc, licFileDst, true);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("*** Copy license failed: {0}", e.Message);
+                        return 1;
+                    }
+                }
+
+                string exeFile = Path.Combine(inputDir, "ISTAGUI.exe");
+                if (!UpdateExeConfig(exeFile, noIcomVerCheck, verificationMode, overwriteConfig, out long? exeFileVersion))
+                {
+                    Console.WriteLine("*** Update config file failed for: {0}", exeFile);
+                    return 1;
+                }
+
+                string[] files = Directory.GetFiles(inputDir, "*.*", SearchOption.AllDirectories);
+                foreach (string file in files)
+                {
+                    string relPath = GetRelativePath(inputDir, file);
+                    if (string.IsNullOrEmpty(relPath))
+                    {
+                        continue;
+                    }
+
+                    string baseName = Path.GetFileNameWithoutExtension(file);
+                    if (string.IsNullOrEmpty(baseName))
+                    {
+                        continue;
+                    }
+
+                    string ext = Path.GetExtension(file);
+                    if (string.IsNullOrEmpty(ext))
+                    {
+                        continue;
+                    }
+
+                    if ((string.Compare(ext, ".exe", StringComparison.OrdinalIgnoreCase) != 0) &&
+                        (string.Compare(ext, ".dll", StringComparison.OrdinalIgnoreCase) != 0))
+                    {
+                        continue;
+                    }
+
+                    if (relPath.StartsWith("runtimes") ||
+                        relPath.StartsWith("x86") ||
+                        relPath.StartsWith("x64") ||
+                        relPath.StartsWith("arm"))
+                    {
+                        continue;
+                    }
+
+                    if (baseName.StartsWith("Google", StringComparison.OrdinalIgnoreCase) ||
+                        baseName.StartsWith("Grpc", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (baseName.EndsWith("BuzzSharp", StringComparison.OrdinalIgnoreCase) ||
+                        baseName.EndsWith("interop", StringComparison.OrdinalIgnoreCase) ||
+                        baseName.EndsWith("IDESKernel", StringComparison.OrdinalIgnoreCase) ||
+                        baseName.EndsWith("procdump", StringComparison.OrdinalIgnoreCase) ||
+                        baseName.EndsWith("SkiaSharp", StringComparison.OrdinalIgnoreCase) ||
+                        baseName.EndsWith("WebView2Loader", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (!File.Exists(file))
+                    {
+                        Console.WriteLine("*** Assembly not existing: {0}", file);
+                        return 1;
+                    }
+
+                    string assemblyPathBak = Path.Combine(inputDir, file + ".bak");
+                    if (File.Exists(assemblyPathBak))
+                    {
+                        Console.WriteLine("Assembly already patched: {0}", file);
+                        continue;
+                    }
+
+                    FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(file);
+                    long? fileVersion = null;
+                    string companyName = fvi?.CompanyName ?? string.Empty;
+                    string legalCopyright = fvi?.LegalCopyright ?? string.Empty;
+                    string versionString = null;
+                    if (!string.IsNullOrEmpty(fvi?.FileVersion))
+                    {
+                        if (companyName.IndexOf("BMW", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            legalCopyright.IndexOf("Bayerische", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            fileVersion = (fvi.FileMajorPart << 24) + (fvi.FileMinorPart << 16) + fvi.FileBuildPart;
+                            versionString = string.Format(CultureInfo.InvariantCulture,  "{0}.{1}.{2}", fvi.FileMajorPart, fvi.FileMinorPart, fvi.FileBuildPart);
+                        }
+                    }
+
+                    try
+                    {
+                        bool patched = false;
+                        Patcher patcher = new Patcher(file, false);
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = patchCtorNamespace,
+                                Class = patchCtorClass,
+                                Method = ".ctor",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("{0}.ctor patched", patchCtorClass);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** patchCtorClass:.ctor Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = patchMethod1Namespace,
+                                Class = patchMethod1Class,
+                                Method = patchMethod1Name,
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_0));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("{0}.{1} patched", patchMethod1Class, patchMethod1Name);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** patchMethod1Class:patchMethod1Name Exception: {0}", ex.Message);
+                        }
+
+                        if (!string.IsNullOrEmpty(patchMethod1Name2))
+                        {   // optional
+                            try
+                            {
+                                Target target = new Target
+                                {
+                                    Namespace = patchMethod1Namespace,
+                                    Class = patchMethod1Class,
+                                    Method = patchMethod1Name2,
+                                };
+                                IList<Instruction> instructions = patcher.GetInstructionList(target);
+                                if (instructions != null)
+                                {
+                                    instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_0));
+                                    instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                    patched = true;
+                                    Console.WriteLine("{0}.{1} patched", patchMethod1Class, patchMethod1Name2);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("*** patchMethod1Class:patchMethod1Name2 Exception: {0}", ex.Message);
+                            }
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = patchMethod2Namespace,
+                                Class = patchMethod2Class,
+                                Method = patchMethod2Name,
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_1));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("{0}.{1} patched", patchMethod2Class, patchMethod2Name);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** patchMethod2Class:patchMethod2 Exception: {0}", ex.Message);
+                        }
+
+                        // Old location of CheckExpirationDate (4.57.X)
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.ISTAGUI.ViewModels",
+                                Class = "MainWindowViewModel",
+                                Method = "CheckExpirationDate",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("MainWindowViewModel.CheckExpirationDate 4.57 found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("CheckExpirationDate patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** MainWindowViewModel.CheckExpirationDate Exception: {0}", ex.Message);
+                        }
+
+                        // New location of CheckExpirationDate (4.58.X)
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.ISTAGUI.Services",
+                                Class = "MainWindowViewModelService",
+                                Method = "CheckExpirationDate",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("MainWindowViewModelService.CheckExpirationDate 4.58 found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("CheckExpirationDate patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** MainWindowViewModelService.CheckExpirationDate Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.Programming.States",
+                                Class = "TherapyPlanCalculated",
+                                Method = "IsConnectedViaENETAndBrandIsToyota",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                // Hard coded "BMW.Rheingold.ISTAGUI.enableENETprogramming", not option required
+                                Console.WriteLine("TherapyPlanCalculated.IsConnectedViaENETAndBrandIsToyota found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_1));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("IsConnectedViaENETAndBrandIsToyota patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** TherapyPlanCalculated.IsConnectedViaENETAndBrandIsToyota Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.iLean.CommonServices.Models.Helper",
+                                Class = "Encryption",
+                                Method = "EncryptSensitveContent",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("EncryptSensitveContent.EncryptSensitveContent found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldarg_0));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("EncryptSensitveContent patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** EncryptSensitveContent.EncryptSensitveContent Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.RheingoldSessionController",
+                                Class = "Logic",
+                                Method = "get_IsSendFastaDataForbidden",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("Logic.get_IsSendFastaDataForbidden found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_1));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("get_IsSendFastaDataForbidden patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** Logic.get_IsSendFastaDataForbidden Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.RheingoldISPINext.ICS",
+                                Class = "CommonServiceWrapper",
+                                Method = "IsAvailable",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("CommonServiceWrapper.IsAvailable found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_1));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("IsAvailable patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** CommonServiceWrapper.IsAvailable Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.CoreFramework",
+                                Class = "ConfigSettings",
+                                Method = "get_IsILeanActive",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("ConfigSettings.get_IsILeanActive found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_1));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("get_IsILeanActive patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** ConfigSettings.get_IsILeanActive Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.RheingoldSessionController",
+                                Class = "Logic",
+                                Method = "SendFastaDataToFBM",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("Logic.SendFastaDataToFBM found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldarg_1));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("SendFastaDataToFBM patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** Logic.SendFastaDataToFBM Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.Programming",
+                                Class = "ConnectionManager",
+                                Method = "UseTheDoipPort",
+                            };
+
+                            Target targetTemplate = new Target
+                            {
+                                Namespace = "BMW.Rheingold.Programming",
+                                Class = "ConnectionManager",
+                                Method = "ConnectToProject",
+                                Parameters = new[] { "ConnectionManager", "String", "String", "Boolean" },
+                            };
+
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            IList<Local> locals = patcher.GetVariableList(target);
+                            IList<Instruction> instructionsTemplate = patcher.GetInstructionList(targetTemplate);
+                            if (instructions != null && instructionsTemplate != null)
+                            {
+                                Console.WriteLine("ConnectionManager.UseTheDoipPort found");
+                                int patchIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldarg_0
+                                        && index + 2 < instructions.Count)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Callvirt)
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 2].OpCode != OpCodes.Ret)
+                                        {
+                                            continue;
+                                        }
+
+                                        Console.WriteLine("get_IsEEES25Vehicle found at index: {0}", index);
+                                        patchIndex = index + 1;
+                                        break;
+                                    }
+                                }
+
+                                if (patchIndex >= 0)
+                                {
+                                    int templateIndex = -1;
+                                    for (int index = 0; index < instructionsTemplate.Count; index++)
+                                    {
+                                        Instruction instruction = instructionsTemplate[index];
+                                        if (instruction.OpCode == OpCodes.Ldarg_0
+                                            && index + 5 < instructionsTemplate.Count)
+                                        {
+                                            if (instructionsTemplate[index + 1].OpCode != OpCodes.Callvirt)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructionsTemplate[index + 2].OpCode != OpCodes.Stloc_3)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructionsTemplate[index + 3].OpCode != OpCodes.Ldloca_S)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructionsTemplate[index + 4].OpCode != OpCodes.Call)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructionsTemplate[index + 5].OpCode != OpCodes.Callvirt)
+                                            {
+                                                continue;
+                                            }
+
+                                            Console.WriteLine("get_IsDoIP found at index: {0}", index);
+                                            templateIndex = index + 1;
+                                            break;
+                                        }
+                                    }
+
+                                    if (templateIndex < 0)
+                                    {
+                                        Console.WriteLine("get_IsDoIP template not found");
+                                    }
+
+                                    if (patchIndex >= 0 && templateIndex >= 0)
+                                    {
+                                        List<Instruction> insertInstructions = new List<Instruction>();
+                                        insertInstructions.Add(instructionsTemplate[templateIndex + 0].Clone());    // callvirt get_IsDoIP()
+                                        insertInstructions.Add(new Instruction(OpCodes.Stloc_0));
+
+                                        Local localTemp1 = instructionsTemplate[templateIndex + 2].Operand as Local;
+                                        Local local1 = new Local(localTemp1.Type);
+                                        locals.Add(local1);
+                                        insertInstructions.Add(new Instruction(OpCodes.Ldloca_S, local1));
+
+                                        insertInstructions.Add(instructionsTemplate[templateIndex + 3].Clone());    // call get_Value()
+
+                                        instructions.RemoveAt(patchIndex);  // callvirt
+                                        int offset = 0;
+                                        foreach (Instruction insertInstruction in insertInstructions)
+                                        {
+                                            instructions.Insert(patchIndex + offset, insertInstruction);
+                                            offset++;
+                                        }
+
+                                        Console.WriteLine("ConnectionManager UseTheDoipPort patched");
+                                        patched = true;
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("*** UseTheDoipPort appears to have already been patched or is not existing");
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine("get_IsEEES25Vehicle not found, searching for get_AvoidTlsConnection");
+                                    patchIndex = -1;
+                                    for (int index = 0; index < instructions.Count; index++)
+                                    {
+                                        Instruction instruction = instructions[index];
+                                        if (instruction.OpCode == OpCodes.Ldarg_0
+                                            && index + 2 < instructions.Count)
+                                        {
+                                            if (instructions[index + 1].OpCode != OpCodes.Call)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructions[index + 2].OpCode != OpCodes.Ret)
+                                            {
+                                                continue;
+                                            }
+
+                                            Console.WriteLine("get_AvoidTlsConnection found at index: {0}", index);
+                                            patchIndex = index;
+                                            break;
+                                        }
+                                    }
+
+                                    if (patchIndex >= 0)
+                                    {
+                                        instructions.RemoveAt(patchIndex);  // ldarg.0
+                                        instructions.RemoveAt(patchIndex);  // call
+                                        instructions.RemoveAt(patchIndex);  // get_AvoidTlsConnection
+                                        instructions.Insert(patchIndex, Instruction.Create(OpCodes.Ldc_I4_1));
+                                        instructions.Insert(patchIndex + 1, Instruction.Create(OpCodes.Ret));
+                                        Console.WriteLine("ConnectionManager UseTheDoipPort patched (get_AvoidTlsConnection removed)");
+                                        patched = true;
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("*** UseTheDoipPort appears to have already been patched or is not existing");
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** ConnectionManager.UseTheDoipPort Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.Programming.Common",
+                                Class = "VoltageUtils",
+                                Method = "CheckVoltageForEthernetConnection",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                // Hard coded "BMW.Rheingold.ISTAGUI.enableENETprogramming", not option required
+                                Console.WriteLine("VoltageUtils.CheckVoltageForEthernetConnection found");
+                                int patchIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldloc_0
+                                        && index + 3 < instructions.Count)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Ldc_R8 && instructions[index + 1].Operand is double value && value == 0)
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 2].OpCode != OpCodes.Bgt_Un_S)
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 3].OpCode != OpCodes.Ldarg_1)
+                                        {
+                                            continue;
+                                        }
+
+                                        Console.WriteLine("handleAbnormalValue found at index: {0}", index);
+                                        patchIndex = index + 3;
+                                        break;
+                                    }
+                                }
+
+                                if (patchIndex >= 0)
+                                {
+                                    instructions.Insert(patchIndex, new Instruction(OpCodes.Ret));
+
+                                    Console.WriteLine("VoltageUtils CheckVoltageForEthernetConnection patched");
+                                    patched = true;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("*** CheckVoltageForEthernetConnection appears to have already been patched or is not existing");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** VoltageUtils.CheckVoltageForEthernetConnection Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.CoreFramework.Sec4Diag",
+                                Class = "Sec4DiagHandler",
+                                Method = "SearchForCertificatesInWindowsStore",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                // Hard coded "BMW.Rheingold.ISTAGUI.enableENETprogramming", not option required
+                                Console.WriteLine("Sec4DiagHandler.SearchForCertificatesInWindowsStore found");
+                                int patchCounter = 0;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldc_R8 && instruction.Operand is double value)
+                                    {
+                                        if (value > -7.01 && value < -6.99)
+                                        {
+                                            double newValue = -2;
+                                            instruction.Operand = newValue;
+                                            patchCounter++;
+                                        }
+                                    }
+                                }
+
+                                if (patchCounter > 0)
+                                {
+                                    Console.WriteLine("Sec4DiagHandler.SearchForCertificatesInWindowsStore patch count: {0}", patchCounter);
+                                    patched = true;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("*** Sec4DiagHandler.SearchForCertificatesInWindowsStore appears to have already been patched or is not existing");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** VoltageUtils.CheckVoltageForEthernetConnection Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.CoreFramework.DatabaseProvider",
+                                Class = "DatabaseProviderFactory",
+                                Method = "get_Instance",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                // Hard coded "BMW.Rheingold.ISTAGUI.enableENETprogramming", not option required
+                                Console.WriteLine("DatabaseProviderFactory.get_Instance found");
+                                int patchIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldstr &&
+                                        string.Compare(instruction.Operand.ToString(), "DatabaseProviderOracle", StringComparison.OrdinalIgnoreCase) == 0)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Stloc_1)
+                                        {
+                                            continue;
+                                        }
+
+                                        patchIndex = index;
+                                        Console.WriteLine("DatabaseProviderOracle found at index: {0}", index);
+                                        break;
+                                    }
+                                }
+
+                                if (patchIndex >= 0)
+                                {
+                                    instructions.RemoveAt(patchIndex);
+                                    instructions.RemoveAt(patchIndex);
+                                    patched = true;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("*** DatabaseProviderFactory.get_Instance appears to have already been patched or is not existing");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** VoltageUtils.CheckVoltageForEthernetConnection Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.PresentationFramework.AuthenticationRefactored.Services",
+                                Class = "LoginEnabledOptionProvider",
+                                Method = "IsLoginEnabled",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                // Hard coded "BMW.Rheingold.ISTAGUI.enableENETprogramming", not option required
+                                Console.WriteLine("LoginEnabledOptionProvider.IsLoginEnabled found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_0));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("IsLoginEnabled patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** LoginEnabledOptionProvider.IsLoginEnabled Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.CoreFramework.InteropHelper",
+                                Class = "VerifyAssemblyHelper",
+                                Method = "VerifyStrongName",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("VerifyAssemblyHelper.VerifyStrongName found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_1));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("VerifyStrongName patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** VerifyAssemblyHelper.VerifyStrongName Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.ISPI.IstaServices.Client",
+                                Class = "IstaIcsServiceClient",
+                                Method = "ValidateHost",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("IstaIcsServiceClient.ValidateHost found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("ValidateHost patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** IstaIcsServiceClient.ValidateHost Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.ISPI.IstaServices.Client",
+                                Class = "IstaIcsServiceClient",
+                                Method = "VerifyLicense",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("IstaIcsServiceClient.VerifyLicense found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("VerifyLicense patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** IstaIcsServiceClient.VerifyLicense Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.ISTAGUI.Controller",
+                                Class = "IstaInstallationRequirements",
+                                Method = "CheckInstallationStatus",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("IstaInstallationRequirements.CheckInstallationStatus found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_1));
+                                instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("CheckInstallationStatus patched");
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // ignored
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.ISTAGUI.Controller",
+                                Class = "PackageValidityService",
+                                Method = "CheckPackageValidity",
+                                Parameters = new[] { "PackageValidityService", "Version" },
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("PackageValidityService.CheckPackageValidity found");
+                                instructions.Insert(0, Instruction.Create(OpCodes.Ret));
+                                patched = true;
+                                Console.WriteLine("CheckPackageValidity patched");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** PackageValidityService.CheckPackageValidity Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.VehicleCommunication",
+                                Class = "ECUKom",
+                                Method = "InitVCI",
+                                Parameters = new []{ "ECUKom", "IVciDevice", "Boolean" },
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("ECUKom.InitVCI found");
+                                if (fileVersion != null && fileVersion.Value < FileVersion450)
+                                {
+                                    int patchIndex = -1;
+                                    int index = 0;
+                                    foreach (Instruction instruction in instructions)
+                                    {
+                                        if (instruction.OpCode == OpCodes.Ldstr &&
+                                            string.Compare(instruction.Operand.ToString(), "ENET::remotehost=", StringComparison.OrdinalIgnoreCase) == 0)
+                                        {
+                                            Console.WriteLine("'ENET::remotehost=' found at index: {0}", index);
+                                            patchIndex = index;
+                                            break;
+                                        }
+
+                                        index++;
+                                    }
+
+                                    if (patchIndex >= 0)
+                                    {
+                                        if ((instructions[patchIndex + 1].OpCode != OpCodes.Ldarg_1) ||     // ldarg.1
+                                            (instructions[patchIndex + 2].OpCode != OpCodes.Callvirt) ||    // callvirt    instance string[RheingoldCoreContracts] BMW.Rheingold.CoreFramework.Contracts.Vehicle.IVciDevice::get_IPAddress()
+                                            (instructions[patchIndex + 3].OpCode != OpCodes.Call) ||        // call	string [mscorlib]System.String::Concat(string, string)
+                                            (instructions[patchIndex + 4].OpCode != OpCodes.Ldstr) ||       // ldstr	"_"
+                                            (instructions[patchIndex + 5].OpCode != OpCodes.Ldstr) ||       // ldstr	"Rheingold"
+                                            (instructions[patchIndex + 6].OpCode != OpCodes.Ldsfld) ||      // ldsfld	string [mscorlib]System.String::Empty
+                                            (instructions[patchIndex + 7].OpCode != OpCodes.Ldarg_2) ||     // ldarg.2
+                                            (instructions[patchIndex + 8].OpCode != OpCodes.Callvirt))      // callvirt	instance bool BMW.Rheingold.VehicleCommunication.Ediabas.API::apiInitExt(string, string, string, string, bool)
+                                        {
+                                            Console.WriteLine("*** InitVCI patch location invalid");
+                                        }
+                                        else
+                                        {
+                                            /*
+                                            Change:
+                                                flag = this.api.apiInitExt("ENET::remotehost=" + device.IPAddress, "_", "Rheingold", string.Empty, logging);
+                                            to:
+                                                flag = this.api.apiInitExt("ENET", "_", "Rheingold", "RemoteHost=" + device.IPAddress + ";DiagnosticPort=50160;ControlPort=50161", logging);
+                                            */
+
+                                            instructions.RemoveAt(patchIndex);  // ldstr	"ENET::remotehost="
+                                            instructions.Insert(patchIndex, Instruction.Create(OpCodes.Ldstr, "ENET"));
+                                            instructions.Insert(patchIndex + 1, Instruction.Create(OpCodes.Ldstr, "_"));
+                                            instructions.Insert(patchIndex + 2, Instruction.Create(OpCodes.Ldstr, "Rheingold"));
+                                            instructions.Insert(patchIndex + 3, Instruction.Create(OpCodes.Ldstr, "RemoteHost="));
+                                            // Index 4: ldarg.1
+                                            // Index 5: callvirt	instance string [RheingoldCoreContracts]BMW.Rheingold.CoreFramework.Contracts.Vehicle.IVciDevice::get_IPAddress()
+                                            instructions.RemoveAt(patchIndex + 6);  // call	string [mscorlib]System.String::Concat(string, string)
+                                            instructions.RemoveAt(patchIndex + 6);  // ldstr	"_"
+                                            instructions.RemoveAt(patchIndex + 6);  // ldstr	"Rheingold"
+                                            instructions.RemoveAt(patchIndex + 6);  // ldsfld	string [mscorlib]System.String::Empty
+                                            instructions.Insert(patchIndex + 6, Instruction.Create(OpCodes.Ldstr, ";DiagnosticPort=50160;ControlPort=50161"));
+                                            instructions.Insert(patchIndex + 7,
+                                                Instruction.Create(OpCodes.Call,
+                                                    patcher.BuildCall(typeof(System.String), "Concat", typeof(string),
+                                                        new[] { typeof(string), typeof(string), typeof(string) })));
+                                            patched = true;
+                                            Console.WriteLine("InitVCI patched");
+                                            //patcher.Save(file.Replace(".dll", "Test.dll"));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Info: 'ENET::remotehost=' appears to have already been patched or is not existing");
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** ECUKom.InitVCI Exception: {0}", ex.Message);
+                        }
+
+                        bool initEnetDevicePatched = false;
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.VehicleCommunication",
+                                Class = "ECUKom",
+                                Method = "InitializeEnetDevice",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("ECUKom.InitializeEnetDevice found");
+                                int patchIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldstr &&
+                                        string.Compare(instruction.Operand.ToString(), "ENET", StringComparison.OrdinalIgnoreCase) == 0
+                                        && index + 3 < instructions.Count)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Ldstr || string.Compare(instructions[index + 1].Operand.ToString(), "_", StringComparison.OrdinalIgnoreCase) != 0)
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 2].OpCode != OpCodes.Ldstr || string.Compare(instructions[index + 2].Operand.ToString(), "Rheingold", StringComparison.OrdinalIgnoreCase) != 0)
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 3].OpCode != OpCodes.Ldstr)
+                                        {
+                                            continue;
+                                        }
+                                        if ((string.Compare(instructions[index + 3].Operand.ToString(), "", StringComparison.OrdinalIgnoreCase) != 0) &&
+                                            (string.Compare(instructions[index + 3].Operand.ToString(), "Authentication=None;NetworkProtocol=TCP", StringComparison.OrdinalIgnoreCase) != 0))
+                                        {
+                                            continue;
+                                        }
+
+                                        Console.WriteLine("\"ENET\", \"_\", \"Rheingold\", \"\" found at index: {0}", index);
+                                        patchIndex = index + 3;
+                                        break;
+                                    }
+                                }
+
+                                int templateIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldstr &&
+                                        string.Compare(instruction.Operand.ToString(), "RemoteHost={0};selectCertificate={1};SSLPort={2};Authentication=S29;NetworkProtocol=SSL", StringComparison.OrdinalIgnoreCase) == 0
+                                        && index + 4 < instructions.Count)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Ldarg_1)
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 2].OpCode != OpCodes.Callvirt)     // get_IPAddress()
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 3].OpCode != OpCodes.Ldloc_0)
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 4].OpCode != OpCodes.Callvirt)    // get_CertificateFilePathWithoutEnding()
+                                        {
+                                            continue;
+                                        }
+
+                                        Console.WriteLine("Format template found at index: {0}", index);
+                                        templateIndex = index + 1;
+                                        break;
+                                    }
+                                }
+
+                                if (templateIndex < 0)
+                                {
+                                    Console.WriteLine("*** Format template not found");
+                                }
+
+                                if (patchIndex >= 0 && templateIndex >= 0)
+                                {
+                                    List<Instruction> insertInstructions = new List<Instruction>();
+                                    insertInstructions.Add(new Instruction(OpCodes.Ldstr, "RemoteHost="));
+                                    insertInstructions.Add(instructions[templateIndex + 0].Clone());    // Ldarg_1
+                                    insertInstructions.Add(instructions[templateIndex + 1].Clone());    // get_IPAddress()
+                                    insertInstructions.Add(new Instruction(OpCodes.Ldstr, ";DiagnosticPort=6801;ControlPort=6811;Authentication=None;NetworkProtocol=TCP"));
+                                    insertInstructions.Add(Instruction.Create(OpCodes.Call,
+                                        patcher.BuildCall(typeof(System.String), "Concat", typeof(String), new[] { typeof(String), typeof(String), typeof(String) })));
+
+                                    instructions.RemoveAt(patchIndex);
+                                    int offset = 0;
+                                    foreach (Instruction insertInstruction in insertInstructions)
+                                    {
+                                        instructions.Insert(patchIndex + offset, insertInstruction);
+                                        offset++;
+                                    }
+                                    patched = true;
+                                    initEnetDevicePatched = true;
+                                    Console.WriteLine("InitVCI InitializeEnetDevice patched");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("*** \"ENET\", \"_\", \"Rheingold\", \"\" appears to have already been patched or is not existing");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** ECUKom.InitializeEnetDevice Exception: {0}", ex.Message);
+                        }
+
+                        if (!initEnetDevicePatched)
+                        {
+                            try
+                            {
+                                Target target = new Target
+                                {
+                                    Namespace = "BMW.Rheingold.VehicleCommunication",
+                                    Class = "ECUKom",
+                                    Method = "InitVCI",
+                                    Parameters = new[] { "ECUKom", "IVciDevice", "Boolean", "Boolean" },
+                                };
+                                IList<Instruction> instructions = patcher.GetInstructionList(target);
+                                if (instructions != null)
+                                {
+                                    Console.WriteLine("ECUKom.InitVCI isDoIP found");
+                                    int patchIndex = -1;
+                                    for (int index = 0; index < instructions.Count; index++)
+                                    {
+                                        Instruction instruction = instructions[index];
+                                        if (instruction.OpCode == OpCodes.Ldstr &&
+                                            string.Compare(instruction.Operand.ToString(), "ENET", StringComparison.OrdinalIgnoreCase) == 0
+                                            && index + 3 < instructions.Count)
+                                        {
+                                            if (instructions[index + 1].OpCode != OpCodes.Ldstr || string.Compare(instructions[index + 1].Operand.ToString(), "_", StringComparison.OrdinalIgnoreCase) != 0)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructions[index + 2].OpCode != OpCodes.Ldstr || string.Compare(instructions[index + 2].Operand.ToString(), "Rheingold", StringComparison.OrdinalIgnoreCase) != 0)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructions[index + 3].OpCode != OpCodes.Ldstr || string.Compare(instructions[index + 3].Operand.ToString(), "", StringComparison.OrdinalIgnoreCase) != 0)
+                                            {
+                                                continue;
+                                            }
+
+                                            Console.WriteLine("\"ENET\", \"_\", \"Rheingold\", \"\" found at index: {0}", index);
+                                            patchIndex = index + 3;
+                                            break;
+                                        }
+                                    }
+
+                                    int templateIndex = -1;
+                                    for (int index = 0; index < instructions.Count; index++)
+                                    {
+                                        Instruction instruction = instructions[index];
+                                        if (instruction.OpCode == OpCodes.Ldstr &&
+                                            string.Compare(instruction.Operand.ToString(), "RPLUS:ICOM_P:Remotehost=", StringComparison.OrdinalIgnoreCase) == 0
+                                            && index + 5 < instructions.Count)
+                                        {
+                                            if (instructions[index + 1].OpCode != OpCodes.Ldloc_0)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructions[index + 2].OpCode != OpCodes.Ldfld)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructions[index + 3].OpCode != OpCodes.Callvirt)     // get_IPAddress()
+                                            {
+                                                continue;
+                                            }
+                                            if (instructions[index + 4].OpCode != OpCodes.Ldstr)
+                                            {
+                                                continue;
+                                            }
+                                            if (instructions[index + 5].OpCode != OpCodes.Call)         // Conact()
+                                            {
+                                                continue;
+                                            }
+
+                                            Console.WriteLine("Format template found at index: {0}", index);
+                                            templateIndex = index;
+                                            break;
+                                        }
+                                    }
+
+                                    if (templateIndex < 0)
+                                    {
+                                        Console.WriteLine("*** Format template not found");
+                                    }
+
+                                    if (patchIndex >= 0 && templateIndex >= 0)
+                                    {
+                                        List<Instruction> insertInstructions = new List<Instruction>();
+                                        insertInstructions.Add(new Instruction(OpCodes.Ldstr, "RemoteHost="));
+                                        insertInstructions.Add(new Instruction(OpCodes.Ldloc_0));
+                                        insertInstructions.Add(instructions[templateIndex + 2].Clone());    // get_IPAddress()
+                                        insertInstructions.Add(instructions[templateIndex + 3].Clone());    // get_IPAddress()
+                                        insertInstructions.Add(new Instruction(OpCodes.Ldstr, ";DiagnosticPort=6801;ControlPort=6811"));
+                                        insertInstructions.Add(instructions[templateIndex + 5].Clone());    // Concat()
+
+                                        instructions.RemoveAt(patchIndex);
+                                        int offset = 0;
+                                        foreach (Instruction insertInstruction in insertInstructions)
+                                        {
+                                            instructions.Insert(patchIndex + offset, insertInstruction);
+                                            offset++;
+                                        }
+                                        patched = true;
+                                        Console.WriteLine("InitVCI isDoIP patched");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Info: \"ENET\", \"_\", \"Rheingold\", \"\" appears to have already been patched or is not existing");
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("*** ECUKom.InitVCI Exception: {0}", ex.Message);
+                            }
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.Psdz.Client",
+                                Class = "PsdzServiceStarter",
+                                Method = "StartServerInstance",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("PsdzServiceStarter.StartServerInstance found");
+                                bool alreadyCorrected = false;
+                                int patchIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldstr &&
+                                        string.Compare(instruction.Operand.ToString(), "\"{0}\" {1} \"{2}\"", StringComparison.OrdinalIgnoreCase) == 0)
+                                    {
+                                        Console.WriteLine("Arguments three param found at index: {0}", index);
+                                        patchIndex = index;
+                                        break;
+                                    }
+
+                                    if (instruction.OpCode == OpCodes.Ldstr &&
+                                        string.Compare(instruction.Operand.ToString(), "\"{0}\" \"{1}\" \"{2}\"", StringComparison.OrdinalIgnoreCase) == 0)
+                                    {
+                                        alreadyCorrected = true;
+                                        break;
+                                    }
+                                }
+
+                                if (patchIndex >= 0)
+                                {
+                                    instructions[patchIndex].Operand = "\"{0}\" \"{1}\" \"{2}\"";
+                                    patched = true;
+                                    Console.WriteLine("StartServerInstance patched");
+                                }
+                                else
+                                {
+                                    if (alreadyCorrected)
+                                    {
+                                        Console.WriteLine("StartServerInstance already fixed");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("*** Patching StartServerInstance failed");
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** StartServerInstance Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.Psdz.Client",
+                                Class = "PsdzServiceStarter",
+                                Method = "checkForPsdzInstancesLogFile",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("PsdzServiceStarter.checkForPsdzInstancesLogFile found");
+                                int patchIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldsfld &&
+                                        index + 2 < instructions.Count)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Call)
+                                        {
+                                            continue;
+                                        }
+                                        if (instructions[index + 2].OpCode != OpCodes.Pop)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 3].OpCode == OpCodes.Nop)
+                                        {
+                                            if (instructions[index + 4].OpCode != OpCodes.Ret)
+                                            {
+                                                continue;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (instructions[index + 3].OpCode != OpCodes.Ret)
+                                            {
+                                                continue;
+                                            }
+                                        }
+
+                                        Console.WriteLine("File.Create found at index: {0}", index);
+                                        patchIndex = index + 2;
+                                        break;
+                                    }
+                                }
+
+                                if (patchIndex >= 0)
+                                {
+                                    instructions[patchIndex] = Instruction.Create(OpCodes.Callvirt,
+                                        patcher.BuildCall(typeof(System.IO.Stream), "Close", typeof(void), null));
+                                    patched = true;
+                                    Console.WriteLine("checkForPsdzInstancesLogFile patched");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("*** Patching File.Create failed");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** checkForPsdzInstancesLogFile Exception: {0}", ex.Message);
+                        }
+
+                        if ((exeFileVersion & ~0xFF) >= FileVersion459 && (exeFileVersion & ~0xFF) <= FileVersion461)
+                        {
+                            try
+                            {
+                                Target target = new Target
+                                {
+                                    Namespace = "RheingoldPsdzWebApi.Adapter",
+                                    Class = "PsdzWebService",
+                                    Method = "StartPsdzWebserviceProcess",
+                                };
+                                IList<Instruction> instructions = patcher.GetInstructionList(target);
+                                if (instructions != null)
+                                {
+                                    Console.WriteLine("PsdzWebService.StartPsdzWebserviceProcess found");
+                                    bool alreadyPatched = false;
+                                    object psdzWebserviceProcessField = null;
+                                    object psdzWebApiLogDirField = null;
+                                    int insertIndex = -1;
+
+                                    // Bereits gepatcht?
+                                    foreach (Instruction inst in instructions)
+                                    {
+                                        if (inst.OpCode == OpCodes.Callvirt &&
+                                            inst.Operand?.ToString()?.Contains("set_WorkingDirectory") == true)
+                                        {
+                                            alreadyPatched = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!alreadyPatched)
+                                    {
+                                        // psdzWebserviceProcess-Feld: ldfld direkt vor call StartAndRegisterWebserviceProcess
+                                        for (int index = 0; index < instructions.Count; index++)
+                                        {
+                                            if (index >= 2 &&
+                                                instructions[index].OpCode == OpCodes.Call &&
+                                                instructions[index].Operand?.ToString()?.Contains("StartAndRegisterWebserviceProcess") == true &&
+                                                instructions[index - 1].OpCode == OpCodes.Ldfld &&
+                                                instructions[index - 2].OpCode == OpCodes.Ldarg_0)
+                                            {
+                                                psdzWebserviceProcessField = instructions[index - 1].Operand;
+                                                insertIndex = index - 2; // ldarg.0 vor ldfld psdzWebserviceProcess
+                                                Console.WriteLine("psdzWebserviceProcess field found at index: {0}", index - 1);
+                                                break;
+                                            }
+                                        }
+
+                                        // _psdzWebApiLogDir-Feld: im Konstruktor aus stfld nach ldarg.0, ldarg.1
+                                        Target targetCtor = new Target
+                                        {
+                                            Namespace = "RheingoldPsdzWebApi.Adapter",
+                                            Class = "PsdzWebService",
+                                            Method = ".ctor",
+                                        };
+                                        IList<Instruction> ctorInstructions = patcher.GetInstructionList(targetCtor);
+                                        if (ctorInstructions != null)
+                                        {
+                                            for (int index = 0; index < ctorInstructions.Count; index++)
+                                            {
+                                                if (index >= 2 &&
+                                                    ctorInstructions[index].OpCode == OpCodes.Stfld &&
+                                                    ctorInstructions[index - 1].OpCode == OpCodes.Ldarg_1 &&
+                                                    ctorInstructions[index - 2].OpCode == OpCodes.Ldarg_0)
+                                                {
+                                                    psdzWebApiLogDirField = ctorInstructions[index].Operand;
+                                                    Console.WriteLine("_psdzWebApiLogDir field found in .ctor at index: {0}", index);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (alreadyPatched)
+                                    {
+                                        Console.WriteLine("StartPsdzWebserviceProcess already patched");
+                                    }
+                                    else if (insertIndex >= 0 && psdzWebserviceProcessField != null && psdzWebApiLogDirField != null)
+                                    {
+                                        List<Instruction> insertInstructions = new List<Instruction>();
+
+                                        // psdzWebserviceProcess.StartInfo.WorkingDirectory = _psdzWebApiLogDir;
+                                        insertInstructions.Add(new Instruction(OpCodes.Ldarg_0));
+                                        insertInstructions.Add(Instruction.Create(OpCodes.Ldfld, (dnlib.DotNet.IField)psdzWebserviceProcessField));
+                                        insertInstructions.Add(Instruction.Create(OpCodes.Callvirt,
+                                            patcher.BuildCall(typeof(System.Diagnostics.Process), "get_StartInfo",
+                                                typeof(System.Diagnostics.ProcessStartInfo), null)));
+                                        insertInstructions.Add(new Instruction(OpCodes.Ldarg_0));
+                                        insertInstructions.Add(Instruction.Create(OpCodes.Ldfld, (dnlib.DotNet.IField)psdzWebApiLogDirField));
+                                        insertInstructions.Add(Instruction.Create(OpCodes.Callvirt,
+                                            patcher.BuildCall(typeof(System.Diagnostics.ProcessStartInfo), "set_WorkingDirectory",
+                                                typeof(void), new[] { typeof(string) })));
+
+                                        int offset = 0;
+                                        foreach (Instruction insertInstruction in insertInstructions)
+                                        {
+                                            instructions.Insert(insertIndex + offset, insertInstruction);
+                                            offset++;
+                                        }
+
+                                        patched = true;
+                                        Console.WriteLine("PsdzWebService.StartPsdzWebserviceProcess patched");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("*** Patching StartPsdzWebserviceProcess failed - " +
+                                            $"insertIndex={insertIndex}, processField={psdzWebserviceProcessField != null}, logDirField={psdzWebApiLogDirField != null}");
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("*** StartPsdzWebserviceProcess Exception: {0}", ex.Message);
+                            }
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Authoring.API.Implementation.SeamLM2Demand",
+                                Class = "SeamLM2BatteryDataHandler",
+                                Method = "GetBatteryDataFromBackend",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("SeamLM2BatteryDataHandler.GetBatteryDataFromBackend found");
+
+                                int apiResultIndex = -1;
+                                int seamLm2Index = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Newobj &&
+                                        instruction.Operand?.ToString()?.Contains("ApiResult::.ctor") == true)
+                                    {
+                                        Console.WriteLine(
+                                            "ApiResult constructor found at index: {0}",
+                                            index);
+                                        apiResultIndex = index;
+                                    }
+
+                                    if (instruction.OpCode == OpCodes.Newobj &&
+                                        instruction.Operand?.ToString()?.Contains("SeamLM2BatteryData::.ctor") == true)
+                                    {
+                                        Console.WriteLine(
+                                            "SeamLM2BatteryData constructor found at index: {0}",
+                                            index);
+                                        seamLm2Index = index;
+                                    }
+                                }
+
+                                if (apiResultIndex >= 0 && seamLm2Index >= 0)
+                                {
+                                    Console.WriteLine("SeamLM2BatteryDataHandler.GetBatteryDataFromBackend constructors found");
+                                    List<Instruction> insertInstructions = new List<Instruction>();
+
+                                    insertInstructions.Add(instructions[apiResultIndex].Clone());
+                                    insertInstructions.Add(instructions[seamLm2Index].Clone());
+                                    insertInstructions.Add(Instruction.Create(OpCodes.Ret));
+
+                                    instructions.Clear();
+                                    foreach (Instruction insertInstruction in insertInstructions)
+                                    {
+                                        instructions.Add(insertInstruction);
+                                    }
+
+                                    patched = true;
+                                    Console.WriteLine("SeamLM2BatteryDataHandler.GetBatteryDataFromBackend patched");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("*** SeamLM2BatteryDataHandler.GetBatteryDataFromBackend constructors not found");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** SeamLM2BatteryDataHandler.GetBatteryDataFromBackend Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.Diagnostics",
+                                Class = "VehicleIdent",
+                                Method = "doVehicleShortTest",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+
+                            if (instructions == null)
+                            {
+                                target.Method = "DoVehicleShortTest";
+                                instructions = patcher.GetInstructionList(target);
+                            }
+
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("VehicleIdent.DoVehicleShortTest found");
+                                int removeIndex = -1;
+                                int removeCount = 0;
+                                bool removeWithOffset = false;
+                                int getBnTypeIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Ldarg_0 && index + 12 < instructions.Count)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Call)         // get_VecInfo
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 2].OpCode != OpCodes.Callvirt)     // get_Classification
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 3].OpCode != OpCodes.Callvirt)     // IsPreDS2Vehicle
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 4].OpCode != OpCodes.Brtrue_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 5].OpCode != OpCodes.Ldarg_0)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 6].OpCode != OpCodes.Call)         // get_VecInfo
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 7].OpCode != OpCodes.Callvirt)     // get_BNType
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 8].OpCode != OpCodes.Ldc_I4_2)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 9].OpCode != OpCodes.Bne_Un_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 10].OpCode != OpCodes.Ldarg_0)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 11].OpCode != OpCodes.Ldc_I4_0)     // false
+                                        {
+                                            if (instructions[index + 11].OpCode != OpCodes.Call)     // HandleMissingEcus()
+                                            {
+                                                continue;
+                                            }
+
+                                            removeCount = 2;
+                                            removeWithOffset = false;
+                                            removeIndex = index + 10;
+                                        }
+                                        else
+                                        {
+                                            if (instructions[index + 12].OpCode != OpCodes.Call)     // HandleMissingEcus(false)
+                                            {
+                                                continue;
+                                            }
+
+                                            removeCount = 13;
+                                            removeWithOffset = true;
+                                            removeIndex = index;
+                                        }
+
+                                        getBnTypeIndex = index + 5;
+                                        break;
+                                    }
+                                }
+
+                                if (removeIndex < 0 || getBnTypeIndex < 0)
+                                {
+                                    Console.WriteLine("*** HandleMissingEcus not found");
+                                }
+
+                                int insertIndex = -1;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Callvirt && index + 7 < instructions.Count)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Brtrue_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 2].OpCode != OpCodes.Ldloc_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 3].OpCode != OpCodes.Ldc_I4_0)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 4].OpCode != OpCodes.Callvirt)     // set_IDENT_SUCCESSFULLY
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 5].OpCode != OpCodes.Ldloc_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 6].OpCode != OpCodes.Ldc_I4_0)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 7].OpCode != OpCodes.Callvirt)     // set_FS_SUCCESSFULLY
+                                        {
+                                            continue;
+                                        }
+
+                                        insertIndex = index + 2;
+                                        break;
+                                    }
+                                }
+
+                                if (insertIndex < 0)
+                                {
+                                    Console.WriteLine("*** set_IDENT_SUCCESSFULLY not found");
+                                }
+
+                                if (removeIndex >= 0 && getBnTypeIndex >= 0 && insertIndex >= 0)
+                                {
+                                    //  copy Ldarg_0, Call, Callvirt, Ldc_I4_2
+                                    List<Instruction> insertInstructions = new List<Instruction>();
+                                    int pos;
+                                    for (pos = 0; pos < 4; pos++)
+                                    {
+                                        Instruction instruction = instructions[getBnTypeIndex + pos];
+                                        insertInstructions.Add(instruction.Clone());
+                                    }
+                                    insertInstructions.Add(new Instruction(OpCodes.Beq_S, instructions[insertIndex + 3]));
+
+                                    int offset = 0;
+                                    foreach (Instruction insertInstruction in insertInstructions)
+                                    {
+                                        instructions.Insert(insertIndex + offset, insertInstruction);
+                                        offset++;
+                                    }
+
+                                    for (int idx = 0; idx < removeCount; idx++)
+                                    {
+                                        if (removeWithOffset)
+                                        {
+                                            instructions.RemoveAt(removeIndex + offset);
+                                        }
+                                        else
+                                        {
+                                            instructions.RemoveAt(removeIndex);
+                                        }
+                                    }
+
+                                    patched = true;
+                                    Console.WriteLine("DoVehicleShortTest patched");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("*** Patching DoVehicleShortTest failed");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** doVehicleShortTest Exception: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.Rheingold.Diagnostics",
+                                Class = "VehicleIdent",
+                                Method = "ClearAndReadErrorInfoMemory",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("VehicleIdent.ClearAndReadErrorInfoMemory found");
+                                int patchIndex = -1;
+                                object operand = null;
+                                for (int index = 0; index < instructions.Count; index++)
+                                {
+                                    Instruction instruction = instructions[index];
+                                    if (instruction.OpCode == OpCodes.Call && index + 7 < instructions.Count)
+                                    {
+                                        if (instructions[index + 1].OpCode != OpCodes.Callvirt)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 2].OpCode != OpCodes.Callvirt)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 3].OpCode != OpCodes.Stloc_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 4].OpCode != OpCodes.Ldloc_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 5].OpCode != OpCodes.Brfalse_S)    // copy offset from here
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 6].OpCode != OpCodes.Ldloca_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 7].OpCode != OpCodes.Call)
+                                        {
+                                            continue;
+                                        }
+
+                                        if (instructions[index + 8].OpCode != OpCodes.Brfalse_S)
+                                        {
+                                            continue;
+                                        }
+
+                                        patchIndex = index + 8;
+                                        operand = instructions[index + 5].Operand;
+                                        break;
+                                    }
+                                }
+
+                                if (patchIndex >= 0 && operand != null)
+                                {
+                                    instructions[patchIndex].Operand = operand;
+                                    patched = true;
+                                    Console.WriteLine("Disabled NoClamp15ForErrorMemory message if clamp15 is not readable");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("*** Patching ClearAndReadErrorInfoMemory failed");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** ClearAndReadErrorInfoMemory Exception: {0}", ex.Message);
+                        }
+
+                        if (noIcomVerCheck)
+                        {
+                            try
+                            {
+                                Target target = new Target
+                                {
+                                    Namespace = "BMW.Rheingold.xVM",
+                                    Class = "SLP",
+                                    Method = "IsIcomUnsupported",
+                                };
+                                IList<Instruction> instructions = patcher.GetInstructionList(target);
+                                if (instructions != null)
+                                {
+                                    Console.WriteLine("SLP.IsIcomUnsupported found");
+                                    instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_0));
+                                    instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                    patched = true;
+                                    Console.WriteLine("IsIcomUnsupported patched");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("*** IsIcomUnsupported Exception: {0}", ex.Message);
+                            }
+
+                            try
+                            {
+                                Target target = new Target
+                                {
+                                    Namespace = "BMW.Rheingold.xVM",
+                                    Class = "SLP",
+                                    Method = "ScanDeviceFromAttrList",
+                                };
+                                IList<Instruction> instructions = patcher.GetInstructionList(target);
+                                if (instructions != null)
+                                {
+                                    Console.WriteLine("SLP.ScanDeviceFromAttrList found");
+
+                                    int patchIndex = -1;
+                                    for (int index = 0; index + 1 < instructions.Count; index++)
+                                    {
+                                        // Find: ldstr "ICOM-Next"  followed by  call String::op_Equality(string, string)
+                                        if (instructions[index].OpCode == OpCodes.Ldstr &&
+                                            (instructions[index].Operand as string) == "ICOM-Next" &&
+                                            instructions[index + 1].OpCode == OpCodes.Call &&
+                                            instructions[index + 1].Operand is IMethod calledMethod &&
+                                            calledMethod.Name == "op_Equality")
+                                        {
+                                            patchIndex = index;
+                                            break;
+                                        }
+                                    }
+
+                                    if (patchIndex >= 0)
+                                    {
+                                        // Import instance method: bool String.StartsWith(string)
+                                        ModuleDef module = patcher.GetModule();
+                                        IMethod startsWith = module.Import(
+                                            typeof(string).GetMethod("StartsWith", new[] { typeof(string) }));
+
+                                        // Change comparison from ("DevType" == "ICOM-Next") to DevType.StartsWith("ICOM"),
+                                        // which matches both "ICOM" and "ICOM-Next".
+                                        instructions[patchIndex].Operand = "ICOM";
+                                        instructions[patchIndex + 1].OpCode = OpCodes.Callvirt;
+                                        instructions[patchIndex + 1].Operand = startsWith;
+
+                                        patched = true;
+                                        Console.WriteLine("ScanDeviceFromAttrList patched");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("*** Patching ScanDeviceFromAttrList failed");
+                                    }
+
+                                    // Ignore firmware-update requirement for ICOM_A1 / ICOM_A2:
+                                    // insert DevTypeExt checks right before the SLP.IsFirmwareUpdateRequired(vcidevice) call.
+                                    // This injects teh code:
+                                    //if (dictionary["State"] != "5"
+                                    //    && vcidevice.DevTypeExt != "ICOM_A1" && vcidevice.DevTypeExt != "ICOM_A2"
+                                    //    && SLP.IsFirmwareUpdateRequired(vcidevice))
+                                    int fwIndex = -1;
+                                    for (int index = 1; index + 1 < instructions.Count; index++)
+                                    {
+                                        if (instructions[index].OpCode == OpCodes.Call &&
+                                            instructions[index].Operand is IMethod fwMethod &&
+                                            fwMethod.Name == "IsFirmwareUpdateRequired" &&
+                                            IsLdloc(instructions[index - 1].OpCode.Code)) // ldloc vcidevice (any form)
+                                        {
+                                            fwIndex = index;
+                                            break;
+                                        }
+                                    }
+
+                                    // Find a get_DevType callvirt to reuse its declaring-type reference for get_DevTypeExt.
+                                    IMemberRefParent vciTypeRef = null;
+                                    foreach (Instruction instr in instructions)
+                                    {
+                                        if (instr.OpCode == OpCodes.Callvirt &&
+                                            instr.Operand is MemberRef getter &&
+                                            getter.Name == "get_DevType")
+                                        {
+                                            vciTypeRef = getter.Class;
+                                            break;
+                                        }
+                                    }
+
+                                    if (fwIndex >= 0 && vciTypeRef != null &&
+                                        (instructions[fwIndex + 1].OpCode == OpCodes.Brfalse ||
+                                         instructions[fwIndex + 1].OpCode == OpCodes.Brfalse_S))
+                                    {
+                                        ModuleDef module = patcher.GetModule();
+                                        IMethod startsWith = module.Import(
+                                            typeof(string).GetMethod("StartsWith", new[] { typeof(string) }));
+
+                                        // bool VCIDevice.get_DevTypeExt() on the same declaring type as get_DevType.
+                                        IMethod getDevTypeExt = new MemberRefUser(module, "get_DevTypeExt",
+                                            MethodSig.CreateInstance(module.CorLibTypes.String), vciTypeRef);
+
+                                        Instruction ldVci = instructions[fwIndex - 1];               // ldloc vcidevice (also the fall-through target)
+                                        Instruction elseTarget = (Instruction)instructions[fwIndex + 1].Operand; // else branch
+
+                                        // if ((ext = vcidevice.DevTypeExt) != null && ext.StartsWith("ICOM_A")) goto else;
+                                        Instruction popNull = Instruction.Create(OpCodes.Pop);       // drop null ext, fall through
+                                        Instruction[] seq =
+                                        {
+                                            ldVci.Clone(),                                            // ldloc vcidevice
+                                            Instruction.Create(OpCodes.Callvirt, getDevTypeExt),      // ext
+                                            Instruction.Create(OpCodes.Dup),                          // ext, ext
+                                            Instruction.Create(OpCodes.Brfalse, popNull),            // if null -> popNull
+                                            Instruction.Create(OpCodes.Ldstr, "ICOM_A"),
+                                            Instruction.Create(OpCodes.Callvirt, startsWith),        // bool
+                                            Instruction.Create(OpCodes.Brtrue, elseTarget),          // matched -> else
+                                            Instruction.Create(OpCodes.Br, ldVci),                   // no match -> firmware check
+                                            popNull,                                                  // pop null; fall through to ldVci
+                                        };
+
+                                        int ins = fwIndex - 1; // insert before "ldloc vcidevice"
+                                        foreach (Instruction instr in seq)
+                                        {
+                                            instructions.Insert(ins++, instr);
+                                        }
+
+                                        // Fix short branches now that instructions were inserted.
+                                        MethodDef scanMethod = target.MethodDef;
+                                        if (scanMethod?.Body != null)
+                                        {
+                                            scanMethod.Body.SimplifyBranches();
+                                            scanMethod.Body.OptimizeBranches();
+                                        }
+
+                                        patched = true;
+                                        Console.WriteLine("ScanDeviceFromAttrList firmware check skipped for DevTypeExt StartsWith ICOM_A");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("*** Patching ScanDeviceFromAttrList firmware check failed");
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("*** ScanDeviceFromAttrList Exception: {0}", ex.Message);
+                            }
+                        }
+
+                        if (disableBackend)
+                        {
+                            try
+                            {
+                                Target target = new Target
+                                {
+                                    Namespace = "BMW.iLean.CommonServices.Models",
+                                    Class = "WebService",
+                                    Method = "GetServerBaseAddress",
+                                };
+                                IList<Instruction> instructions = patcher.GetInstructionList(target);
+                                if (instructions != null)
+                                {
+                                    Console.WriteLine("WebService.GetServerBaseAddress found");
+                                    instructions.Insert(0, instructions[0].Clone());
+                                    instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                    patched = true;
+                                    Console.WriteLine("WebService.GetServerBaseAddress patched");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("*** WebService.GetServerBaseAddress Exception: {0}", ex.Message);
+                            }
+
+                            try
+                            {
+                                // Alternativly, create the folders and allow user write access:
+                                // C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\SdpPatch
+                                // C:\ProgramData\BMW\ISPI\data\TRIC\ISTA\SdpPatchBOMs
+                                Target target = new Target
+                                {
+                                    Namespace = "BMW.Rheingold.CoreFramework",
+                                    Class = "ConfigSettings",
+                                    Method = "GetActivateSdpOnlinePatch",
+                                };
+                                IList<Instruction> instructions = patcher.GetInstructionList(target);
+                                if (instructions != null)
+                                {
+                                    Console.WriteLine("ConfigSettings.GetActivateSdpOnlinePatch found");
+                                    instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I4_0));
+                                    instructions.Insert(1, Instruction.Create(OpCodes.Ret));
+                                    patched = true;
+                                    Console.WriteLine("GetActivateSdpOnlinePatch patched");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("*** ConfigSettings.GetActivateSdpOnlinePatch Exception: {0}", ex.Message);
+                            }
+                        }
+
+                        try
+                        {
+                            Target target = new Target
+                            {
+                                Namespace = "BMW.ISPI.IstaOperation.Controller",
+                                Class = "IstaOperationStarter",
+                                Method = "Start",
+                            };
+                            IList<Instruction> instructions = patcher.GetInstructionList(target);
+                            if (instructions != null)
+                            {
+                                Console.WriteLine("IstaOperationStarter.Start found");
+                                int patchIndex = -1;
+                                if (instructions.Count > 50)
+                                {
+                                    patchIndex = instructions.Count - 2;
+                                }
+
+                                if (patchIndex >= 0)
+                                {
+                                    if ((instructions[patchIndex].OpCode != OpCodes.Ldloc_S) ||     // ldloc.s	V_4 (4)
+                                        (instructions[patchIndex + 1].OpCode != OpCodes.Ret))       // ret
+                                    {
+                                        Console.WriteLine("Start patch location invalid");
+                                    }
+                                    else
+                                    {
+                                        switch (debugOpt)
+                                        {
+                                            case Options.DebugOption.MsgBox:
+                                                if (!patcher.InsertDebugMessageBox(ref instructions, patchIndex, "IstaOperation started. Attach to IstaOperation.exe now.", "ISTAGUI"))
+                                                {
+                                                    Console.WriteLine("Patch InsertDebugMessageBox failed");
+                                                }
+                                                else
+                                                {
+                                                    Console.WriteLine();
+                                                    Console.WriteLine("To show the message box at startup:");
+                                                    Console.WriteLine("In dnSpy disable the ignore options: IsDebuggerPresent and System.Diagnostics.Debugger");
+                                                    Console.WriteLine();
+                                                }
+                                                break;
+
+                                            case Options.DebugOption.Break:
+                                                instructions.Insert(patchIndex,
+                                                    Instruction.Create(OpCodes.Call,
+                                                        patcher.BuildCall(typeof(System.Diagnostics.Debugger), "get_IsAttached", typeof(bool), null)));
+                                                instructions.Insert(patchIndex + 1, Instruction.Create(OpCodes.Brfalse_S, instructions[patchIndex + 1]));
+                                                instructions.Insert(patchIndex + 2, Instruction.Create(OpCodes.Break));
+                                                Console.WriteLine();
+                                                Console.WriteLine("When running in debugger attach IstaOperation.exe when the break point has been reached");
+                                                Console.WriteLine();
+                                                break;
+                                        }
+
+                                        //patcher.Save(file.Replace(".dll", "Test.dll"));
+                                        patched = true;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("*** IstaOperationStarter.Start Exception: {0}", ex.Message);
+                        }
+
+                        if (patched)
+                        {
+                            try
+                            {
+#if true
+                                patcher.Save(true);
+#endif
+                                Console.WriteLine("Patched: {0} Version={1} '{2}'", relPath, versionString ?? string.Empty, companyName);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("*** Patch exception: File={0}, Msg={1}", relPath, ex.Message);
+                            }
+                        }
+                    }
+                    catch (NullReferenceException)
+                    {
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("*** Patch exception: File={0}, Msg={1}", file, ex.Message);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("*** Exception: {0}", e.Message);
+                return 1;
+            }
+
+            return 0;
+        }
+
+        static bool UpdateExeConfig(string exeFileName, bool noIcomVerCheck, bool verificationMode, bool overwriteConfig, out long? fileVersion)
+        {
+            fileVersion = null;
+            try
+            {
+                if (!File.Exists(exeFileName))
+                {
+                    Console.WriteLine("UpdateExeConfig Executable file not existing: {0}", exeFileName);
+                    return false;
+                }
+
+                string configFileName = exeFileName + ".config";
+                if (!File.Exists(configFileName))
+                {
+                    Console.WriteLine("UpdateExeConfig Config file not existing: {0}", configFileName);
+                    return false;
+                }
+
+                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(exeFileName);
+                string companyName = fvi?.CompanyName ?? string.Empty;
+                string legalCopyright = fvi?.LegalCopyright ?? string.Empty;
+                if (!string.IsNullOrEmpty(fvi?.FileVersion))
+                {
+                    if (companyName.IndexOf("BMW", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        legalCopyright.IndexOf("Bayerische", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        fileVersion = (fvi.FileMajorPart << 24) + (fvi.FileMinorPart << 16) + fvi.FileBuildPart;
+                    }
+                }
+
+                if (fileVersion == null)
+                {
+                    Console.WriteLine("UpdateExeConfig Missing file version for: {0}", exeFileName);
+                    return false;
+                }
+
+                string backupFile = configFileName + ".bak";
+                if (File.Exists(backupFile))
+                {
+                    if (overwriteConfig)
+                    {
+                        Console.WriteLine("UpdateExeConfig Overwriting modified config file: {0}", configFileName);
+                    }
+                    else
+                    {
+                        Console.WriteLine("UpdateExeConfig Config file already modified: {0}", configFileName);
+                        return true;
+                    }
+                }
+
+                string dirtyFlagValue = noIcomVerCheck ? "false" : "true";
+                string verificationModeValue = verificationMode ? "true" : "false";
+
+                var patchList = new List<(string Match, string Replace)>()
+                {
+                    ("\"DebugLevel\"", "    <add key=\"DebugLevel\" value=\"5\" />"),
+                    ("\"BMW.Rheingold.Programming.Prodias.LogLevel\"", "    <add key=\"BMW.Rheingold.Programming.Prodias.LogLevel\" value=\"TRACE\" />"),
+                    ("\"BMW.Rheingold.RheingoldSessionController.FASTATransferMode\"", "    <add key=\"BMW.Rheingold.RheingoldSessionController.FASTATransferMode\" value=\"None\" />"),
+                    ("\"BMW.Rheingold.RheingoldSessionController.CircumventProgramingProhibitionPlus\"", "    <add key=\"BMW.Rheingold.RheingoldSessionController.CircumventProgramingProhibitionPlus\" value=\"true\" />"),
+                    ("\"BMW.Rheingold.Diagnostics.VehicleIdent.ReadFASTAData\"", "    <add key=\"BMW.Rheingold.Diagnostics.VehicleIdent.ReadFASTAData\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.OperationalMode\"", "    <add key=\"BMW.Rheingold.OperationalMode\" value=\"ISTA_PLUS\" />"),
+                    ("\"BMW.Rheingold.ISTAGUI.Pages.StartPage.ShowDisclaimer\"", "    <add key=\"BMW.Rheingold.ISTAGUI.Pages.StartPage.ShowDisclaimer\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.ISTAGUI.App.DoInitialIpsAvailabilityCheck\"", "    <add key=\"BMW.Rheingold.ISTAGUI.App.DoInitialIpsAvailabilityCheck\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.Programming.ExpertMode\"", "    <add key=\"BMW.Rheingold.Programming.ExpertMode\" value=\"true\" />"),
+                    ("\"BMW.Rheingold.ISTAGUI.ShowHiddenDiagnosticObjects\"", "    <add key=\"BMW.Rheingold.ISTAGUI.ShowHiddenDiagnosticObjects\" value=\"true\" />"),
+                    ("\"BMW.Rheingold.OnlineMode\"", "    <add key=\"BMW.Rheingold.OnlineMode\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.UseIdentNuget\"", "    <add key=\"BMW.Rheingold.UseIdentNuget\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.UseJreWithTLS13Support_Activate\"", "    <add key=\"BMW.Rheingold.UseJreWithTLS13Support_Activate\" value=\"true\" />"),
+                    ("\"BMW.Rheingold.Programming.Sdp.Patch.Enabled\"", "    <add key=\"BMW.Rheingold.Programming.Sdp.Patch.Enabled\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.OnlinePatch.Serviceprogram.IsActive\"", "    <add key=\"BMW.Rheingold.OnlinePatch.Serviceprogram.IsActive\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.OnlinePatch.Validity.IsActive\"", "    <add key=\"BMW.Rheingold.OnlinePatch.Validity.IsActive\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.Diagnostics.EnableRsuProcessHandling\"", "    <add key=\"BMW.Rheingold.Diagnostics.EnableRsuProcessHandling\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.ISTAGUI.Dialogs.AdministrationDialog.ShowPTTSelection\"", "    <add key=\"BMW.Rheingold.ISTAGUI.Dialogs.AdministrationDialog.ShowPTTSelection\" value=\"true\" />"),
+                    ("\"BMW.Rheingold.CoreFramework.TRICZentralActive\"", "    <add key=\"BMW.Rheingold.CoreFramework.TRICZentralActive\" value=\"false\" />"),
+                    ("\"EnableRelevanceFaultCode\"", "    <add key=\"EnableRelevanceFaultCode\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.Developer.guidebug\"", "    <add key=\"BMW.Rheingold.Developer.guidebug\" value=\"true\" />"),
+                    ("\"BMW.Rheingold.ISTAGUI.App.MultipleInstancesAllowed\"", "    <add key=\"BMW.Rheingold.ISTAGUI.App.MultipleInstancesAllowed\" value=\"false\" />"),
+                    ("\"BMW.Rheingold.xVM.ICOM.Dirtyflag.Detection\"", $"    <add key=\"BMW.Rheingold.xVM.ICOM.Dirtyflag.Detection\" value=\"{dirtyFlagValue}\" />"),
+                    ("\"BMW.Rheingold.VerificationMode\"", $"    <add key=\"BMW.Rheingold.VerificationMode\" value=\"{verificationModeValue}\" />"),
+                };
+
+                if (fileVersion.Value < FileVersion450)
+                {
+                    // hard coded, not option required
+                    patchList.Add(("\"BMW.Rheingold.ISTAGUI.enableENETprogramming\"", "    <add key=\"BMW.Rheingold.ISTAGUI.enableENETprogramming\" value=\"true\" />"));
+                    // not existing anymore
+                    patchList.Add(("\"TesterGUI.PreferEthernet\"", "    <add key=\"TesterGUI.PreferEthernet\" value=\"true\" />"));
+                }
+
+                if (fileVersion.Value < FileVersion456)
+                {
+                    // not existing anymore
+                    patchList.Add(("\"BMW.Rheingold.PsdzWebservice_Activate\"", "    <add key=\"BMW.Rheingold.PsdzWebservice_Activate\" value=\"false\" />"));
+                }
+
+                string[] fileLines = File.ReadAllLines(configFileName);
+                List<string> outputLines = new List<string>();
+                foreach (string line in fileLines)
+                {
+                    int matchIdx = -1;
+                    for (int i = 0; i < patchList.Count; i++)
+                    {
+                        if (line.Contains(patchList[i].Match))
+                        {
+                            matchIdx = i;
+                            break;
+                        }
+                    }
+
+                    if (matchIdx >= 0)
+                    {
+                        Console.WriteLine("UpdateExeConfig Modify: '{0}' to '{1}'", line, patchList[matchIdx].Replace);
+                        outputLines.Add(patchList[matchIdx].Replace);
+                        patchList.RemoveAt(matchIdx);
+                        continue;
+                    }
+
+                    if (line.Contains("</appSettings>"))
+                    {
+                        foreach (var patch in patchList)
+                        {
+                            Console.WriteLine("UpdateExeConfig Add: '{0}''", patch.Replace);
+                            outputLines.Add(patch.Replace);
+                        }
+                    }
+
+                    outputLines.Add(line);
+                }
+
+                if (!File.Exists(backupFile))
+                {
+                    File.Copy(configFileName, backupFile, false);
+                }
+
+                File.WriteAllLines(configFileName, outputLines);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("UpdateExeConfig Exception: {0}", e.Message);
+                return false;
+            }
+            return true;
+        }
+
+        private static bool IsLdloc(Code code)
+        {
+            switch (code)
+            {
+                case Code.Ldloc:
+                case Code.Ldloc_S:
+                case Code.Ldloc_0:
+                case Code.Ldloc_1:
+                case Code.Ldloc_2:
+                case Code.Ldloc_3:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static string GetRelativePath(string basePath, string fullPath)
+        {
+            // Require trailing backslash for path
+            if (!basePath.EndsWith("\\"))
+            {
+                basePath += "\\";
+            }
+
+            Uri baseUri = new Uri(basePath);
+            Uri fullUri = new Uri(fullPath);
+
+            Uri relativeUri = baseUri.MakeRelativeUri(fullUri);
+
+            // Uri's use forward slashes so convert back to backward slashes
+            return relativeUri.ToString().Replace("/", "\\");
+        }
+
+        public static string AssemblyDirectory
+        {
+            get
+            {
+#if NET
+                string location = Assembly.GetExecutingAssembly().Location;
+                if (string.IsNullOrEmpty(location) || !File.Exists(location))
+                {
+                    return null;
+                }
+                return Path.GetDirectoryName(location);
+#else
+                string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                UriBuilder uri = new UriBuilder(codeBase);
+                string path = Uri.UnescapeDataString(uri.Path);
+                if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                {
+                    return null;
+                }
+                return Path.GetDirectoryName(path);
+#endif
+            }
+        }
+    }
+}

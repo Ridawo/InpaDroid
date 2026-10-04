@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <ProjectGuid>{4D348EAC-E423-4F6E-8508-BEA18A623701}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net481</TargetFramework>
+    <AssemblyTitle>EdiabasTest</AssemblyTitle>
+    <Product>EdiabasTest</Product>
+    <Copyright>Copyright ©  2014</Copyright>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EdiabasLib\EdiabasLib.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NDesk.Options.Core" Version="1.2.8" />
+    <PackageReference Include="Ranges" Version="1.0.5" />
+  </ItemGroup>
+</Project>

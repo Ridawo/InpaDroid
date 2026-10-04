@@ -1,0 +1,471 @@
+﻿using BMW.Rheingold.CoreFramework.Contracts.Vehicle;
+using BMW.Rheingold.Psdz;
+using BMW.Rheingold.Psdz.Model;
+using Org.BouncyCastle.Asn1.Pkcs;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Pkcs;
+using PsdzClient.Core;
+using PsdzClient.Core.Container;
+using PsdzClient.Programming;
+using System;
+using System.Globalization;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using BMW.Rheingold.CoreFramework.DatabaseProvider;
+using BMW.Rheingold.CoreFramework.Programming.Data.Ecu;
+using BMW.Rheingold.Psdz.Model.Ecu;
+
+#pragma warning disable CS0169, CS0612, CS0649
+namespace PsdzClient.Psdz
+{
+    public class ConnectionManager : ProgrammingMessageListener, IPsdzProg
+    {
+        protected const int DEFAULT_VEHICLE_CONNECTION_PORT = 50160;
+        protected const int DEFAULT_SP25_VEHICLE_CONNECTION_PORT = 50162;
+        protected const int DEFAULT_ETHERNET_CONNECTION_PORT = 6801;
+        protected const int DEFAULT_SP25_ETHERNET_CONNECTION_PORT = 13400;
+        protected const int DEFAULT_MOTORCYCLE_CONNECTION_PORT = 50960;
+        protected const int FALLBACK_MOTORCYCLE_CONNECTION_PORT = 52410;
+        protected const int ICOM_REBOOT_RETRY = 2;
+        private bool shouldSetConnectionToDcan;
+        private string eReihe;
+        private string bauIStufe;
+        private readonly IProtocolBasic fastaService;
+        public readonly IPsdzCentralConnectionService psdzCentralConnectionService;
+        private readonly ISecureDiagnosticsService secureDiagnosticsService;
+        private readonly IHttpConfigurationService httpConfigurationService;
+        [PreserveSource(Hint = "EdiabasConnectionManager", Placeholder = true)]
+        private PlaceholderType EdiabasConnection { get; }
+
+        [PreserveSource(Hint = "PsdzConnectionManager", Placeholder = true)]
+        private PlaceholderType PsdzConnectionManager { get; }
+        private IBaureiheUtilityService BaureiheUtilityService { get; }
+
+        [PreserveSource(Hint = "IICOMHandler", Placeholder = true)]
+        private PlaceholderType ICOMHandler { get; }
+
+        private string EReihe
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(eReihe))
+                {
+                    eReihe = GetPsdzBaureihe();
+                }
+
+                return eReihe;
+            }
+        }
+
+        private string BauIstufe
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(bauIStufe))
+                {
+                    bauIStufe = GetBauIStufe();
+                }
+
+                return bauIStufe;
+            }
+        }
+
+        public bool AvoidTlsConnection { get; set; }
+        protected virtual IVehicle Vehicle { get; }
+        protected virtual string Vin17 => Vehicle?.VIN17;
+
+        [PreserveSource(Hint = "Modified using ClientContext", SuppressWarning = true)]
+        protected virtual bool? IsDoIP => ClientContext.GetClientContext((Vehicle)Vehicle)?.SessionInfo?.IsDoIP;
+
+        protected virtual bool IsEES25Vehicle
+        {
+            get
+            {
+                if (Vehicle != null)
+                {
+                    return Vehicle.Classification.IsNCar;
+                }
+
+                return false;
+            }
+        }
+
+        protected virtual string BRV => Vehicle?.Baureihenverbund;
+        protected virtual IVciDevice VCI => Vehicle?.VCI;
+        protected virtual IcomConnectionType IcomConnectionType => IcomConnectionType.DCan;
+
+        internal bool IsNotConnectedViaPttAndEnet
+        {
+            get
+            {
+                if (!IsConnectedViaPtt())
+                {
+                    return !IsConnectedViaENET();
+                }
+
+                return false;
+            }
+        }
+
+        internal bool IsConnectedViaPttOrEnet => !IsNotConnectedViaPttAndEnet;
+        internal int ConnectionPort { get; set; }
+
+        [PreserveSource(Hint = "IProtocolBasic protocoller, IICOMHandler icomHandler, removed", SignatureModified = true)]
+        internal ConnectionManager(IPsdz psdz, IVehicle vehicle, IProgMsgListener progMsgListener, bool shouldSetConnectionToDcan = false, int connectionPort = -1) : base(progMsgListener)
+        {
+            //[-] PsdzConnectionManager = new PsdzConnectionManager(psdz, protocoller);
+            //[-] psdzCentralConnectionService = PsdzCentralConnectionService.CreateInstance(PsdzConnectionManager);
+            //[-] ServiceLocator.Current.TryAddService(psdzCentralConnectionService);
+            //[-] EdiabasConnection = new EdiabasConnectionManager(ecuKom, progMsgListener);
+            Vehicle = vehicle;
+            this.shouldSetConnectionToDcan = shouldSetConnectionToDcan;
+            ConnectionPort = connectionPort;
+            //[-] ICOMHandler = icomHandler;
+            //[-] fastaService = protocoller;
+            secureDiagnosticsService = psdz.SecureDiagnosticsService;
+            AvoidTlsConnection = false;
+            httpConfigurationService = psdz.HttpConfigurationService;
+            BaureiheUtilityService = psdz.BaureiheUtilityService;
+        }
+
+        private bool IsConnectedViaPtt()
+        {
+            return VCI.VCIType == VCIDeviceType.PTT;
+        }
+
+        private bool IsConnectedViaENET()
+        {
+            return VCI.VCIType == VCIDeviceType.ENET;
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal IPsdzConnection ConnectToProject(string projectName, string vehicleInfo, int diagPort)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal bool IsConnected(IPsdzConnection connection)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal bool IsConnected(IPsdzConnection connection, out string psdzMessage)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal IPsdzConnection ConnectToProject(string projectName, string vehicleInfo, bool restartHsfzOnError)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal IPsdzConnection ConnectToProjectOverDcan(string projectName, string vehicleInfo)
+        {
+            shouldSetConnectionToDcan = true;
+            return ConnectToProject(projectName, vehicleInfo);
+        }
+
+        public virtual IPsdzConnection ConnectToProject(string projectName, string vehicleInfo)
+        {
+            IVehicle vehicle = Vehicle;
+            if (vehicle != null && vehicle.Classification.IsMotorcycle())
+            {
+                return ConnectToMotorcycle(projectName, vehicleInfo, 50960, 52410);
+            }
+
+            int defaultVehicleConnectionPort = (UseTheDoipPort() ? 50162 : 50160);
+            return ConnectToCar(projectName, vehicleInfo, defaultVehicleConnectionPort);
+        }
+
+        internal void RenewPsdzConnection(PsdzContext psdzContext)
+        {
+            try
+            {
+                Log.Info(Log.CurrentMethod(), "Called");
+                psdzCentralConnectionService.ReleaseConnection();
+                ReconnectToPsdz(psdzContext);
+                Log.Info(Log.CurrentMethod(), "Finished");
+            }
+            catch (Exception exception)
+            {
+                Log.ErrorException(Log.CurrentMethod(), exception);
+            }
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal void SwitchFromEDIABASToPSdZIfConnectedViaPTTOrENET(PsdzContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal void SwitchFromEDIABASToPSdZ(PsdzContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal void SwitchFromPSdZToEDIABASIfConnectedViaPTTOrENET(PsdzContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal void SwitchFromPSdZToEDIABAS(PsdzContext context, bool isDoIP)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal IPsdzConnection SwitchFromEDIABASToPSdZIfConnectedViaPTTOrENET(bool restartHsfzOnError = false)
+        {
+            CloseEdiabasConnectionIfConnectedViaPTTOrENET();
+            return ConnectToPsdz(restartHsfzOnError);
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal void CloseEdiabasConnectionIfConnectedViaPTTOrENET()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        internal void SwitchFromPSdZToEDIABASIfConnectedViaPTTOrENET(IPsdzConnection connection)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void RegisterCallbackAndPassCertificatesToPsdz(IPsdzConnection connection)
+        {
+            Log.Info(Log.CurrentMethod(), "Registering callbacks and passing certificates to psdz");
+            if (!ServiceLocator.Current.TryGetService<ISec4DiagHandler>(out var service))
+            {
+                return;
+            }
+
+            try
+            {
+                Log.Info(Log.CurrentMethod(), "Generating certificates");
+                string text = ((!string.IsNullOrEmpty(Vin17)) ? Vin17 : VCI.VIN);
+                X509Certificate2 x509Certificate = null;
+                AsymmetricKeyParameter asymmetricKeyParameter = null;
+                X509Certificate2 caCertificate = null;
+                X509Certificate2 subCaCertificate = null;
+                if (ConfigSettings.IsOssModeActive && ServiceLocator.Current.TryGetService<IBackendCallsWatchDog>(out var service2) && ServiceLocator.Current.TryGetService<IstaLoginServiceClient>(out var service3))
+                {
+                    string text2 = service3.GetUserTokenByOperationId()?.UserToken;
+                    if (text2 == null)
+                    {
+                        fastaService.AddServiceCode("LOG09_AccessTokenNotFound_nu_LF ", "Access token could not be retrieved.", LayoutGroup.D);
+                    }
+
+                    WebCallResponse<Sec4DiagResponseData> webCallResponse = Sec4DiagProcessorFactory.Create(service2).SendDataToBackend(service.BuildRequestModelForPSdZInAos(text), BackendServiceType.AosSec4Diag, text2);
+                    service.Sec4DiagCertificatesForPSdZInAos = service.CreateS29CertificateInstallCertificatesAndWriteToFileForAos(webCallResponse.Response.CertificateChain[0], webCallResponse.Response.CertificateChain[1], webCallResponse.Response.Certificate, writeFile: false);
+                    x509Certificate = service.Sec4DiagCertificatesForPSdZInAos.S29Cert;
+                    caCertificate = service.Sec4DiagCertificatesForPSdZInAos.CaCert;
+                    subCaCertificate = service.Sec4DiagCertificatesForPSdZInAos.SubCaCert;
+                    asymmetricKeyParameter = service.IstaKeyPair?.Private;
+                }
+                else if (!ConfigSettings.IsOssModeActive)
+                {
+                    service.GenerateS29ForPSdZ(text);
+                    x509Certificate = service.Sec4DiagCertificates.S29CertPSdZ;
+                    caCertificate = service.Sec4DiagCertificates.CaCert;
+                    subCaCertificate = service.Sec4DiagCertificates.SubCaCert;
+                    asymmetricKeyParameter = service.Service29KeyPair?.Private;
+                }
+                else
+                {
+                    Log.Error(Log.CurrentMethod(), "In ISTA AOS BackendCallsWatchDog OR UserService in the ServiceLocator did not exists!");
+                }
+
+                if (x509Certificate != null && asymmetricKeyParameter != null)
+                {
+                    Log.Info(Log.CurrentMethod(), "Registering Callback");
+                    byte[] s29CertificateChainByteArray = calculateAuthService29Certificate(x509Certificate, subCaCertificate, caCertificate);
+                    PrivateKeyInfo privateKeyInfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(asymmetricKeyParameter);
+                    secureDiagnosticsService.RegisterAuthService29Callback(s29CertificateChainByteArray, privateKeyInfo.ToAsn1Object().GetDerEncoded(), connection);
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.WarningException(Log.CurrentMethod(), exception);
+            }
+        }
+
+        private byte[] calculateAuthService29Certificate(X509Certificate2 s29Certificate, X509Certificate2 subCaCertificate, X509Certificate2 caCertificate)
+        {
+            Log.Info(Log.CurrentMethod(), "Calculating S29 certificate chain");
+            byte[] array = BitConverter.GetBytes((short)s29Certificate.RawData.Length).Reverse().ToArray();
+            byte[] rawCertData = s29Certificate.GetRawCertData();
+            byte[] array2 = BitConverter.GetBytes((short)subCaCertificate.RawData.Length).Reverse().ToArray();
+            byte[] rawCertData2 = subCaCertificate.GetRawCertData();
+            byte[] array3 = BitConverter.GetBytes((short)caCertificate.RawData.Length).Reverse().ToArray();
+            byte[] rawCertData3 = caCertificate.GetRawCertData();
+            Log.Debug(Log.CurrentMethod(), "Lenght of S29 Certificte in bytes array: " + BitConverter.ToString(array));
+            Log.Debug(Log.CurrentMethod(), "S29 Certificte in bytes array: " + BitConverter.ToString(rawCertData));
+            Log.Debug(Log.CurrentMethod(), "Lenght of subCA Certificte in bytes array: " + BitConverter.ToString(array2));
+            Log.Debug(Log.CurrentMethod(), "subCA Certificte in bytes array: " + BitConverter.ToString(rawCertData2));
+            Log.Debug(Log.CurrentMethod(), "Lenght of CA Certificte in bytes array: " + BitConverter.ToString(array3));
+            Log.Debug(Log.CurrentMethod(), "CA Certificte in bytes array: " + BitConverter.ToString(rawCertData3));
+            return array.Concat(rawCertData).Concat(array2).Concat(rawCertData2).Concat(array3).Concat(rawCertData3).ToArray();
+        }
+
+        private void LogPsdzCall(string method, string psdzFctName, bool success)
+        {
+            if (success)
+            {
+                LogDebug(method, "{0}: OK", psdzFctName);
+            }
+            else
+            {
+                LogError(method, "{0}: failed!", psdzFctName);
+            }
+        }
+
+        private void Pause()
+        {
+            int configint = ConfigSettings.getConfigint("BMW.Rheingold.VehicleCommunication.PTT.Disconnection.WaitTime", 0);
+            if (configint > 0)
+            {
+                Log.Info("PsdzProg.Pause()", "Give some time for the disconnection to finish.", configint / 1000);
+                SleepUtility.ThreadSleep(configint, "ConnectionManager.Pause");
+            }
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectionForSIM(string projectName, string vehicleInfo, bool isTlsAllowed, out string psdzFct)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectionForICOM(string projectName, string vehicleInfo, int diagPort, int additionalTransmissionTimeout, bool isTlsAllowed, out string psdzFct)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectionForEDIABAS(string projectName, string vehicleInfo, int diagPort, bool isTlsAllowed, out string psdzFct)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectionForENET(string projectName, string vehicleInfo, int diagPort, bool isTlsAllowed, out string psdzFct)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectionForPTT(string projectName, string vehicleInfo, bool isTlsAllowed, out string psdzFct)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectionForDefaultCases(string projectName, string vehicleInfo, bool isTlsAllowed, out string psdzFct)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectToCar(string projectName, string vehicleInfo, int defaultVehicleConnectionPort)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectToMotorcycle(string projectName, string vehicleInfo, int defaultMotorcycleConnectionPort, int fallbackMotorcycleConnectionPort)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection DoHsfzRestartAndConnectAgain(string projectName, string vehicleInfo, int port)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private bool DoIcomRestartAndConnectAgain(string projectName, string vehicleInfo, int port, out IPsdzConnection connection)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool UseTheDoipPort()
+        {
+            if (ConfigSettings.getConfigStringAsBoolean("BMW.Rheingold.Programming.PsdzProg.UseDoipPortForSp25", defaultValue: true))
+            {
+                if (!IsEES25Vehicle)
+                {
+                    if (IsDoIP.Value)
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private void ReconnectToPsdz(PsdzContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzConnection ConnectToPsdz(bool restartHsfzOnError = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        private string GetPsdzBaureihe()
+        {
+            string method = Log.CurrentMethod();
+            if (string.IsNullOrEmpty(Vehicle?.Ereihe))
+            {
+                Log.Warning(method, "'Ereihe' is not initialized.");
+                return null;
+            }
+
+            if (BaureiheUtilityService == null)
+            {
+                Log.Warning(method, "'BaureiheUtilityService' is not initialized. The Ereihe '" + Vehicle.Ereihe + "' is being returned.");
+                return Vehicle.Ereihe;
+            }
+
+            string text = BaureiheUtilityService?.GetBaureihe(Vehicle.Ereihe);
+            Log.Info(method, "Ereihe: '" + Vehicle.Ereihe + "', and psdzBaureihe: '" + text + "'");
+            return text;
+        }
+
+        private string GetBauIStufe()
+        {
+            string method = Log.CurrentMethod();
+            if (!string.IsNullOrEmpty(Vehicle?.ILevelWerk))
+            {
+                Log.Info(method, "The 'ILevelWerk' -> '" + Vehicle.ILevelWerk + "' is being returned.");
+                return Vehicle.ILevelWerk;
+            }
+
+            Log.Warning(method, "'ILevelWerk' is not initialized.");
+            string configString = ConfigSettings.getConfigString("BMW.Rheingold.Programming.BuildILevel", null);
+            Log.Info(method, "The 'manuallySetIlevelShipment' -> '" + configString + "' is being returned.");
+            return configString;
+        }
+
+        [PreserveSource(Added = true)]
+        public void RegisterCallbackAndPassCertificatesToPsdzPublic(IPsdzConnection connection)
+        {
+            RegisterCallbackAndPassCertificatesToPsdz(connection);
+        }
+    }
+}

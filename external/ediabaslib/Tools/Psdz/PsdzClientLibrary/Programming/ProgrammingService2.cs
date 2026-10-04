@@ -1,0 +1,460 @@
+﻿using BMW.Rheingold.CoreFramework;
+using BMW.Rheingold.CoreFramework.Contracts.Programming;
+using BMW.Rheingold.CoreFramework.Contracts.Vehicle;
+using BMW.Rheingold.Programming;
+using BMW.Rheingold.Psdz;
+using BMW.Rheingold.Psdz.Model;
+using PsdzClient.Core;
+using PsdzClient.Core.Container;
+using PsdzClient.Utility;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using BMW.Rheingold.CoreFramework.AutomotiveSecurity;
+using PsdzClient.Contracts;
+
+#pragma warning disable CS0169, CS0414
+namespace PsdzClient.Programming
+{
+    [PreserveSource(Hint = "ProgrammingService renamed", InheritanceModified = true)]
+    public class ProgrammingService2 : IProgrammingService2, IDisposable
+    {
+        [PreserveSource(Hint = "PsdzWebServiceWrapper", Placeholder = true)]
+        private readonly PlaceholderType psdzService;
+        [PreserveSource(Hint = "IProgrammingWorker", Placeholder = true)]
+        private readonly PlaceholderType programmingWorker;
+        private readonly IOperationServices services;
+        private readonly string ZgwAddress = "0x10";
+        private readonly string ZgwEcuGroup = "G_ZGW";
+        private readonly string FsfValueForSec4CnAuthorization = "31";
+        private readonly string SteuernRoutineJob = "STEUERN_ROUTINE";
+        private readonly string ObdFirewallStoppRoutineParam = "ARG;OBD_FIREWALL_WRITE_TOKEN;STPR;00DA18";
+        private readonly long FeatureIdForSec4CnSP21 = Convert.ToInt64("0x00DA21", 16);
+        private readonly long FeatureIdForSec4CnSP18 = Convert.ToInt64("0x00DA18", 16);
+        private readonly int EnableType = 1;
+        [PreserveSource(Hint = "Changed to psdzServiceGateway.Psdz", SuppressWarning = true)]
+        public IPsdz Psdz => psdzServiceGateway.Psdz;
+
+        [PreserveSource(Hint = "Modified, create services", SignatureModified = true)]
+        public ProgrammingService2(string istaFolder, string dealerId)
+        {
+            //[-] this.services = services;
+            //[-] psdzService = new PsdzWebServiceWrapper();
+            //[-] PreparePsdzBackupDataPath();
+            //[-] programmingWorker = CreateProgrammingWorker();
+            //[+] psdzConfig = new PsdzConfig(istaFolder, dealerId);
+            psdzConfig = new PsdzConfig(istaFolder, dealerId);
+            //[+] psdzServiceGateway = new PsdzServiceGateway(psdzConfig, istaFolder, dealerId);
+            psdzServiceGateway = new PsdzServiceGateway(psdzConfig, istaFolder, dealerId);
+            //[+] SetLogLevelToNormal();
+            SetLogLevelToNormal();
+            //[+] EventManager = new ProgrammingEventManager();
+            EventManager = new ProgrammingEventManager();
+            //[+] PsdzDatabase = new PsdzDatabase(istaFolder);
+            PsdzDatabase = new PsdzDatabase(istaFolder);
+            //[+] PreparePsdzBackupDataPath(istaFolder);
+            PreparePsdzBackupDataPath(istaFolder);
+            //[+] IFasta2Service fasta2Service = ServiceLocator.Current.GetService<IFasta2Service>();
+            IFasta2Service fasta2Service = ServiceLocator.Current.GetService<IFasta2Service>();
+            //[+] if (fasta2Service == null)
+            if (fasta2Service == null)
+            //[+] {
+            {
+                //[+] ServiceLocator.Current.TryAddService((IFasta2Service)new Fasta2Service());
+                ServiceLocator.Current.TryAddService((IFasta2Service)new Fasta2Service());
+            //[+] }
+            }
+
+            //[+] IDiagnosticsBusinessData diagnosticsBusiness = ServiceLocator.Current.GetService<IDiagnosticsBusinessData>();
+            IDiagnosticsBusinessData diagnosticsBusiness = ServiceLocator.Current.GetService<IDiagnosticsBusinessData>();
+            //[+] if (diagnosticsBusiness == null)
+            if (diagnosticsBusiness == null)
+            //[+] {
+            {
+                //[+] ServiceLocator.Current.TryAddService((IDiagnosticsBusinessData)new DiagnosticsBusinessData());
+                ServiceLocator.Current.TryAddService((IDiagnosticsBusinessData)new DiagnosticsBusinessData());
+            //[+] }
+            }
+        }
+
+        public bool CollectPsdzLog(string targetLogFilePath)
+        {
+            if (!Psdz.IsPsdzInitialized)
+            {
+                return false;
+            }
+
+            string text = Psdz.LogService.ClosePsdzLog();
+            if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(targetLogFilePath))
+            {
+                bool flag = false;
+                try
+                {
+                    File.Move(text, targetLogFilePath);
+                    flag = true;
+                }
+                catch (Exception exception)
+                {
+                    Log.WarningException("ProgrammingService.CollectPsdzLog", exception);
+                }
+
+                if (!flag)
+                {
+                    File.Copy(text, targetLogFilePath, overwrite: true);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        [PreserveSource(Cleaned = true)]
+        public IEnumerable<IProgrammingTask> RetrieveAvailableProgrammingTasks(IVehicle vehicle)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetLogLevelToMax()
+        {
+            //[-]psdzService.SetLogLevel(PsdzLoglevel.TRACE, ProdiasLoglevel.INFO);
+            //[+]psdzServiceGateway.SetLogLevel(PsdzLoglevel.TRACE, ProdiasLoglevel.INFO);
+            psdzServiceGateway.SetLogLevel(PsdzLoglevel.TRACE, ProdiasLoglevel.INFO);
+        }
+
+        public void SetLogLevelToNormal()
+        {
+            //[-]psdzService.SetLogLevel(PsdzLoglevel.FINE, ProdiasLoglevel.ERROR);
+            //[+]psdzServiceGateway.SetLogLevel(PsdzLoglevel.FINE, ProdiasLoglevel.ERROR);
+            psdzServiceGateway.SetLogLevel(PsdzLoglevel.FINE, ProdiasLoglevel.ERROR);
+        }
+
+        [PreserveSource(Hint = "ProgrammingParam", Placeholder = true)]
+        public IProgrammingSessionExt Start(PlaceholderType programmingParam)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Hint = "ProgrammingParam", Placeholder = true)]
+        public IProgrammingSessionExt Start(PlaceholderType programmingParam, bool avoidTlsConnection)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private void FillAdditionalDataForPretestConfig()
+        {
+        }
+
+        [PreserveSource(Hint = "FcFnActivationResult", Placeholder = true)]
+        public PlaceholderType StoreAndActivateFcFn(IVehicle vehicle, int appNo, int upgradeIdx, byte[] fsc)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Hint = "force added", SignatureModified = true)]
+        public void CloseConnectionsToPsdz(bool force = false)
+        {
+            Log.Info(Log.CurrentMethod(), "Start.");
+            //[-]psdzService.Shutdown();
+            //[+] psdzServiceGateway.CloseConnectionsToPsdz(force);
+            psdzServiceGateway.CloseConnectionsToPsdz(force);
+            //[+]PsdzStarterGuard.Instance.ResetInitialization();
+            PsdzStarterGuard.Instance.ResetInitialization();
+            Log.Info(Log.CurrentMethod(), "End.");
+        }
+
+        [PreserveSource(Hint = "FcFnActivationResult", Placeholder = true)]
+        public PlaceholderType CreatePsdzProg(IVehicle vehicle, IEcuKom ecuKom, IProtocolBasic protocoller)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Hint = "IProgrammingCallbackHandler", Placeholder = true)]
+        public PlaceholderType CreateCallbackHandler()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetPsdzWebServiceLogFilePath()
+        {
+            //[-]return psdzService.PsdzServiceLogFilePath;
+            //[+]return psdzServiceGateway.PsdzWebServiceLogFilePath;
+            return psdzServiceGateway.PsdzWebServiceLogFilePath;
+        }
+
+        public string GetPsdzLogFilePath()
+        {
+            //[-]return psdzService.PsdzLogFilePath;
+            //[+]return psdzServiceGateway.PsdzLogFilePath;
+            return psdzServiceGateway.PsdzLogFilePath;
+        }
+
+        [PreserveSource(Cleaned = true)]
+        public IPsdzStandardSvt GetVehicleSvtUsingPsdz()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        public ISvt GetCurrentSvtFromPsdzSvt()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Hint = "Arguments removed", Cleaned = true)]
+        public bool ExecuteIPBEcuValidation()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        public bool ImportSecureTokenForSec4CnSp21()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        public bool ImportSecureTokenForSec4CnSp18(ILogic logic, PsdzDatabase database, string seriesGroup, bool avoidTlsConnection)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        public bool RevokeSec4CnAutorizationForSp21(IProgrammingSession session)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RevokeSec4CnAutorizationForSp18(IEcuKom ecuKom)
+        {
+            string method = "ProgrammingService.RevokeSec4CnAutorizationForSp18";
+            if (ecuKom == null)
+            {
+                Log.Warning(method, "The parameter ecuKom is null");
+                return false;
+            }
+
+            IEcuJob ecuJob = ecuKom?.ApiJobWithRetries(ZgwEcuGroup, SteuernRoutineJob, ObdFirewallStoppRoutineParam, string.Empty, 2);
+            if (ecuJob != null && ecuJob.IsOkay())
+            {
+                return true;
+            }
+
+            string text = ecuJob?.JobErrorText ?? "null";
+            Log.Warning(method, "The job '" + SteuernRoutineJob + "' '" + ObdFirewallStoppRoutineParam + "' was not successful on the '" + ZgwEcuGroup + "', 'jobErrorText': '" + text + "'");
+            return false;
+        }
+
+        [PreserveSource(Hint = "Added istaFolder", SignatureModified = true)]
+        private void PreparePsdzBackupDataPath(string istaFolder)
+        {
+            //[-] if (!ConfigSettings.IsProgrammingEnabled())
+            //[-] {
+            //[-] return;
+            //[-] }
+            //[-] string pathString = ConfigSettings.getPathString("BMW.Rheingold.Programming.PsdzBackupDataPath", null);
+            //[+] string pathString = PsdzContext.GetBackupBasePath(istaFolder);
+            string pathString = PsdzContext.GetBackupBasePath(istaFolder);
+            if (string.IsNullOrEmpty(pathString))
+            {
+                throw new InvalidOperationException("Key 'BMW.Rheingold.Programming.PsdzBackupDataPath' is not set properly but is required for programming!");
+            }
+
+            try
+            {
+                if (!Directory.Exists(pathString))
+                {
+                    Directory.CreateDirectory(pathString);
+                }
+
+                string path = Path.Combine(pathString, Guid.NewGuid().ToString());
+                File.WriteAllText(path, string.Empty);
+                File.Delete(path);
+                //[+] BackupDataPath = pathString;
+                BackupDataPath = pathString;
+            }
+            catch (Exception)
+            {
+                Log.Error("ProgrammingService.PreparePsdzBackupDataPath()", "No write access to the folder \"{0}\".", pathString);
+                throw;
+            }
+        }
+
+        [PreserveSource(Hint = "IProgrammingWorker", Placeholder = true)]
+        private PlaceholderType CreateProgrammingWorker()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Hint = "Return bool", SignatureModified = true)]
+        public bool StartPsdzService(IVehicle vehicle = null)
+        {
+            string method = Log.CurrentMethod();
+            if (PsdzStarterGuard.Instance.IsInitializationAlreadyAttempted())
+            {
+                Log.Debug(method, "There has already been an attempt to open PsdzService in the past. Returning...");
+                //[-] return;
+                //[+] return true;
+                return true;
+            }
+
+            TimeMetricsUtility.Instance.InitializePsdzStart();
+            Log.Info(method, "Start.");
+            try
+            {
+                //[-] psdzService.StartIfNotRunning();
+                //[+] if (!psdzServiceGateway.StartIfNotRunning(vehicle))
+                if (!psdzServiceGateway.StartIfNotRunning(vehicle))
+                //[+] {
+                {
+                    //[+] return false;
+                    return false;
+                //[+] }
+                }
+            }
+            //[-] catch (AppException ex)
+            //[+] catch (Exception ex)
+            catch (Exception ex)
+            {
+                Log.ErrorException(method, ex);
+                //[-] services?.InteractionService?.RegisterMessage(ex.TitleLocalized, ex.MessageLocalized);
+                //[+] return false;
+                return false;
+            }
+
+            //[-] if (ServiceLocator.Current.TryGetService<IFasta2Service>(out var service))
+            //[-] {
+            //[-] service.AddServiceCode("GFS01_State_PsdzWebservice_nu_LF", "", LayoutGroup.P, allowMultipleEntries: false, bufferIfSessionNotStarted: true);
+            //[-] }
+            Log.Info(method, "End.");
+            TimeMetricsUtility.Instance.InitializePsdzStop();
+            //[+] return true;
+            return true;
+        }
+
+        private bool ExecuteEcuValidationViaBusinessServiceProgrammes(ProgrammingSession session)
+        {
+            Log.Info(Log.CurrentMethod(), "called.");
+            string businessVehicleAction = "FZA_AL_EARLIER_ECU_CERT_VALIDATION";
+            return ExecuteBusinessServiceProgrames(businessVehicleAction, session);
+        }
+
+        private bool ExecuteSecureTokenImportForSec4CnSp21ViaBusinessServiceProgrammes(ProgrammingSession session)
+        {
+            Log.Info(Log.CurrentMethod(), "called.");
+            string businessVehicleAction = "FZA_AL_SEC4CN_IMPORTSECURETOKEN_SP21";
+            return ExecuteBusinessServiceProgrames(businessVehicleAction, session);
+        }
+
+        private bool ExecuteSecureTokenImportForSec4CnSp18ViaBusinessServiceProgrammes(ProgrammingSession session)
+        {
+            Log.Info(Log.CurrentMethod(), "called.");
+            string businessVehicleAction = "FZA_AL_SEC4CN_IMPORTSECURETOKEN_SP18";
+            return ExecuteBusinessServiceProgrames(businessVehicleAction, session);
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private bool ExecuteBusinessServiceProgrames(string businessVehicleAction, ProgrammingSession session)
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private IPsdzTargetSelector GetTargetSelectorForMainSeries()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        private void PrepareSvtForProgrammingSession()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Cleaned = true)]
+        public bool ExecuteEarlyEcuValidationUsingPsdz()
+        {
+            throw new NotImplementedException();
+        }
+
+        [PreserveSource(Added = true)]
+        private readonly PsdzServiceGateway psdzServiceGateway;
+        [PreserveSource(Added = true)]
+        private readonly PsdzConfig psdzConfig;
+        [PreserveSource(Added = true)]
+        public IPsdzProgressListener PsdzProgressListener { get; private set; }
+
+        [PreserveSource(Added = true)]
+        public IPsdzEventListener VehicleProgrammingEventHandler { get; private set; }
+
+        [PreserveSource(Added = true)]
+        internal ProgrammingEventManager EventManager { get; private set; }
+
+        [PreserveSource(Added = true)]
+        public EcuProgrammingInfos ProgrammingInfos { get; private set; }
+
+        [PreserveSource(Added = true)]
+        public PsdzDatabase PsdzDatabase { get; private set; }
+
+        [PreserveSource(Added = true)]
+        public string BackupDataPath { get; private set; }
+
+        [PreserveSource(Added = true)]
+        public string GetPsdzServiceHostLogDir()
+        {
+            return psdzServiceGateway.PsdzServiceLogDir;
+        }
+
+        [PreserveSource(Added = true)]
+        public bool IsPsdzServiceHostInitialized()
+        {
+            return this.Psdz.IsPsdzInitialized;
+        }
+
+        [PreserveSource(Added = true)]
+        public void CreateEcuProgrammingInfos(IVehicle vehicle, IFFMDynamicResolver ffmResolver = null)
+        {
+            this.ProgrammingInfos = new EcuProgrammingInfos(vehicle, ffmResolver);
+        }
+
+        [PreserveSource(Added = true)]
+        public void AddListener(PsdzContext psdzContext)
+        {
+            RemoveListener();
+            this.PsdzProgressListener = new PsdzProgressListener(this.EventManager);
+            this.Psdz.AddPsdzProgressListener(this.PsdzProgressListener);
+            this.VehicleProgrammingEventHandler = new VehicleProgrammingEventHandler(ProgrammingInfos, psdzContext);
+            this.Psdz.AddPsdzEventListener(this.VehicleProgrammingEventHandler);
+        }
+
+        [PreserveSource(Added = true)]
+        public void RemoveListener()
+        {
+            if (PsdzProgressListener != null)
+            {
+                this.Psdz.RemovePsdzProgressListener(this.PsdzProgressListener);
+                this.PsdzProgressListener = null;
+            }
+
+            if (VehicleProgrammingEventHandler != null)
+            {
+                this.Psdz.RemovePsdzEventListener(this.VehicleProgrammingEventHandler);
+                this.VehicleProgrammingEventHandler = null;
+            }
+        }
+
+        [PreserveSource(Added = true)]
+        public void Dispose()
+        {
+            CloseConnectionsToPsdz(true);
+            RemoveListener();
+            this.psdzServiceGateway.Dispose();
+            if (this.PsdzDatabase != null)
+            {
+                this.PsdzDatabase.Dispose();
+                this.PsdzDatabase = null;
+            }
+        }
+    }
+}

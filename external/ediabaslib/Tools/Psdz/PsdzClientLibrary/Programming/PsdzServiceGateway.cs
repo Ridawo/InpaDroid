@@ -1,0 +1,284 @@
+﻿using BMW.Rheingold.CoreFramework.Contracts.Vehicle;
+using BMW.Rheingold.Programming;
+using BMW.Rheingold.Psdz.Client;
+using BMW.Rheingold.Psdz;
+using System.Threading.Tasks;
+using System;
+using PsdzClient.Core;
+
+namespace PsdzClient.Programming
+{
+    [PreserveSource(Removed = true)]
+    public class PsdzServiceGateway : IPsdzServiceGateway, IDisposable
+    {
+        private readonly PsdzWebServiceWrapper _psdzWebServiceWrapper;
+        public static Type PsdzServiceType { get; set; }
+
+        [PreserveSource(Hint = "Added service host", SuppressWarning = true)]
+        public IPsdz Psdz
+        {
+            get
+            {
+                // [UH] [IGNORE] modified
+                if (_psdzWebServiceWrapper != null)
+                {
+                    return _psdzWebServiceWrapper;
+                }
+
+                return _psdzServiceHostWrapper;
+            }
+        }
+
+        [PreserveSource(Hint = "Added service host", SuppressWarning = true)]
+        public string PsdzWebServiceLogFilePath
+        {
+            get
+            {
+                // [UH] [IGNORE] modified
+                if (_psdzWebServiceWrapper != null)
+                {
+                    return _psdzWebServiceWrapper.PsdzServiceLogFilePath;
+                }
+
+                return _psdzServiceHostWrapper.PsdzServiceLogFilePath;
+            }
+        }
+
+        [PreserveSource(Hint = "Added service host", SuppressWarning = true)]
+        public string PsdzLogFilePath
+        {
+            get
+            {
+                // [UH] [IGNORE] modified
+                if (_psdzWebServiceWrapper != null)
+                {
+                    return _psdzWebServiceWrapper.PsdzLogFilePath;
+                }
+
+                return _psdzServiceHostWrapper.PsdzLogFilePath;
+            }
+        }
+
+        [PreserveSource(Hint = "istaFolder, dealerId, service host added", SignatureModified = true)]
+        public PsdzServiceGateway(PsdzConfig psdzConfig, string istaFolder, string dealerId, Action psdzServiceHostStarter = null)
+        {
+            //[-] _psdzWebServiceWrapper = new PsdzWebServiceWrapper(new PsdzWebServiceConfig(null, LicenseHelper.DealerInstance.GetDistributionPartnerNumber(5)));
+            //[-] new CommonServiceWrapper();
+            //[+] _psdzServiceHostStarter = psdzServiceHostStarter;
+            _psdzServiceHostStarter = psdzServiceHostStarter;
+            //[+] if (ClientContext.EnablePsdzWebService())
+            if (ClientContext.EnablePsdzWebService())
+            //[+] {
+            {
+                //[+] _psdzWebServiceWrapper = new PsdzWebServiceWrapper(new PsdzWebServiceConfig(istaFolder, dealerId), istaFolder, dealerId);
+                _psdzWebServiceWrapper = new PsdzWebServiceWrapper(new PsdzWebServiceConfig(istaFolder, dealerId), istaFolder, dealerId);
+            //[+] }
+            }
+            //[+] else
+            else
+            //[+] {
+            {
+                //[+] _psdzServiceHostWrapper = new PsdzServiceWrapper(psdzConfig);
+                _psdzServiceHostWrapper = new PsdzServiceWrapper(psdzConfig);
+            //[+] }
+            }
+        }
+
+        [PreserveSource(Hint = "Return bool, service host added", SignatureModified = true)]
+        public bool StartIfNotRunning(IVehicle vehicle = null)
+        {
+            if (PsdzStarterGuard.Instance.IsInitializationAlreadyAttempted())
+            {
+                Log.Debug(Log.CurrentMethod(), "There has already been an attempt to open PsdzService in the past. Returning...");
+                //[-] return;
+                //[+] return true;
+                return true;
+            }
+
+            Log.Info(Log.CurrentMethod(), "Start.");
+            //[-] PsdzStarterGuard.Instance.TryInitialize(delegate
+            //[-] {
+            //[-] _psdzWebServiceWrapper.StartIfNotRunning();
+            //[-] return _psdzWebServiceWrapper.IsPsdzInitialized;
+            //[-] });
+            //[-] Log.Info(Log.CurrentMethod(), "End.");
+
+            //[+] bool started = false;
+            bool started = false;
+            //[+] if (_psdzWebServiceWrapper != null)
+            if (_psdzWebServiceWrapper != null)
+            //[+] {
+            {
+                //[+] started = PsdzStarterGuard.Instance.TryInitialize(delegate
+                started = PsdzStarterGuard.Instance.TryInitialize(delegate
+                //[+] {
+                {
+                    //[+] _psdzWebServiceWrapper.StartIfNotRunning();
+                    _psdzWebServiceWrapper.StartIfNotRunning();
+                    //[+] return _psdzWebServiceWrapper.IsPsdzInitialized;
+                    return _psdzWebServiceWrapper.IsPsdzInitialized;
+                //[+] });
+                });
+            //[+] }
+            }
+            //[+] if (_psdzServiceHostWrapper != null)
+            if (_psdzServiceHostWrapper != null)
+            //[+] {
+            {
+                //[+] if (ClientContext.EnablePsdzMultiSession() || _psdzServiceHostStarter == null)
+                if (ClientContext.EnablePsdzMultiSession() || _psdzServiceHostStarter == null)
+                //[+] {
+                {
+                    //[+] started = PsdzStarterGuard.Instance.TryInitialize(delegate
+                    started = PsdzStarterGuard.Instance.TryInitialize(delegate
+                    //[+] {
+                    {
+                        //[+] _psdzServiceHostWrapper.StartHostIfNotRunning(vehicle);
+                        _psdzServiceHostWrapper.StartHostIfNotRunning(vehicle);
+                        //[+] WaitForPsdzServiceHostInitialization();
+                        WaitForPsdzServiceHostInitialization();
+                        //[+] return _psdzServiceHostWrapper.IsPsdzInitialized;
+                        return _psdzServiceHostWrapper.IsPsdzInitialized;
+                    //[+] });
+                    });
+                //[+] }
+                }
+                //[+] else
+                else
+                //[+] {
+                {
+                    //[+] started = PsdzStarterGuard.Instance.TryInitialize(delegate
+                    started = PsdzStarterGuard.Instance.TryInitialize(delegate
+                    //[+] {
+                    {
+                        //[+] _psdzServiceHostStarter();
+                        _psdzServiceHostStarter();
+                        //[+] WaitForPsdzServiceHostInitialization();
+                        WaitForPsdzServiceHostInitialization();
+                        //[+] return _psdzServiceHostWrapper.IsPsdzInitialized;
+                        return _psdzServiceHostWrapper.IsPsdzInitialized;
+                    //[+] });
+                    });
+                //[+] }
+                }
+            //[+] }
+            }
+            //[+] Log.Info(Log.CurrentMethod(), "Started: {0}", started);
+            Log.Info(Log.CurrentMethod(), "Started: {0}", started);
+            //[+] Log.Info(Log.CurrentMethod(), "End.");
+            Log.Info(Log.CurrentMethod(), "End.");
+            //[+] return started;
+            return started;
+        }
+
+        [PreserveSource(Hint = "Added service host", SignatureModified = true)]
+        public void CloseConnectionsToPsdz(bool force = false)
+        {
+            try
+            {
+                //[-] _psdzWebServiceWrapper.Shutdown();
+                //[+] if (_psdzWebServiceWrapper != null)
+                if (_psdzWebServiceWrapper != null)
+                //[+] {
+                {
+                    //[+] _psdzWebServiceWrapper.Shutdown();
+                    _psdzWebServiceWrapper.Shutdown();
+                //[+] }
+                }
+                //[+] if (_psdzServiceHostWrapper != null)
+                if (_psdzServiceHostWrapper != null)
+                //[+] {
+                {
+                    //[+] if (ClientContext.EnablePsdzMultiSession() || force)
+                    if (ClientContext.EnablePsdzMultiSession() || force)
+                    //[+] {
+                    {
+                        //[+] _psdzServiceHostWrapper.Shutdown();
+                        _psdzServiceHostWrapper.Shutdown();
+                    //[+] }
+                    }
+                    //[+] else
+                    else
+                    //[+] {
+                    {
+                        //[+] _psdzServiceHostWrapper.CloseConnectionsToPsdzHost();
+                        _psdzServiceHostWrapper.CloseConnectionsToPsdzHost();
+                    //[+] }
+                    }
+                //[+] }
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.WarningException(Log.CurrentMethod(), exception);
+            }
+        }
+
+        [PreserveSource(Added = true)]
+        public void SetLogLevel(PsdzLoglevel psdzLoglevel, ProdiasLoglevel prodiasLoglevel)
+        {
+            _psdzServiceHostWrapper?.SetLogLevel(psdzLoglevel, prodiasLoglevel);
+            _psdzWebServiceWrapper?.SetLogLevel(psdzLoglevel, prodiasLoglevel);
+        }
+
+        [PreserveSource(Added = true)]
+        public void Shutdown()
+        {
+            _psdzServiceHostWrapper?.Shutdown();
+            _psdzWebServiceWrapper?.Shutdown();
+        }
+
+        public void Dispose()
+        {
+            //[+]_psdzServiceHostWrapper?.Dispose();
+            _psdzServiceHostWrapper?.Dispose();
+            //[+]_psdzServiceHostWrapper = null;
+            _psdzServiceHostWrapper = null;
+            GC.SuppressFinalize(this);
+        }
+
+        [PreserveSource(Added = true)]
+        private PsdzServiceWrapper _psdzServiceHostWrapper;
+        [PreserveSource(Added = true)]
+        private readonly Action _psdzServiceHostStarter;
+        [PreserveSource(Added = true)]
+        public string PsdzServiceLogDir
+        {
+            get
+            {
+                if (_psdzWebServiceWrapper != null)
+                {
+                    return _psdzWebServiceWrapper.PsdzServiceLogDir;
+                }
+
+                return _psdzServiceHostWrapper.PsdzServiceLogDir;
+            }
+        }
+
+        [PreserveSource(Added = true)]
+        private bool WaitForPsdzServiceHostInitialization()
+        {
+            if (_psdzServiceHostWrapper == null)
+            { // [UH] [IGNORE] added
+                Log.Error(Log.CurrentMethod(), $"_psdzServiceHostWrapper is null");
+                return false;
+            }
+
+            int num = 40;
+            DateTime dateTime = DateTime.Now.AddSeconds(num);
+            while (!_psdzServiceHostWrapper.IsPsdzInitialized)
+            {
+                if (DateTime.Now > dateTime)
+                {
+                    Log.Error(Log.CurrentMethod(), $"PsdzServiceHost failed to start in {num} seconds. The method will stop waiting for it.");
+                    return false;
+                }
+
+                Task.Delay(500).Wait();
+            }
+
+            _psdzServiceHostWrapper.DoInitSettings();
+            return true;
+        }
+    }
+}

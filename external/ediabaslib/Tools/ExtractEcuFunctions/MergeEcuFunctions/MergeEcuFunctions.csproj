@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AssemblyTitle>MergeEcuFunctions</AssemblyTitle>
+    <Product>MergeEcuFunctions</Product>
+    <Copyright>Copyright ©  2021</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Nullable>disable</Nullable>
+    <Authors>Ulrich Holeschak</Authors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\EdiabasLib\BmwFileReader\EcuFunctionStructs.cs">
+      <Link>EcuFunctionStructs.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,37 @@
+﻿using System;
+
+namespace PsdzClient
+{
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Enum | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Event, AllowMultiple = false, Inherited = false)]
+    public class PreserveSourceAttribute : Attribute
+    {
+        public string Hint;
+
+        public string OriginalHash;
+
+        public bool Added;
+
+        public bool Removed;
+
+        public bool Cleaned;
+
+        public bool SuppressWarning;
+
+        public bool Placeholder;
+
+        public bool KeepAttribute;
+
+        public bool SignatureModified;
+
+        public bool AccessModified;
+
+        public bool InheritanceModified;
+
+        public bool AttributesModified;
+    }
+
+    public struct PlaceholderType
+    {
+        public static readonly PlaceholderType Value = default;
+    }
+}

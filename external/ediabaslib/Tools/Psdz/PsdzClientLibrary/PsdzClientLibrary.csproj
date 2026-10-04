@@ -1,0 +1,113 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ProjectGuid>{EEF1264D-D00F-44D4-B21C-D65CF54E149E}</ProjectGuid>
+    <TargetFrameworks>net10.0-windows10.0.26100.0;net481</TargetFrameworks>
+    <UseWPF>true</UseWPF>
+    <AssemblyTitle>PsdzClientLibrary</AssemblyTitle>
+    <Product>PsdzClientLibrary</Product>
+    <Copyright>Copyright ©  2021</Copyright>
+    <WarningLevel>4</WarningLevel>
+    <LangVersion>12.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- SYSLIB0011 nicht als Fehler behandeln -->
+    <NoWarn>$(NoWarn);SYSLIB0011</NoWarn>
+  </PropertyGroup>
+    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+        <Reference Include="System.ComponentModel.DataAnnotations" />
+        <Reference Include="System.Configuration" />
+        <Reference Include="System.IO.Compression" />
+        <Reference Include="System.Management" />
+        <Reference Include="System.ServiceModel" />
+        <Reference Include="System.Web" />
+        <Reference Include="System.Windows" />
+        <Reference Include="System.Data.DataSetExtensions" />
+        <Reference Include="Microsoft.CSharp" />
+        <Reference Include="System.Net.Http" />
+        <Reference Include="WindowsBase" />
+    </ItemGroup>
+    <ItemGroup Condition="$(TargetFramework.Contains('windows'))">
+        <PackageReference Include="HtmlTextWriter" Version="3.0.2" />
+        <PackageReference Include="System.ServiceModel.NetNamedPipe" Version="10.0.652802" />
+        <PackageReference Include="System.Runtime.Serialization.Formatters" Version="10.0.12" />
+    </ItemGroup>
+  <ItemGroup>
+    <Reference Include="jni4net.n-0.8.8.0">
+      <HintPath>.\jni4net.n-0.8.8.0.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\EdiabasLib\BmwFileReader\DetectVehicleBmwBase.cs" Link="DetectVehicleBmwBase.cs" />
+    <Compile Include="..\..\..\EdiabasLib\BmwFileReader\EcuFunctionStructs.cs" Link="EcuFunctionStructs.cs" />
+    <Compile Include="..\..\..\EdiabasLib\BmwFileReader\SerializableDictionary.cs" Link="SerializableDictionary.cs" />
+    <Compile Include="..\..\..\EdiabasLib\BmwFileReader\VehicleInfoBmw.cs" Link="VehicleInfoBmw.cs" />
+    <Compile Include="..\..\..\EdiabasLib\BmwFileReader\VehicleStructsBmw.cs" Link="VehicleStructsBmw.cs" />
+    <Compile Include="..\..\ExtractEcuFunctions\Common\DatabaseFunctions.cs" Link="DatabaseFunctions.cs" />
+    <Compile Update="Resources\Strings.de.Designer.cs">
+      <DependentUpon>Strings.de.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Update="Resources\Strings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\EdiabasLib\BmwFileReader\VehicleSeries.zip">
+      <Link>Resources\VehicleSeries.zip</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\EdiabasLib\ApiInternal\ApiInternal.csproj" />
+    <ProjectReference Include="..\..\..\EdiabasLib\EdiabasLib\EdiabasLib.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.de.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.de.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+      <None Remove="Resources\**\*.xml;Resources\**\*.xsl" />
+      <EmbeddedResource Include="Resources\**\*.xml;Resources\**\*.xsl">
+          <LogicalName>%(Filename)%(Extension)</LogicalName>
+      </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <PackageReference Include="Lib.Harmony" Version="2.4.2" />
+    <PackageReference Include="log4net" Version="3.4.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.12" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="RestSharp" Version="114.0.0" />
+    <PackageReference Include="SharpLearning.Containers" Version="0.31.8" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3mc" Version="2.1.11" />
+    <PackageReference Include="SQLitePCLRaw.core" Version="3.0.5" />
+    <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
+    <PackageReference Include="System.Management" Version="10.0.12" />
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="10.0.652802" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.12" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="IgnoreAssemblies.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Core\Measurement\" />
+    <Folder Include="Core\Vmx\" />
+  </ItemGroup>
+</Project>

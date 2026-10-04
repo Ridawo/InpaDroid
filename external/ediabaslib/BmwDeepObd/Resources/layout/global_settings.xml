@@ -1,0 +1,490 @@
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fitsSystemWindows="true">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+        <TextView
+          android:text="@string/settings_caption_locale"
+          android:id="@+id/textViewCaptionLocale"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          style="@style/TextViewInnerCaption" />
+        <RadioGroup
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical">
+          <RadioButton
+            android:id="@+id/radioButtonLocaleDefault"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_locale_default" />
+          <RadioButton
+            android:id="@+id/radioButtonLocaleEn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_locale_en" />
+          <RadioButton
+            android:id="@+id/radioButtonLocaleDe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_locale_de" />
+          <RadioButton
+            android:id="@+id/radioButtonLocaleRu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_locale_ru" />
+        </RadioGroup>
+        <TextView
+            android:text="@string/settings_caption_theme"
+            android:id="@+id/textViewCaptionTheme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton
+                android:id="@+id/radioButtonThemeDark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_theme_dark" />
+            <RadioButton
+                android:id="@+id/radioButtonThemeLight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_theme_light" />
+            <RadioButton
+              android:id="@+id/radioButtonThemeSystem"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="@string/settings_theme_system" />
+        </RadioGroup>
+        <TextView
+            android:text="@string/settings_caption_title_bar"
+            android:id="@+id/textViewCaptionTitleBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxAutoHideTitleBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_auto_hide_title_bar" />
+        <CheckBox
+            android:id="@+id/checkBoxSuppressTitleBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_suppress_title_bar" />
+        <CheckBox
+            android:id="@+id/checkBoxFullScreenMode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_full_screen_mode" />
+        <TextView
+            android:text="@string/settings_caption_multi_window"
+            android:id="@+id/textViewCaptionMultiWindow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxSwapMultiWindowOrientation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_swap_multi_window_orientation" />
+        <TextView
+            android:text="@string/settings_caption_internet"
+            android:id="@+id/textViewCaptionInternet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <RadioGroup
+            android:id="@+id/radioGroupInternet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton
+                android:id="@+id/radioButtonInternetCellular"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_internet_cellular" />
+            <RadioButton
+                android:id="@+id/radioButtonInternetWifi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_internet_wifi" />
+            <RadioButton
+                android:id="@+id/radioButtonInternetEthernet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_internet_ethernet" />
+        </RadioGroup>
+        <TextView
+            android:text="@string/settings_caption_bluetooth_enable"
+            android:id="@+id/textViewCaptionBtEnable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton
+                android:id="@+id/radioButtonAskForBtEnable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_ask_for_bt_enable" />
+            <RadioButton
+                android:id="@+id/radioButtonAlwaysEnableBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_always_enable_bt" />
+            <RadioButton
+                android:id="@+id/radioButtonNoBtHandling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_no_bt_handling" />
+        </RadioGroup>
+        <TextView
+            android:text="@string/settings_caption_bluetooth_disable"
+            android:id="@+id/textViewCaptionBtDisable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxDisableBtAtExit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_disable_bt_at_exit" />
+        <TextView
+            android:text="@string/settings_caption_lock_communication"
+            android:id="@+id/textViewCaptionLockComm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton
+                android:id="@+id/radioButtonCommLockNone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_none" />
+            <RadioButton
+                android:id="@+id/radioButtonCommLockCpu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_cpu" />
+            <RadioButton
+                android:id="@+id/radioButtonCommLockDim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_dim" />
+            <RadioButton
+                android:id="@+id/radioButtonCommLockBright"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_bright" />
+        </RadioGroup>
+        <TextView
+            android:text="@string/settings_caption_lock_logging"
+            android:id="@+id/textViewCaptionLockLogging"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton
+                android:id="@+id/radioButtonLogLockNone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_none" />
+            <RadioButton
+                android:id="@+id/radioButtonLogLockCpu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_cpu" />
+            <RadioButton
+                android:id="@+id/radioButtonLogLockDim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_dim" />
+            <RadioButton
+                android:id="@+id/radioButtonLogLockBright"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_lock_bright" />
+        </RadioGroup>
+        <TextView
+            android:text="@string/settings_caption_logfiles"
+            android:id="@+id/textViewCaptionLogfiles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxStoreDataLogSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_store_data_log_settings" />
+        <TextView
+            android:text="@string/settings_caption_app_start"
+            android:id="@+id/textViewCaptionAppStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton
+                android:id="@+id/radioButtonStartOffline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_start_offline" />
+            <RadioButton
+                android:id="@+id/radioButtonStartConnect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_start_connect" />
+            <RadioButton
+                android:id="@+id/radioButtonStartConnectClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_start_connect_close" />
+            <RadioButton
+              android:id="@+id/radioButtonStartBoot"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="@string/settings_start_boot" />
+        </RadioGroup>
+        <Button
+            android:text="@string/settings_sys_config"
+            android:id="@+id/buttonManageSysConfig"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:text="@string/settings_caption_app_exit"
+            android:id="@+id/textViewCaptionAppExit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxDoubleClickForAppExit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_double_click_for_app_exit" />
+        <TextView
+            android:text="@string/settings_caption_update"
+            android:id="@+id/textViewCaptionUpdate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <RadioButton
+                android:id="@+id/radioButtonUpdateOff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_update_off" />
+            <RadioButton
+                android:id="@+id/radioButtonUpdate1Day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_update_1day" />
+            <RadioButton
+                android:id="@+id/radioButtonUpdate1Week"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_update_1week" />
+        </RadioGroup>
+        <TextView
+            android:text="@string/settings_caption_broadcast"
+            android:id="@+id/textViewCaptionBroadcast"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxSendDataBroadcast"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_send_data_broadcast" />
+        <TextView
+            android:text="@string/settings_caption_cpu_usage"
+            android:id="@+id/textViewCaptionCpuUsage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxCheckCpuUsage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_check_cpu_usage" />
+        <TextView
+            android:text="@string/settings_caption_check_ecu_files"
+            android:id="@+id/textViewCaptionCheckEcuFiles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxCheckEcuFiles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_check_ecu_files" />
+        <TextView
+            android:text="@string/settings_caption_battery_voltage_warning"
+            android:id="@+id/textViewCaptionBatteryVoltageWarning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxShowBatteryVoltageWarning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_show_battery_voltage_warning" />
+        <TextView
+            android:text="@string/settings_caption_old_vag_mode"
+            android:id="@+id/textViewCaptionOldVagMode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxOldVagMode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_old_vag_mode" />
+        <TextView
+            android:text="@string/settings_caption_bmw_database"
+            android:id="@+id/textViewCaptionBmwDatabase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxUseBmwDatabase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_use_bmw_database" />
+        <CheckBox
+            android:id="@+id/checkBoxShowOnlyRelevantErrors"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_show_only_relevant_errors" />
+        <TextView
+            android:text="@string/settings_caption_scan_all_ecus"
+            android:id="@+id/textViewCaptionScallAllEcus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxScanAllEcus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_scan_all_ecus" />
+        <LinearLayout
+            android:id="@+id/layoutFileManage"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="@string/settings_caption_file_manage"
+                android:id="@+id/textViewCaptionCopyTree"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/TextViewInnerCaption" />
+            <Button
+                android:text="@string/settings_storage_copy_tree_to_app"
+                android:id="@+id/buttonStorageCopyTreeToApp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <Button
+                android:text="@string/settings_storage_copy_tree_from_app"
+                android:id="@+id/buttonStorageCopyTreeFromApp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <Button
+                android:text="@string/settings_storage_del_tree_from_app"
+                android:id="@+id/buttonStorageDelTreeFromApp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <TextView
+            android:text="@string/settings_caption_storage"
+            android:id="@+id/textViewCaptionStorage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <Button
+            android:id="@+id/buttonStorageLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:text="@string/settings_caption_notifications"
+            android:id="@+id/textViewCaptionNotifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <Button
+            android:text="@string/settings_notification_settings"
+            android:id="@+id/buttonManageNotifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:text="@string/settings_caption_debug"
+            android:id="@+id/textViewCaptionDebug"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <CheckBox
+            android:id="@+id/checkBoxCollectDebugInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_collect_debug_info" />
+        <CheckBox
+            android:id="@+id/checkBoxUncompressedTrace"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_uncompressed_trace" />
+        <CheckBox
+            android:id="@+id/checkBoxHciSnoopLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <Button
+            android:id="@+id/buttonHciSnoopLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_hci_snoop_log_config" />
+        <TextView
+            android:text="@string/settings_options"
+            android:id="@+id/textViewCaptionSettingsOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/TextViewInnerCaption" />
+        <Button
+            android:id="@+id/buttonDefaultSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_default_settings" />
+        <Button
+            android:id="@+id/buttonExportSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_export_settings" />
+        <Button
+            android:id="@+id/buttonImportSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_import_settings" />
+    </LinearLayout>
+</ScrollView>
