@@ -1,0 +1,14 @@
+bin/
+obj/
+out/
+# BMW proprietary files (EDIABAS .prg/.grp, INPA, Standard Tools): never commit
+datos_bmw/
+*.prg
+*.grp
+*.ipo
+*.ips
+*.apk
+*.keystore
+.vs/
+*.user
+/daten*/
