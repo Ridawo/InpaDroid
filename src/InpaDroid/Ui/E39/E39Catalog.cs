@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace InpaDroid.Ui.E39;
 
 // Catálogo de centralitas del E39 diésel (520d M47, 525d/530d M57), solo datos.
@@ -432,5 +434,76 @@ public static class E39Catalog
                 "Cierra la sesión de diagnosis del climatizador y le devuelve el control de todas las salidas."),
         ]);
 
-    public static IReadOnlyList<E39Ecu> Ecus { get; } = [Dde, Egs, Abs, Airbag, Ike, Lcm, Gm, Ews, Clima];
+    static IReadOnlyList<E39Ecu> _ecus = BuildDefault();
+    public static IReadOnlyList<E39Ecu> Ecus => _ecus;
+
+    private static IReadOnlyList<E39Ecu> BuildDefault() => [Dde, Egs, Abs, Airbag, Ike, Lcm, Gm, Ews, Clima];
+
+    public static void TryLoadFromFolder(string ecuPath)
+    {
+        if (string.IsNullOrWhiteSpace(ecuPath))
+            return;
+        string file = Path.Combine(ecuPath, "e39_catalog.json");
+        if (!File.Exists(file))
+            return;
+        try
+        {
+            using var stream = File.OpenRead(file);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                AllowTrailingCommas = true,
+                ReadCommentHandling = JsonCommentHandling.Skip
+            };
+            var dtos = JsonSerializer.Deserialize<EcuJsonDto[]>(stream, options);
+            if (dtos != null && dtos.Length > 0)
+                _ecus = dtos.Select(ToEcu).ToList();
+        }
+        catch (Exception)
+        {
+            // Error de parseo: mantener los datos por defecto sin romper la app.
+        }
+    }
+
+    private static E39Ecu ToEcu(EcuJsonDto d) => new(
+        d.Title, d.Sgbd,
+        d.StatusPages.Select(p => new E39Page(p.Title,
+            p.Values.Select(v => new E39Value(v.Job, v.Result, v.Label, v.Unit, v.Args)).ToList()
+        )).ToList(),
+        d.Actions.Select(a => new E39Action(a.Title, a.Job, a.Args, a.Warning)).ToList(),
+        d.IdentJob, d.FsReadJob, d.FsClearJob);
+
+    private sealed class EcuJsonDto
+    {
+        public string Title { get; init; } = "";
+        public string Sgbd { get; init; } = "";
+        public string IdentJob { get; init; } = "IDENT";
+        public string FsReadJob { get; init; } = "FS_LESEN";
+        public string FsClearJob { get; init; } = "FS_LOESCHEN";
+        public List<PageJsonDto> StatusPages { get; init; } = [];
+        public List<ActionJsonDto> Actions { get; init; } = [];
+    }
+
+    private sealed class PageJsonDto
+    {
+        public string Title { get; init; } = "";
+        public List<ValueJsonDto> Values { get; init; } = [];
+    }
+
+    private sealed class ValueJsonDto
+    {
+        public string Job { get; init; } = "";
+        public string Result { get; init; } = "";
+        public string Label { get; init; } = "";
+        public string Unit { get; init; } = "";
+        public string Args { get; init; } = "";
+    }
+
+    private sealed class ActionJsonDto
+    {
+        public string Title { get; init; } = "";
+        public string Job { get; init; } = "";
+        public string Args { get; init; } = "";
+        public string Warning { get; init; } = "";
+    }
 }

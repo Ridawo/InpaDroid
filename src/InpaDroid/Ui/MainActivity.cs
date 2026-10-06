@@ -5,6 +5,7 @@ using Android.OS;
 using Android.Util;
 using Android.Widget;
 using InpaDroid.Diag;
+using InpaDroid.Ui.E46;
 
 namespace InpaDroid.Ui;
 
@@ -29,6 +30,7 @@ public class MainActivity : InpaActivity
         SetKey(2, "Centralita", () => StartActivity(new Intent(this, typeof(EcuSelectActivity))));
         SetKey(3, "Identificar", IdentifyVehicle);
         SetKey(4, "E39", () => StartActivity(new Intent(this, typeof(E39.E39MenuActivity))));
+        SetKey(5, "E46", () => StartActivity(new Intent(this, typeof(E46MenuActivity))));
         SetKey(9, "Ajustes", () => StartActivity(new Intent(this, typeof(SettingsActivity))));
         SetKey(10, "Salir", Exit);
         SetShiftKey(10, "Salir", Exit);
@@ -36,7 +38,6 @@ public class MainActivity : InpaActivity
         BuildMenu();
     }
 
-    /// <summary>Menú de texto "&lt; F1 &gt;  Información" … como la pantalla principal de INPA (cada línea se puede tocar).</summary>
     void BuildMenu()
     {
         var menu = FindViewById<LinearLayout>(Resource.Id.main_menu)!;
@@ -47,6 +48,7 @@ public class MainActivity : InpaActivity
             [(2, false)] = "Selección de centralita",
             [(3, false)] = "Identificar vehículo",
             [(4, false)] = "Vehículo BMW E39",
+            [(5, false)] = "Vehículo BMW E46",
             [(9, false)] = "Ajustes de interfaz",
             [(10, false)] = "Fin",
             [(10, true)] = "Salir",
@@ -100,7 +102,6 @@ public class MainActivity : InpaActivity
         JobDialogs.Message(this, "Información", text);
     }
 
-    /// <summary>F3: lee batería/encendido (UTILITY) y bastidor/orden de vehículo (CAS) si existen los .prg.</summary>
     async void IdentifyVehicle()
     {
         if (_working)

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.inpadroid.app"
+    android:versionCode="1"
+    android:versionName="0.1.0">
+
+  <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="36" />
+
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+  <!-- Legacy BT permissions for API ≤ 30 -->
+  <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+  <!-- BT permissions for API 31+ -->
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+  <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+  <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+  <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+  <uses-feature android:name="android.hardware.location" android:required="false" />
+  <uses-feature android:name="android.hardware.wifi" android:required="false" />
+
+  <application
+      android:allowBackup="false"
+      android:extractNativeLibs="true"
+      android:icon="@drawable/ic_launcher"
+      android:label="@string/app_name">
+    <!-- Activities are declared via [Activity] attributes in C#. -->
+  </application>
+
+</manifest>

@@ -8,7 +8,6 @@ namespace InpaDroid.Ui;
 /// <summary>Diálogos de jobs al estilo Tool32: lista filtrable, datos del job + argumentos, confirmaciones.</summary>
 internal static class JobDialogs
 {
-    /// <summary>Lista de jobs con buscador. Al tocar uno se cierra y se llama a onPick.</summary>
     public static void PickJob(Activity activity, string title, IReadOnlyList<JobInfo> jobs, Action<JobInfo> onPick)
     {
         var view = activity.LayoutInflater.Inflate(Resource.Layout.dialog_job_list, null)!;
@@ -47,7 +46,6 @@ internal static class JobDialogs
         dialog.Show();
     }
 
-    /// <summary>Datos del job (comentario, argumentos, resultados) y campos de argumentos/resultados.</summary>
     public static void AskArguments(Activity activity, string sgbd, JobInfo job, string runText,
         Action<string, string> onRun)
     {

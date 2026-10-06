@@ -105,7 +105,6 @@ internal sealed class ResultPanel
         bool faultJob = job.StartsWith("FS_LESEN", StringComparison.OrdinalIgnoreCase);
         int faults = r.Sets.Count(IsFaultSet);
 
-        // Cabecera: SGBD : JOB, hora, JOB_STATUS
         var h = new SpannableStringBuilder();
         AppendSpan(h, $"{sgbd} : {job}", new StyleSpan(TypefaceStyle.Bold), new ForegroundColorSpan(UiUtil.BlueDark));
         h.Append($"   {DateTime.Now:HH:mm:ss}");

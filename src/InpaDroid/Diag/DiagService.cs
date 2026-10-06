@@ -7,9 +7,8 @@ using EdiabasLib;
 
 namespace InpaDroid.Diag;
 
-// Envoltorio de EdiabasNet. EdiabasNet no es thread-safe: todas las llamadas a _ediabas se hacen en un único
-// hilo de trabajo (_worker) que consume _queue en orden. Las tareas devueltas nunca fallan: los errores se
-// devuelven como JobResult.Ok = false o como valores vacíos/null.
+// EdiabasNet is not thread-safe: all calls are serialized through _worker/_queue.
+// Public methods never throw; errors are returned as JobResult.Ok = false or empty values.
 public sealed class DiagService : IDisposable
 {
     private const string ResultSetStatus = "JOB_STATUS";
@@ -35,7 +34,6 @@ public sealed class DiagService : IDisposable
         _networkData = new TcpClientWithTimeout.NetworkData(
             _context.GetSystemService(Context.ConnectivityService) as ConnectivityManager);
 
-        // Igual que BmwDeepObd EdiabasThread: interfaz + AbortJobFunc, luego EcuPath.
         _ediabas = new EdiabasNet
         {
             EdInterfaceClass = _settings.Type == AdapterType.Enet ? new EdInterfaceEnet() : new EdInterfaceObd(),
@@ -86,7 +84,7 @@ public sealed class DiagService : IDisposable
             return ToJobResult(_ediabas.ResultSets);
         }, error => new JobResult { Ok = false, Error = error });
 
-    // Como EdiabasToolActivity.ReadSgbd: jobs internos _JOBS/_JOBCOMMENTS/_ARGUMENTS/_RESULTS, sin comunicación.
+    // Virtual jobs (_JOBS/_JOBCOMMENTS etc.) — no ECU communication.
     public Task<IReadOnlyList<JobInfo>> GetJobsAsync(string sgbd) =>
         Enqueue(() => ReadJobs(sgbd), _ => (IReadOnlyList<JobInfo>)[]);
 
@@ -123,7 +121,7 @@ public sealed class DiagService : IDisposable
         }
         try
         {
-            // Como el botón Abort de EdiabasToolActivity: corta también la transmisión en curso.
+            // TransmitCancel(true) interrupts any in-flight frame, not just future jobs.
             _ediabas.EdInterfaceClass?.TransmitCancel(true);
         }
         catch (Exception)
@@ -184,8 +182,7 @@ public sealed class DiagService : IDisposable
             _abort = false;
             try
             {
-                // Abort deja la transmisión cancelada; si no se rearma, todos los jobs siguientes fallan al instante
-                // (BmwDeepObd hace lo mismo antes de cada job).
+                // Re-arm after abort; a cancelled interface rejects all subsequent jobs immediately.
                 _ediabas.EdInterfaceClass?.TransmitCancel(false);
                 RefreshNetworks();
                 tcs.SetResult(work());
@@ -207,7 +204,6 @@ public sealed class DiagService : IDisposable
         return tcs.Task;
     }
 
-    // Puertos y parámetros de conexión como en BmwDeepObd ActivityCommon.SetEdiabasInterface.
     private void ConfigureInterface()
     {
         if (_ediabas.EdInterfaceClass is EdInterfaceEnet enet)
@@ -355,7 +351,6 @@ public sealed class DiagService : IDisposable
         return ScanEcuFolder().Any(f => f.IsGroup && f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
-    // Ejecuta un job de UTILITY; null si falla o JOB_STATUS no es OKAY.
     private List<Dictionary<string, EdiabasNet.ResultData>>? TryRunUtilityJob(string job)
     {
         try
@@ -410,7 +405,6 @@ public sealed class DiagService : IDisposable
         _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? ""
     };
 
-    // Valores de tipo string de "key" en todos los sets salvo el 0 (p.ej. JOBNAME de _JOBS).
     private static List<string> StringResults(List<Dictionary<string, EdiabasNet.ResultData>> resultSets, string key) =>
         resultSets.Skip(1)
             .Select(dict => dict.TryGetValue(key, out EdiabasNet.ResultData? data) ? data.OpData as string : null)

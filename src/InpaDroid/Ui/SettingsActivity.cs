@@ -164,8 +164,6 @@ public class SettingsActivity : InpaActivity
         parent.AddView(usb, index);
     }
 
-    // ---------------------------------------------------------------- USB K+DCAN
-
     void UpdateUsbInfo()
     {
         try
@@ -198,8 +196,6 @@ public class SettingsActivity : InpaActivity
         _usbInfo.Text = text;
         _usbInfo.SetTextColor(color);
     }
-
-    // ---------------------------------------------------------------- Bluetooth
 
     void UpdateBtSelected(string? name)
     {
@@ -295,11 +291,19 @@ public class SettingsActivity : InpaActivity
         else
         {
             _btList.RemoveAllViews();
-            AddBtMessage("Permiso de Bluetooth denegado: no se pueden listar los dispositivos emparejados.", true);
+            AddBtMessage("Permiso de Bluetooth denegado. Si marcaste \"No volver a preguntar\", actívalo manualmente:", true);
+            var btn = new Button(this) { Text = "Abrir Ajustes de Android" };
+            btn.SetAllCaps(false);
+            btn.Click += (_, _) =>
+            {
+                var intent = new Android.Content.Intent(Android.Provider.Settings.ActionApplicationDetailsSettings,
+                    Android.Net.Uri.Parse("package:" + PackageName));
+                try { StartActivity(intent); } catch (Exception) { }
+            };
+            _btList.AddView(btn, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent));
         }
     }
-
-    // ---------------------------------------------------------------- carpeta ECU
 
     void PickFolder()
     {
@@ -370,8 +374,6 @@ public class SettingsActivity : InpaActivity
         }
     }
 
-    // ---------------------------------------------------------------- guardar
-
     async void Save()
     {
         if (_saving)
@@ -382,8 +384,29 @@ public class SettingsActivity : InpaActivity
             var s = DiagHolder.LoadSettings(this);
             s.Type = SelectedType();
             s.BluetoothAddress = _btAddress;
-            s.EnetHost = string.IsNullOrWhiteSpace(_enetHost.Text) ? "auto" : _enetHost.Text.Trim();
-            s.ElmWifiHost = string.IsNullOrWhiteSpace(_wifiHost.Text) ? "192.168.0.10:35000" : _wifiHost.Text.Trim();
+
+            string enetRaw = _enetHost.Text?.Trim() ?? "";
+            if (enetRaw.Length > 0 && !enetRaw.Equals("auto", StringComparison.OrdinalIgnoreCase)
+                && !System.Text.RegularExpressions.Regex.IsMatch(enetRaw, @"^[A-Za-z0-9.\-]+$"))
+            {
+                ShowStatus("Host ENET inválido: usa una IP, un hostname o \"auto\".", true);
+                return;
+            }
+
+            string wifiRaw = _wifiHost.Text?.Trim() ?? "";
+            if (wifiRaw.Length > 0)
+            {
+                var wifiMatch = System.Text.RegularExpressions.Regex.Match(wifiRaw, @"^([A-Za-z0-9.\-]+)(?::(\d+))?$");
+                if (!wifiMatch.Success
+                    || (wifiMatch.Groups[2].Success && (int.TryParse(wifiMatch.Groups[2].Value, out int port) ? port < 1 || port > 65535 : true)))
+                {
+                    ShowStatus("Host WiFi inválido: usa el formato «host:puerto», p.ej. 192.168.0.10:35000.", true);
+                    return;
+                }
+            }
+
+            s.EnetHost = enetRaw.Length == 0 ? "auto" : enetRaw;
+            s.ElmWifiHost = wifiRaw.Length == 0 ? "192.168.0.10:35000" : wifiRaw;
             s.EcuPath = string.IsNullOrWhiteSpace(_ecuPath.Text) ? _defaultPath : _ecuPath.Text.Trim();
             _ecuPath.Text = s.EcuPath;
             DiagHolder.TryCreateDirectory(s.EcuPath);

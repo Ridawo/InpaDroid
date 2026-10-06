@@ -13,9 +13,15 @@ PROJ="$ROOT/src/InpaDroid/InpaDroid.csproj"
 TFM=net10.0-android36.1
 
 # EnableAndroidTargets / TargetFrameworks for EdiabasLib come from src/InpaDroid/Directory.Build.rsp.
+# Signing uses the Android debug key (~/.android/debug.keystore). Replace with a release key for distribution.
 dotnet publish "$PROJ" -c Release -f "$TFM" \
   -p:AndroidSdkDirectory="$ANDROID_HOME" \
   -p:JavaSdkDirectory="$JAVA_HOME" \
+  -p:AndroidKeyStore=true \
+  -p:AndroidSigningKeyStore="$HOME/.android/debug.keystore" \
+  -p:AndroidSigningKeyAlias=androiddebugkey \
+  -p:AndroidSigningKeyPass=android \
+  -p:AndroidSigningStorePass=android \
   "$@"
 
 APK="$ROOT/src/InpaDroid/bin/Release/$TFM/publish/com.inpadroid.app-Signed.apk"

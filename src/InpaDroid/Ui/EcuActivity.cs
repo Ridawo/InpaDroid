@@ -8,10 +8,6 @@ using InpaDroid.Diag;
 
 namespace InpaDroid.Ui;
 
-/// <summary>
-/// Pantalla de una centralita, con las teclas de un script INPA estándar:
-/// F1 Info, F2 Ident, F4 Fehlerspeicher (Shift+F4 borrar), F5 Status, F6 Steuern, F7 Jobs, F9 Copiar, F10 Volver.
-/// </summary>
 [Activity(Label = "Centralita", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
@@ -76,8 +72,6 @@ public class EcuActivity : InpaActivity
     void UpdateSubtitle() =>
         SetSubtitle(_isGroup ? $"{_ecuName}.grp → {(_sgbd ?? "?")}" : $"{_ecuName}.prg");
 
-    // ---------------------------------------------------------------- control de teclas
-
     protected override bool BeforeKey(int f, bool shift)
     {
         bool isBack = f == 10 && !shift;
@@ -104,7 +98,6 @@ public class EcuActivity : InpaActivity
         base.OnPause();
     }
 
-    /// <summary>Ejecuta una operación exclusiva (sin otras teclas salvo F10) con gestión de errores.</summary>
     async void Exclusive(Func<Task> work)
     {
         if (_busyJob)
@@ -161,8 +154,6 @@ public class EcuActivity : InpaActivity
         return jobs;
     }
 
-    // ---------------------------------------------------------------- ejecución de jobs
-
     void RunOnce(string job, string heading, string args = "", string results = "") =>
         Exclusive(async () =>
         {
@@ -206,7 +197,6 @@ public class EcuActivity : InpaActivity
             }));
     }
 
-    /// <summary>Elige un job por prefijo (o todos) y llama a onPick.</summary>
     void PickJob(string? prefix, string title, Action<string, JobInfo> onPick) =>
         Exclusive(async () =>
         {
@@ -227,7 +217,6 @@ public class EcuActivity : InpaActivity
             JobDialogs.PickJob(this, $"{title} - {sgbd} ({list.Count})", list, job => onPick(sgbd, job));
         });
 
-    // F5: elegir STATUS_* y repetirlo cada ~1 s
     void StatusMenu() =>
         PickJob("STATUS_", "Status", (sgbd, job) =>
         {
@@ -237,7 +226,6 @@ public class EcuActivity : InpaActivity
                 JobDialogs.AskArguments(this, sgbd, job, "Leer", (args, res) => StartPolling(sgbd, job.Name, args, res));
         });
 
-    // F6: elegir STEUERN_*, pedir argumentos, aviso de seguridad y confirmación
     void SteuernMenu() =>
         PickJob("STEUERN", "Steuern", (sgbd, job) =>
             JobDialogs.AskArguments(this, sgbd, job, "Continuar", (args, res) =>
@@ -252,13 +240,10 @@ public class EcuActivity : InpaActivity
                     "Ejecutar",
                     () => Exclusive(() => RunJobCore(sgbd, job.Name, "Steuern: " + job.Name, args, res)))));
 
-    // F7: todos los jobs estilo Tool32
     void JobsMenu() =>
         PickJob(null, "Jobs", (sgbd, job) =>
             JobDialogs.AskArguments(this, sgbd, job, "Ejecutar", (args, res) =>
                 Exclusive(() => RunJobCore(sgbd, job.Name, "Job: " + job.Name, args, res))));
-
-    // ---------------------------------------------------------------- Status continuo
 
     void StartPolling(string sgbd, string job, string args, string results)
     {
@@ -311,8 +296,6 @@ public class EcuActivity : InpaActivity
         HideBusy();
         _heading.Text += " (detenido)";
     }
-
-    // ---------------------------------------------------------------- F9 copiar (equivale a "Druck" de INPA)
 
     void CopyResults()
     {

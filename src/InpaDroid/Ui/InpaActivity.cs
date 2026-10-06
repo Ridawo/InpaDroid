@@ -11,11 +11,6 @@ using InpaDroid.Diag;
 
 namespace InpaDroid.Ui;
 
-/// <summary>
-/// Base de todas las pantallas: cabecera INPA (Batería / Encendido), barra de teclas F1–F10 con Shift,
-/// teclado físico F1–F10 y barra de progreso con Abortar.
-/// Las subclases llaman a <see cref="InitInpa"/> en OnCreate y definen sus teclas con SetKey/SetShiftKey.
-/// </summary>
 public abstract class InpaActivity : Activity
 {
     const int HeaderPollMs = 2000;
@@ -79,8 +74,6 @@ public abstract class InpaActivity : Activity
     {
         if (_subtitle != null) _subtitle.Text = text;
     }
-
-    // ---------------------------------------------------------------- teclas F
 
     protected void SetKey(int f, string label, Action action) =>
         _keys[f - 1] = new KeyDef { Label = label, Action = action };
@@ -285,8 +278,6 @@ public abstract class InpaActivity : Activity
         BuildKeyBar();
     }
 
-    // ---------------------------------------------------------------- barra de progreso
-
     /// <summary>Muestra la barra de trabajo. Por defecto el botón llama a DiagService.Abort().</summary>
     protected void ShowBusy(string text, string buttonText = "Abortar", Action? onButton = null)
     {
@@ -316,8 +307,6 @@ public abstract class InpaActivity : Activity
             UiUtil.Toast(this, UiUtil.Describe(ex));
         }
     }
-
-    // ---------------------------------------------------------------- cabecera Batería / Encendido
 
     protected override void OnResume()
     {

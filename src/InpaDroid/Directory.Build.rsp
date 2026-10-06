@@ -1,0 +1,2 @@
+/p:EnableAndroidTargets=true
+/p:EnableWindowsTargeting=true

@@ -6,28 +6,29 @@ using Android.OS;
 using Android.Views;
 using Android.Widget;
 using InpaDroid.Diag;
+using InpaDroid.Ui.E39;
 
-namespace InpaDroid.Ui.E39;
+namespace InpaDroid.Ui.E46;
 
-[Activity(Label = "Centralita E39", Theme = "@style/InpaTheme",
+[Activity(Label = "Centralita E46", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
-public class E39EcuActivity : InpaActivity
+public class E46EcuActivity : InpaActivity
 {
-    public const string ExtraEcuIndex = "e39_ecu_index";
+    public const string ExtraEcuIndex = "e46_ecu_index";
 
     const int StatusPollMs = 1000;
-    internal const int MaxLabelPad = 30;
-    internal const int MaxValuePad = 12;
+    const int MaxLabelPad = 30;
+    const int MaxValuePad = 12;
 
     E39Ecu _ecu = null!;
-    string? _sgbd;                          // variante real (.prg) una vez resuelta
+    string? _sgbd;
     ResultPanel _results = null!;
     TextView _heading = null!;
     TextView _status = null!;
-    bool _busyJob;                          // job puntual en curso (bloquea otras teclas salvo F10)
+    bool _busyJob;
     bool _pollInFlight;
-    int _generation;                        // descarta resultados de operaciones ya sustituidas
+    int _generation;
     CancellationTokenSource? _pollCts;
 
     protected override bool PauseHeader => _busyJob || _pollCts != null;
@@ -36,10 +37,10 @@ public class E39EcuActivity : InpaActivity
     {
         base.OnCreate(savedInstanceState);
         int index = Intent?.GetIntExtra(ExtraEcuIndex, -1) ?? -1;
-        var ecus = E39Catalog.Ecus;
+        var ecus = E46Catalog.Ecus;
         if (index < 0 || index >= ecus.Count)
         {
-            UiUtil.Toast(this, "Centralita E39 no válida");
+            UiUtil.Toast(this, "Centralita E46 no válida");
             Finish();
             return;
         }
@@ -80,8 +81,6 @@ public class E39EcuActivity : InpaActivity
 
     void UpdateSubtitle() => SetSubtitle($"{_ecu.Sgbd} → {_sgbd ?? "?"}");
 
-    // ---------------------------------------------------------------- control de teclas
-
     protected override bool BeforeKey(int f, bool shift)
     {
         bool isBack = f == 10 && !shift;
@@ -92,7 +91,6 @@ public class E39EcuActivity : InpaActivity
         }
         if (isBack && (_busyJob || _pollInFlight))
             AbortJob();
-        // Cualquier tecla detiene la lectura continua de Status (como en INPA).
         StopPolling();
         return true;
     }
@@ -121,12 +119,11 @@ public class E39EcuActivity : InpaActivity
         finally
         {
             _busyJob = false;
-            if (_pollCts == null)   // si la operación ha arrancado el Status, su barra "Parar" se queda
+            if (_pollCts == null)
                 HideBusy();
         }
     }
 
-    // null si falla; se reintenta con la siguiente tecla
     async Task<string?> EnsureSgbdAsync()
     {
         if (_sgbd != null)
@@ -147,8 +144,6 @@ public class E39EcuActivity : InpaActivity
         _results.ShowInfo(_ecu.Sgbd, $"Variante identificada: {_sgbd}", append: true);
         return _sgbd;
     }
-
-    // ---------------------------------------------------------------- ejecución de jobs
 
     void RunOnce(string job, string heading, string args = "") =>
         Exclusive(async () =>
@@ -196,7 +191,6 @@ public class E39EcuActivity : InpaActivity
         JobDialogs.Message(this, "Información", text);
     }
 
-    // F4: memoria de errores (ResultPanel destaca F_ORT_NR / F_ORT_TEXT)
     void ReadFaults() =>
         Exclusive(async () =>
         {
@@ -246,7 +240,7 @@ public class E39EcuActivity : InpaActivity
         if (_ecu.StatusPages.Count == 0)
         {
             ShowResults();
-            _results.ShowInfo("Status", "Esta centralita no tiene páginas de status en el catálogo E39. Usa F7 (todos los jobs).");
+            _results.ShowInfo("Status", "Esta centralita no tiene páginas de status en el catálogo E46. Usa F7 (todos los jobs).");
             return;
         }
         PickItem("Status - " + _ecu.Title, _ecu.StatusPages.Select(p => p.Title).ToList(), i =>
@@ -263,7 +257,7 @@ public class E39EcuActivity : InpaActivity
         if (_ecu.Actions.Count == 0)
         {
             ShowResults();
-            _results.ShowInfo("Steuern", "Esta centralita no tiene activaciones en el catálogo E39. Usa F7 (todos los jobs).");
+            _results.ShowInfo("Steuern", "Esta centralita no tiene activaciones en el catálogo E46. Usa F7 (todos los jobs).");
             return;
         }
         PickItem("Steuern - " + _ecu.Title, _ecu.Actions.Select(a => a.Title).ToList(), i =>
@@ -298,8 +292,6 @@ public class E39EcuActivity : InpaActivity
             StartActivity(intent);
         });
 
-    // ---------------------------------------------------------------- Status continuo
-
     void ShowResults(bool results = true)
     {
         _results.Clear();
@@ -321,7 +313,6 @@ public class E39EcuActivity : InpaActivity
 
     async void PollLoop(string sgbd, E39Page page, CancellationTokenSource cts, int gen)
     {
-        // Un job por llamada (job + argumentos distintos), pidiendo solo los resultados necesarios.
         var groups = page.Values
             .GroupBy(v => (Job: v.Job.Trim().ToUpperInvariant(), v.Args))
             .Select(g => (g.Key.Job, g.Key.Args, Values: g.ToList(),
@@ -359,7 +350,7 @@ public class E39EcuActivity : InpaActivity
                         : ($"ERROR sin resultado {v.Result}", true);
                 }
             }
-            _status.TextFormatted = E39StatusTable.BuildTable(page, cells, ++count);
+            _status.TextFormatted = BuildTable(page, cells, ++count);
             try
             {
                 await Task.Delay((int)Math.Max(100, StatusPollMs - sw.ElapsedMilliseconds), cts.Token);
@@ -369,6 +360,41 @@ public class E39EcuActivity : InpaActivity
                 break;
             }
         }
+    }
+
+    static Android.Text.SpannableStringBuilder BuildTable(E39Page page, Dictionary<E39Value, (string Text, bool Error)> cells, int count)
+    {
+        int labelPad = Math.Min(MaxLabelPad, page.Values.Count == 0 ? 0 : page.Values.Max(v => v.Label.Length)) + 3;
+        int valuePad = Math.Min(MaxValuePad, cells.Values.Where(c => !c.Error).Select(c => c.Text.Length).DefaultIfEmpty(0).Max());
+
+        var sb = new Android.Text.SpannableStringBuilder();
+        Append(sb, page.Title,
+            new Android.Text.Style.StyleSpan(Android.Graphics.TypefaceStyle.Bold),
+            new Android.Text.Style.ForegroundColorSpan(UiUtil.BlueDark));
+        sb.Append($"   {DateTime.Now:HH:mm:ss}   #{count}\n");
+        foreach (var v in page.Values)
+        {
+            sb.Append("\n");
+            sb.Append(v.Label.Length + 1 >= labelPad ? v.Label + " " : (v.Label + " ").PadRight(labelPad - 1, '.') + " ");
+            var (text, error) = cells.GetValueOrDefault(v, ("--", true));
+            if (error)
+                Append(sb, text, new Android.Text.Style.ForegroundColorSpan(UiUtil.ErrorText));
+            else
+            {
+                Append(sb, text.PadLeft(valuePad), new Android.Text.Style.StyleSpan(Android.Graphics.TypefaceStyle.Bold));
+                if (v.Unit.Length > 0)
+                    sb.Append(" " + v.Unit);
+            }
+        }
+        return sb;
+    }
+
+    static void Append(Android.Text.SpannableStringBuilder sb, string text, params Java.Lang.Object[] spans)
+    {
+        int start = sb.Length();
+        sb.Append(text);
+        foreach (var span in spans)
+            sb.SetSpan(span, start, sb.Length(), Android.Text.SpanTypes.ExclusiveExclusive);
     }
 
     void StopPolling()

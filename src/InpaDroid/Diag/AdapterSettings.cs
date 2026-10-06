@@ -12,7 +12,7 @@ public sealed class AdapterSettings
     public string BluetoothAddress { get; set; } = "";        // MAC del ELM327
     public string EnetHost { get; set; } = "auto";            // IP o "auto"
     public string ElmWifiHost { get; set; } = "192.168.0.10:35000";
-    public string EcuPath { get; set; } = "";                 // carpeta con .prg/.grp
+    public string EcuPath { get; set; } = "";
 
     public static AdapterSettings Load(Context ctx)
     {

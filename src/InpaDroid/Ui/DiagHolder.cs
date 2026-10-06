@@ -1,5 +1,7 @@
 using Android.Content;
 using InpaDroid.Diag;
+using InpaDroid.Ui.E39;
+using InpaDroid.Ui.E46;
 
 namespace InpaDroid.Ui;
 
@@ -42,6 +44,8 @@ public static class DiagHolder
                 var app = ctx.ApplicationContext ?? ctx;
                 var settings = LoadSettings(app);
                 TryCreateDirectory(settings.EcuPath);
+                E39Catalog.TryLoadFromFolder(settings.EcuPath);
+                E46Catalog.TryLoadFromFolder(settings.EcuPath);
                 _service = new DiagService(app, settings);
             }
             return _service;
