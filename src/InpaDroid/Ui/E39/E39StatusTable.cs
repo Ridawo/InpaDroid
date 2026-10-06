@@ -5,7 +5,7 @@ using InpaDroid.Diag;
 
 namespace InpaDroid.Ui.E39;
 
-static class E39StatusTable
+public static class E39StatusTable
 {
     internal static string? StatusError(JobResult r)
     {

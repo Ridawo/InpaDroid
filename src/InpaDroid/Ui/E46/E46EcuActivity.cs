@@ -350,7 +350,7 @@ public class E46EcuActivity : InpaActivity
                         : ($"ERROR sin resultado {v.Result}", true);
                 }
             }
-            _status.TextFormatted = BuildTable(page, cells, ++count);
+            _status.TextFormatted = E39StatusTable.BuildTable(page, cells, ++count);
             try
             {
                 await Task.Delay((int)Math.Max(100, StatusPollMs - sw.ElapsedMilliseconds), cts.Token);
@@ -360,41 +360,6 @@ public class E46EcuActivity : InpaActivity
                 break;
             }
         }
-    }
-
-    static Android.Text.SpannableStringBuilder BuildTable(E39Page page, Dictionary<E39Value, (string Text, bool Error)> cells, int count)
-    {
-        int labelPad = Math.Min(MaxLabelPad, page.Values.Count == 0 ? 0 : page.Values.Max(v => v.Label.Length)) + 3;
-        int valuePad = Math.Min(MaxValuePad, cells.Values.Where(c => !c.Error).Select(c => c.Text.Length).DefaultIfEmpty(0).Max());
-
-        var sb = new Android.Text.SpannableStringBuilder();
-        Append(sb, page.Title,
-            new Android.Text.Style.StyleSpan(Android.Graphics.TypefaceStyle.Bold),
-            new Android.Text.Style.ForegroundColorSpan(UiUtil.BlueDark));
-        sb.Append($"   {DateTime.Now:HH:mm:ss}   #{count}\n");
-        foreach (var v in page.Values)
-        {
-            sb.Append("\n");
-            sb.Append(v.Label.Length + 1 >= labelPad ? v.Label + " " : (v.Label + " ").PadRight(labelPad - 1, '.') + " ");
-            var (text, error) = cells.GetValueOrDefault(v, ("--", true));
-            if (error)
-                Append(sb, text, new Android.Text.Style.ForegroundColorSpan(UiUtil.ErrorText));
-            else
-            {
-                Append(sb, text.PadLeft(valuePad), new Android.Text.Style.StyleSpan(Android.Graphics.TypefaceStyle.Bold));
-                if (v.Unit.Length > 0)
-                    sb.Append(" " + v.Unit);
-            }
-        }
-        return sb;
-    }
-
-    static void Append(Android.Text.SpannableStringBuilder sb, string text, params Java.Lang.Object[] spans)
-    {
-        int start = sb.Length();
-        sb.Append(text);
-        foreach (var span in spans)
-            sb.SetSpan(span, start, sb.Length(), Android.Text.SpanTypes.ExclusiveExclusive);
     }
 
     void StopPolling()
