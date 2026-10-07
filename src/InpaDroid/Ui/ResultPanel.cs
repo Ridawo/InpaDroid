@@ -26,6 +26,7 @@ internal sealed class ResultPanel
 
     public ResultPanel(LinearLayout root) => _root = root;
 
+    const int MaxExports = 200;   // tope del CSV: en modo bucle el append no tiene fin
     readonly List<ResultExporter.Entry> _exports = [];
 
     public void Clear()
@@ -78,6 +79,8 @@ internal sealed class ResultPanel
     {
         if (!append)
             _exports.Clear();
+        if (_exports.Count >= MaxExports)
+            _exports.RemoveAt(0);
         _exports.Add(new ResultExporter.Entry(DateTime.Now, sgbd, job, result));
         Show(BuildResult(sgbd, job, result, note), append);
     }

@@ -1,13 +1,10 @@
 using Android.App;
-using Android.Bluetooth;
 using Android.Content;
 using Android.Content.PM;
-using Android.Hardware.Usb;
 using Android.OS;
 using Android.Provider;
 using Android.Views;
 using Android.Widget;
-using EdiabasLib;
 using InpaDroid.Diag;
 using InpaDroid.Ui.Settings;
 
