@@ -237,26 +237,18 @@ public sealed class DiagService : IDisposable
 
     // Un intento; si falla por pérdida de conexión con el adaptador (no con la centralita) y no ha sido
     // cancelación ni timeout, se cierra la conexión y se reintenta una sola vez. Todo en el hilo de trabajo.
-    private T RunWithReconnect<T>(Func<T> work, bool allowReconnect, InactivityWatchdog watchdog)
-    {
-        for (int attempt = 0; ; attempt++)
-        {
-            try
+    private T RunWithReconnect<T>(Func<T> work, bool allowReconnect, InactivityWatchdog watchdog) =>
+        DiagLogic.RunWithReconnect(work, allowReconnect, IsAdapterConnectionError,
+            () => !IsAborted && !_disposed && !watchdog.Fired,
+            () =>
             {
                 // Re-arm after abort; a cancelled interface rejects all subsequent jobs immediately.
                 _ediabas.EdInterfaceClass?.TransmitCancel(false);
                 RefreshNetworks();
                 // El plazo cuenta desde aquí: la preparación y la reconexión anterior no consumen el del intento.
                 watchdog.Kick();
-                return work();
-            }
-            catch (Exception ex) when (attempt == 0 && allowReconnect && !IsAborted && !_disposed &&
-                                       !watchdog.Fired && IsAdapterConnectionError(ex))
-            {
-                ResetConnection();
-            }
-        }
-    }
+            },
+            ResetConnection);
 
     private void ResetConnection()
     {
@@ -272,32 +264,9 @@ public sealed class DiagService : IDisposable
         }
     }
 
-    // Errores del adaptador/enlace (UART, sin respuesta del interfaz, init, acceso al dispositivo, sockets).
-    // IFH-0008/0009/0010 (centralita) no cuentan: reconectar al adaptador no los arregla.
-    internal static bool IsAdapterConnectionError(Exception ex)
-    {
-        for (Exception? e = ex; e != null; e = e.InnerException)
-        {
-            if (e is EdiabasNet.EdiabasNetException net)
-            {
-                switch (net.ErrorCode)
-                {
-                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0001:
-                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0002:
-                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0003:
-                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0017:
-                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0018:
-                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0019:
-                        return true;
-                }
-            }
-            else if (e is System.IO.IOException or System.Net.Sockets.SocketException)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
+    // Errores del adaptador/enlace; la clasificación vive en DiagLogic.
+    internal static bool IsAdapterConnectionError(Exception ex) =>
+        DiagLogic.IsAdapterConnectionError(ex, e => (e as EdiabasNet.EdiabasNetException)?.ErrorCode.ToString());
 
     private static string TimeoutMessage(TimeSpan limit) =>
         $"El adaptador no responde (sin respuesta tras {(int)limit.TotalSeconds} s). " +
@@ -518,15 +487,7 @@ public sealed class DiagService : IDisposable
         return new JobResult { Ok = true, Sets = sets, JobStatus = jobStatus };
     }
 
-    private static string FormatValue(object? value) => value switch
-    {
-        null => "",
-        string s => s,
-        long l => l.ToString(CultureInfo.InvariantCulture),
-        double d => d.ToString("0.######", CultureInfo.InvariantCulture),
-        byte[] bytes => BitConverter.ToString(bytes).Replace('-', ' '),
-        _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? ""
-    };
+    private static string FormatValue(object? value) => DiagLogic.FormatValue(value);
 
     private static List<string> StringResults(List<Dictionary<string, EdiabasNet.ResultData>> resultSets, string key) =>
         resultSets.Skip(1)

@@ -21,6 +21,7 @@
   <!-- Pure-logic sources linked from the Android app (no Android/EdiabasLib dependencies). -->
   <ItemGroup>
     <Compile Include="..\..\src\InpaDroid\Diag\DiagModels.cs" Link="Linked\DiagModels.cs" />
+    <Compile Include="..\..\src\InpaDroid\Diag\DiagLogic.cs" Link="Linked\DiagLogic.cs" />
     <Compile Include="..\..\src\InpaDroid\Diag\JobPolicy.cs" Link="Linked\JobPolicy.cs" />
     <Compile Include="..\..\src\InpaDroid\Diag\InactivityWatchdog.cs" Link="Linked\InactivityWatchdog.cs" />
     <Compile Include="..\..\src\InpaDroid\Ui\Chassis\ChassisModel.cs" Link="Linked\ChassisModel.cs" />
