@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ecu_pick_cancel">Cancelar</string>
+    <string name="ecu_choose_function">Elige una función</string>
+    <string name="ecu_choose_hint">Toca una tarjeta para empezar. Para detener una lectura continua, toca Parar.</string>
+    <string name="ecu_search_chassis_hint">Buscar centralita</string>
+    <string name="ecu_search_hint">Buscar centralita (p. ej. D_MOTOR, DME, EGS…)</string>
+    <string name="ecu_busy_job">Hay un job en curso: espera o toca Abortar</string>
+    <string name="ecu_retry_hint">Toca de nuevo una función para reintentar.</string>
+    <string name="ecu_reread_faults">Toca Errores para volver a leerla.</string>
+    <string name="ecu_polling_hint">Se actualiza cada segundo. Toca Parar para detener.</string>
+</resources>

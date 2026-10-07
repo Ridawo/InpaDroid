@@ -43,6 +43,8 @@ internal static class JobDialogs
             dialog.Dismiss();
             onPick(job);
         };
+        dialog.ShowEvent += (_, _) =>
+            dialog.GetButton((int)Android.Content.DialogButtonType.Negative)?.SetMinHeight(UiUtil.Dp(activity, UiUtil.TouchDp));
         dialog.Show();
     }
 
@@ -61,22 +63,60 @@ internal static class JobDialogs
         if (job.Arguments.Count > 0)
             args.Hint = string.Join(";", job.Arguments);
 
-        new AlertDialog.Builder(activity)
+        var dialog = new AlertDialog.Builder(activity)
             .SetTitle(job.Name)!
             .SetView(view)!
             .SetPositiveButton(runText, (_, _) => onRun(args.Text?.Trim() ?? "", results.Text?.Trim() ?? ""))!
             .SetNegativeButton("Cancelar", (_, _) => { })!
-            .Show();
+            .Create()!;
+        dialog.ShowEvent += (_, _) =>
+        {
+            var yes = dialog.GetButton((int)Android.Content.DialogButtonType.Positive);
+            yes?.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
+            yes?.SetMinHeight(UiUtil.Dp(activity, UiUtil.TouchDp));
+            dialog.GetButton((int)Android.Content.DialogButtonType.Negative)?.SetMinHeight(UiUtil.Dp(activity, UiUtil.TouchDp));
+        };
+        dialog.Show();
     }
 
-    public static void Confirm(Activity activity, string title, string message, string yesText, Action onYes)
+    /// <param name="danger">null = se detecta por el título (⚠ / Borrar / Steuern): botón de acción en rojo y aviso destacado.</param>
+    public static void Confirm(Activity activity, string title, string message, string yesText, Action onYes,
+        bool? danger = null)
     {
-        new AlertDialog.Builder(activity)
-            .SetTitle(title)!
-            .SetMessage(message)!
+        bool isDanger = danger ?? (title.Contains('⚠') || title.Contains("Borrar", StringComparison.OrdinalIgnoreCase)
+                                   || title.Contains("componentes", StringComparison.OrdinalIgnoreCase));
+        var builder = new AlertDialog.Builder(activity)
             .SetPositiveButton(yesText, (_, _) => onYes())!
-            .SetNegativeButton("Cancelar", (_, _) => { })!
-            .Show();
+            .SetNegativeButton("Cancelar", (_, _) => { })!;
+        if (!isDanger)
+        {
+            builder.SetTitle(title)!.SetMessage(message)!.Show();
+            return;
+        }
+
+        var warn = new TextView(activity) { Text = message };
+        warn.SetTextColor(UiUtil.ErrorText);
+        warn.SetTextSize(Android.Util.ComplexUnitType.Sp, 16);
+        warn.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
+        warn.SetBackgroundColor(UiUtil.ErrorBg);
+        int p = UiUtil.Dp(activity, 16);
+        warn.SetPadding(p, p, p, p);
+        var box = new ScrollView(activity);
+        box.SetPadding(p, p / 2, p, 0);
+        box.AddView(warn);
+        var dialog = builder.SetTitle(title)!.SetView(box)!.Create()!;
+        dialog.ShowEvent += (_, _) =>
+        {
+            var yes = dialog.GetButton((int)Android.Content.DialogButtonType.Positive);
+            if (yes != null)
+            {
+                yes.SetTextColor(UiUtil.ErrorText);
+                yes.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
+                yes.SetMinHeight(UiUtil.Dp(activity, UiUtil.TouchDp));
+            }
+            dialog.GetButton((int)Android.Content.DialogButtonType.Negative)?.SetMinHeight(UiUtil.Dp(activity, UiUtil.TouchDp));
+        };
+        dialog.Show();
     }
 
     public static void Message(Activity activity, string title, string message)

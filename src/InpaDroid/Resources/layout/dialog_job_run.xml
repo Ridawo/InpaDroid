@@ -24,12 +24,13 @@
             style="@style/InpaLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Argumentos (separados por ;)" />
+            android:text="@string/set_job_args_label" />
 
         <EditText
             android:id="@+id/jobrun_args"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:fontFamily="monospace"
             android:inputType="text|textNoSuggestions"
             android:singleLine="true" />
@@ -38,12 +39,13 @@
             style="@style/InpaLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Resultados (opcional, separados por ;)" />
+            android:text="@string/set_job_results_label" />
 
         <EditText
             android:id="@+id/jobrun_results"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:fontFamily="monospace"
             android:hint="todos"
             android:inputType="textCapCharacters|textNoSuggestions"

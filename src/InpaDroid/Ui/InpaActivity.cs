@@ -2,8 +2,6 @@ using Android.App;
 using Android.Content.Res;
 using Android.Graphics;
 using Android.Graphics.Drawables;
-using Android.Text;
-using Android.Text.Style;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
@@ -24,9 +22,6 @@ public abstract class InpaActivity : Activity
 
     // 0..9 = F1..F10, 10..19 = Shift+F1..F10
     readonly KeyDef?[] _keys = new KeyDef?[20];
-    readonly TextView?[] _keyViews = new TextView?[10];
-    TextView? _shiftView;
-    bool _shift;
 
     LinearLayout? _keyBar;
     TextView? _title, _subtitle, _battText, _ignText;
@@ -61,8 +56,16 @@ public abstract class InpaActivity : Activity
         _busyButton = FindViewById<Button>(Resource.Id.inpa_busy_abort);
         if (_busyButton != null)
             _busyButton.Click += (_, _) => _busyAction?.Invoke();
+        var back = FindViewById(Resource.Id.inpa_back);
+        if (back != null)
+            back.Click += (_, _) =>
+            {
+                // Atrás = la tecla "volver" (F10) de la pantalla si existe; si no, el atrás del sistema.
+                if (_keys[9]?.Action != null) PressKey(10, false);
+                else OnBackPressed();
+            };
         SetTitleText(title);
-        BuildKeyBar();
+        BuildKeyGrid();
     }
 
     protected void SetTitleText(string title)
@@ -92,7 +95,7 @@ public abstract class InpaActivity : Activity
         }
     }
 
-    /// <summary>Texto estilo INPA: "&lt; F1 &gt;  Info" o "&lt;Shift&gt; + &lt; F4 &gt;  Borrar".</summary>
+    /// <summary>Texto estilo INPA para listados de texto: "&lt; F1 &gt;  Info" o "&lt;Shift&gt; + &lt; F4 &gt;  Borrar".</summary>
     protected static string KeyCaption(int f, bool shift, string label)
     {
         var key = f == 10 ? "< F10>" : $"< F{f} >";
@@ -104,12 +107,6 @@ public abstract class InpaActivity : Activity
 
     protected void PressKey(int f, bool shift)
     {
-        if (_shift)
-        {
-            // Shift en pantalla funciona como en INPA con una sola pulsación: se suelta tras usarlo.
-            _shift = false;
-            UpdateKeyLabels();
-        }
         var key = _keys[(shift ? 10 : 0) + f - 1];
         if (key?.Action == null)
             return;
@@ -125,128 +122,77 @@ public abstract class InpaActivity : Activity
         }
     }
 
-    void BuildKeyBar()
+    int KeyColumns()
+    {
+        int w = Resources?.Configuration?.ScreenWidthDp ?? 0;
+        int h = Resources?.Configuration?.ScreenHeightDp ?? 0;
+        // En apaisado el alto es escaso: más columnas para que las tarjetas no se coman los resultados.
+        if (w > h && h > 0)
+            return w >= 560 ? 4 : 3;
+        return w >= 900 ? 4 : w >= 600 ? 3 : 2;
+    }
+
+    /// <summary>Dibuja las teclas definidas como tarjetas en una cuadrícula; las Shift (destructivas) al final.</summary>
+    void BuildKeyGrid()
     {
         if (_keyBar == null)
             return;
         _keyBar.RemoveAllViews();
-
-        _shiftView = MakeKeyView();
-        _shiftView.Click += (_, _) =>
+        int cols = KeyColumns();
+        LinearLayout? row = null;
+        int n = 0;
+        for (int i = 0; i < _keys.Length; i++)
         {
-            _shift = !_shift;
-            UpdateKeyLabels();
-        };
-        for (int i = 0; i < 10; i++)
-        {
-            int f = i + 1;
-            var v = MakeKeyView();
-            v.Click += (_, _) => PressKey(f, _shift);
-            _keyViews[i] = v;
-        }
-
-        bool wide = (Resources?.Configuration?.ScreenWidthDp ?? 0) >= 600;
-        if (wide)
-        {
-            // Pantalla ancha (horizontal): Shift + F1..F10 en una fila, como en INPA.
-            var row = NewRow();
-            row.AddView(_shiftView, KeyParams());
-            foreach (var v in _keyViews)
-                row.AddView(v, KeyParams());
-            _keyBar.AddView(row);
-        }
-        else
-        {
-            // Vertical: Shift alto a la izquierda + dos filas de 5.
-            var outer = NewRow();
-            outer.AddView(_shiftView, KeyParams());
-            var rows = new LinearLayout(this) { Orientation = Android.Widget.Orientation.Vertical };
-            for (int r = 0; r < 2; r++)
+            var key = _keys[i];
+            // F10 (Volver) ya lo hace la flecha de la cabecera: no se dibuja como tarjeta.
+            if (key?.Action == null || i == 9)
+                continue;
+            if (n++ % cols == 0)
             {
-                var row = NewRow();
-                for (int c = 0; c < 5; c++)
-                    row.AddView(_keyViews[r * 5 + c], KeyParams());
-                rows.AddView(row, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent,
-                    LinearLayout.LayoutParams.WrapContent));
+                row = new LinearLayout(this) { Orientation = Android.Widget.Orientation.Horizontal };
+                _keyBar.AddView(row, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MatchParent, LinearLayout.LayoutParams.WrapContent));
             }
-            outer.AddView(rows, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WrapContent, 5f));
-            _keyBar.AddView(outer);
+            row!.AddView(MakeKeyView(key.Label, i % 10 + 1, i >= 10), KeyParams());
         }
-        UpdateKeyLabels();
+        // Relleno de la última fila para que las tarjetas mantengan el ancho.
+        // Alto 0 explícito: una View con wrap_content se estira a todo el espacio disponible y aplastaría el resto.
+        for (int pad = (cols - n % cols) % cols; pad > 0; pad--)
+            row!.AddView(new View(this), new LinearLayout.LayoutParams(0, 0, 1f));
+        _keyBar.Visibility = n == 0 ? ViewStates.Gone : ViewStates.Visible;
     }
-
-    LinearLayout NewRow() => new(this) { Orientation = Android.Widget.Orientation.Horizontal };
 
     LinearLayout.LayoutParams KeyParams()
     {
-        var lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MatchParent, 1f);
-        int m = UiUtil.Dp(this, 1.5f);
+        var lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
+        int m = UiUtil.Dp(this, 4);
         lp.SetMargins(m, m, m, m);
         return lp;
     }
 
-    TextView MakeKeyView()
+    TextView MakeKeyView(string label, int f, bool danger)
     {
         var tv = new TextView(this)
         {
+            Text = label,
             Gravity = GravityFlags.Center,
             Clickable = true,
             Focusable = false,
         };
-        tv.SetMinHeight(UiUtil.Dp(this, 44));
+        tv.SetMinHeight(UiUtil.Dp(this, 56));
         tv.SetMaxLines(3);
-        tv.SetTextSize(ComplexUnitType.Sp, 11);
-        tv.SetTextColor(Color.Black);
-        int p = UiUtil.Dp(this, 2);
+        tv.SetTextSize(ComplexUnitType.Sp, 15);
+        tv.SetTypeface(null, TypefaceStyle.Bold);
+        tv.SetTextColor(Resources!.GetColor(danger ? Resource.Color.m_error : Resource.Color.m_text, Theme));
+        tv.SetBackgroundResource(danger ? Resource.Drawable.bg_card_danger : Resource.Drawable.bg_card);
+        int p = UiUtil.Dp(this, 8);
         tv.SetPadding(p, p, p, p);
+        tv.Click += (_, _) => PressKey(f, danger);
         return tv;
     }
 
-    Drawable KeyBackground(Color color)
-    {
-        GradientDrawable Shape(Color c)
-        {
-            var d = new GradientDrawable();
-            d.SetColor(c);
-            d.SetStroke(UiUtil.Dp(this, 1), UiUtil.KeyBorder);
-            d.SetCornerRadius(UiUtil.Dp(this, 3));
-            return d;
-        }
-        var states = new StateListDrawable();
-        states.AddState(new[] { Android.Resource.Attribute.StatePressed }, Shape(UiUtil.KeyPressed));
-        states.AddState(Array.Empty<int>(), Shape(color));
-        return states;
-    }
-
-    void UpdateKeyLabels()
-    {
-        if (_shiftView != null)
-        {
-            _shiftView.TextFormatted = KeyText("Shift", _shift ? "activo" : "");
-            _shiftView.Background = KeyBackground(_shift ? UiUtil.ShiftOn : UiUtil.KeyBg);
-        }
-        for (int i = 0; i < 10; i++)
-        {
-            var v = _keyViews[i];
-            if (v == null) continue;
-            var key = _keys[(_shift ? 10 : 0) + i];
-            bool enabled = key?.Action != null;
-            v.TextFormatted = KeyText((_shift ? "⇧F" : "F") + (i + 1), enabled ? key!.Label : "");
-            v.Enabled = enabled;
-            v.Alpha = enabled ? 1f : 0.45f;
-            v.Background = KeyBackground(UiUtil.KeyBg);
-        }
-    }
-
-    static SpannableString KeyText(string key, string label)
-    {
-        var s = new SpannableString(label.Length > 0 ? key + "\n" + label : key);
-        s.SetSpan(new StyleSpan(TypefaceStyle.Bold), 0, key.Length, SpanTypes.ExclusiveExclusive);
-        return s;
-    }
-
-    /// <summary>Llamar tras cambiar teclas con SetKey para refrescar las etiquetas.</summary>
-    protected void RefreshKeys() => UpdateKeyLabels();
+    /// <summary>Llamar tras cambiar teclas con SetKey para refrescar las tarjetas.</summary>
+    protected void RefreshKeys() => BuildKeyGrid();
 
     public override bool OnKeyDown(Keycode keyCode, KeyEvent? e)
     {
@@ -258,7 +204,7 @@ public abstract class InpaActivity : Activity
         };
         if (keyCode == Keycode.Escape && _keys[9]?.Action != null)
         {
-            // Escape es siempre F10 (volver), aunque el Shift de pantalla esté pulsado.
+            // Escape es siempre F10 (volver).
             if ((e?.RepeatCount ?? 0) == 0)
                 PressKey(10, false);
             return true;
@@ -266,7 +212,7 @@ public abstract class InpaActivity : Activity
         if (f > 0)
         {
             if ((e?.RepeatCount ?? 0) == 0)
-                PressKey(f, (e?.IsShiftPressed ?? false) || _shift);
+                PressKey(f, e?.IsShiftPressed ?? false);
             return true;
         }
         return base.OnKeyDown(keyCode, e);
@@ -275,7 +221,7 @@ public abstract class InpaActivity : Activity
     public override void OnConfigurationChanged(Configuration newConfig)
     {
         base.OnConfigurationChanged(newConfig);
-        BuildKeyBar();
+        BuildKeyGrid();
     }
 
     /// <summary>Muestra la barra de trabajo. Por defecto el botón llama a DiagService.Abort().</summary>
@@ -371,13 +317,19 @@ public abstract class InpaActivity : Activity
     {
         // Como ShowBatteryIgnition de INPA: sin batería, el encendido también se da por apagado.
         bool battOn = ubatt is > 0;
-        if (_battLed != null) _battLed.SetBackgroundColor(battOn ? UiUtil.LedOn : UiUtil.LedOff);
+        if (_battLed != null) SetLed(_battLed, battOn);
         if (_battText != null)
             _battText.Text = ubatt == null ? "--" : battOn ? $"on  {ubatt.Value:0.0} V" : "off";
         bool ignOn = battOn && ignition == true;
-        if (_ignLed != null) _ignLed.SetBackgroundColor(ignOn ? UiUtil.LedOn : UiUtil.LedOff);
+        if (_ignLed != null) SetLed(_ignLed, ignOn);
         if (_ignText != null)
             _ignText.Text = ignition == null ? "--" : ignOn ? "on" : "off";
     }
 
+    static void SetLed(View led, bool on)
+    {
+        var c = on ? UiUtil.LedOn : UiUtil.LedOff;
+        if (led.Background?.Mutate() is GradientDrawable g) g.SetColor(c);
+        else led.SetBackgroundColor(c);
+    }
 }

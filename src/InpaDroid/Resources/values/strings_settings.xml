@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="set_title">Ajustes</string>
+  <string name="set_subtitle">Interfaz y carpeta ECU</string>
+  <string name="set_sec_connection">Tipo de conexión</string>
+  <string name="set_sec_details">Datos de la interfaz</string>
+  <string name="set_sec_ecu">Carpeta ECU</string>
+  <string name="set_adapter_usb">Cable USB K+DCAN (FTDI)</string>
+  <string name="set_adapter_enet">ENET (cable Ethernet, series F/G)</string>
+  <string name="set_adapter_elmbt">ELM327 Bluetooth</string>
+  <string name="set_adapter_elmwifi">ELM327 WiFi</string>
+  <string name="set_bt_device">Dispositivo Bluetooth emparejado</string>
+  <string name="set_bt_search">Buscar dispositivos emparejados</string>
+  <string name="set_enet_host">Host ENET (IP o «auto»)</string>
+  <string name="set_wifi_host">Host ELM327 WiFi (IP:puerto)</string>
+  <string name="set_ecu_pick">Elegir carpeta</string>
+  <string name="set_ecu_default">Por defecto</string>
+  <string name="set_save">Guardar</string>
+  <string name="set_err_enet">Host ENET inválido: usa una IP, un nombre de host o «auto».</string>
+  <string name="set_err_wifi">Formato no válido. Usa host:puerto, por ejemplo 192.168.0.10:35000 (puerto 1-65535).</string>
+  <string name="set_job_search_hint">Buscar job…</string>
+  <string name="set_job_args_label">Argumentos (separados por ;)</string>
+  <string name="set_job_results_label">Resultados (opcional, separados por ;)</string>
+</resources>

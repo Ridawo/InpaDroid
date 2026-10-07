@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sistema visual móvil: colores, textos y tarjetas. Usar estos nombres en las pantallas. -->
+<resources>
+    <color name="m_bg">#F2F4F8</color>
+    <color name="m_surface">#FFFFFF</color>
+    <color name="m_primary">#1C69D4</color>
+    <color name="m_primary_dark">#0B3E8A</color>
+    <color name="m_primary_container">#E3EDFB</color>
+    <color name="m_on_primary">#FFFFFF</color>
+    <color name="m_text">#1B1F27</color>
+    <color name="m_text_secondary">#5B6472</color>
+    <color name="m_error">#C62828</color>
+    <color name="m_error_container">#FDECEC</color>
+    <color name="m_divider">#D5DAE3</color>
+    <color name="m_ripple">#331C69D4</color>
+    <color name="m_ripple_danger">#33C62828</color>
+
+    <style name="MText_Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/m_text</item>
+    </style>
+
+    <style name="MText_Body">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/m_text</item>
+    </style>
+
+    <style name="MText_Caption">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/m_text_secondary</item>
+    </style>
+</resources>

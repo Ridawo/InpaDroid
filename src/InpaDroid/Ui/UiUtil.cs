@@ -28,6 +28,26 @@ internal static class UiUtil
     public static int Dp(Context ctx, float dp) =>
         (int)(dp * (ctx.Resources?.DisplayMetrics?.Density ?? 1f) + 0.5f);
 
+    /// <summary>Color de recurso (API 23+).</summary>
+    public static Color Res(Context ctx, int colorRes) => new(ctx.GetColor(colorRes));
+
+    /// <summary>Altura mínima táctil recomendada (48dp).</summary>
+    public const int TouchDp = 48;
+
+    /// <summary>Fondo de tarjeta (drawable bg_card / bg_card_primary / bg_card_danger).</summary>
+    public static void SetCard(Android.Views.View v, int drawableRes) =>
+        v.SetBackgroundResource(drawableRes);
+
+    /// <summary>Botón grande (≥48dp) sin mayúsculas forzadas.</summary>
+    public static Button BigButton(Context ctx, string text)
+    {
+        var b = new Button(ctx) { Text = text };
+        b.SetAllCaps(false);
+        b.SetMinHeight(Dp(ctx, TouchDp));
+        b.SetMinimumHeight(Dp(ctx, TouchDp));
+        return b;
+    }
+
     public static void Toast(Context ctx, string text) =>
         Android.Widget.Toast.MakeText(ctx, text, ToastLength.Short)?.Show();
 

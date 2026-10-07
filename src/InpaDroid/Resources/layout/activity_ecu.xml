@@ -2,21 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/inpa_bg"
+    android:background="@color/m_bg"
     android:orientation="vertical">
 
     <include layout="@layout/inpa_header" />
 
     <TextView
         android:id="@+id/ecu_heading"
-        style="@style/InpaHeading"
+        style="@style/MText_Title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="2dp"
-        android:singleLine="true"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"
+        android:maxLines="2"
         android:ellipsize="end" />
 
     <ScrollView
@@ -30,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="6dp" />
+            android:padding="10dp" />
     </ScrollView>
 
     <include layout="@layout/inpa_busy" />

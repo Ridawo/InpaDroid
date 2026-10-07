@@ -3,21 +3,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/inpa_bg"
+    android:background="@color/m_bg"
     android:orientation="vertical">
 
     <include layout="@layout/inpa_header" />
 
     <TextView
         android:id="@+id/chassis_heading"
-        style="@style/InpaHeading"
+        style="@style/MText_Title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="2dp"
-        android:singleLine="true"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="4dp"
+        android:maxLines="2"
         android:ellipsize="end" />
 
     <ScrollView
@@ -29,7 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="6dp">
+            android:padding="10dp">
 
             <LinearLayout
                 android:id="@+id/chassis_results"
@@ -39,13 +39,15 @@
 
             <TextView
                 android:id="@+id/chassis_status"
-                style="@style/InpaMono"
+                style="@style/MText_Body"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#FFFFFF"
-                android:padding="8dp"
+                android:background="@drawable/bg_card"
+                android:fontFamily="monospace"
+                android:lineSpacingMultiplier="1.35"
+                android:padding="16dp"
                 android:textIsSelectable="true"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:visibility="gone" />
         </LinearLayout>
     </ScrollView>

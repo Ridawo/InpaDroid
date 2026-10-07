@@ -25,7 +25,7 @@ public class SettingsActivity : InpaActivity
 
     RadioGroup _adapterGroup = null!;
     View _btSection = null!, _enetSection = null!, _wifiSection = null!;
-    TextView _btSelected = null!, _ecuInfo = null!, _status = null!, _adapterWarn = null!;
+    TextView _btSelected = null!, _ecuInfo = null!, _status = null!, _adapterWarn = null!, _enetError = null!, _wifiError = null!;
     LinearLayout _btList = null!;
     EditText _enetHost = null!, _wifiHost = null!, _ecuPath = null!;
     BluetoothPanel _bt = null!;
@@ -37,7 +37,7 @@ public class SettingsActivity : InpaActivity
     {
         base.OnCreate(savedInstanceState);
         InitInpa(Resource.Layout.activity_settings, "Ajustes");
-        SetSubtitle("Interfaz y carpeta ECU");
+        SetSubtitle(GetString(Resource.String.set_subtitle));
 
         _adapterGroup = FindViewById<RadioGroup>(Resource.Id.set_adapter_group)!;
         _btSection = FindViewById(Resource.Id.set_bt_section)!;
@@ -50,6 +50,8 @@ public class SettingsActivity : InpaActivity
         _ecuPath = FindViewById<EditText>(Resource.Id.set_ecu_path)!;
         _ecuInfo = FindViewById<TextView>(Resource.Id.set_ecu_info)!;
         _status = FindViewById<TextView>(Resource.Id.set_status)!;
+        _enetError = FindViewById<TextView>(Resource.Id.set_enet_error)!;
+        _wifiError = FindViewById<TextView>(Resource.Id.set_wifi_error)!;
         AddAdapterHelpViews();
 
         _defaultPath = DiagHolder.DefaultEcuPath(this);
@@ -66,10 +68,14 @@ public class SettingsActivity : InpaActivity
         _wifiHost.Text = s.ElmWifiHost;
         _ecuPath.Text = s.EcuPath;
         _bt.UpdateSelected(null);
+        StyleAdapterChips();
         UpdateSections();
 
+        _enetHost.TextChanged += (_, _) => ValidateEnet();
+        _wifiHost.TextChanged += (_, _) => ValidateWifi();
         _adapterGroup.CheckedChange += (_, _) =>
         {
+            StyleAdapterChips();
             UpdateSections();
             if (SelectedType() == AdapterType.Elm327Bluetooth)
                 _bt.Refresh();
@@ -79,13 +85,56 @@ public class SettingsActivity : InpaActivity
         FindViewById<Button>(Resource.Id.set_ecu_pick)!.Click += (_, _) => PickFolder();
         FindViewById<Button>(Resource.Id.set_save)!.Click += (_, _) => Save();
 
-        SetKey(2, "Guardar", Save);
+        // "Guardar" es el botón fijo del layout (set_save): no se duplica como tecla.
         SetKey(10, "Volver", Finish);
         RefreshKeys();
 
         ShowEcuCount(s.EcuPath);
         if (s.Type == AdapterType.Elm327Bluetooth)
             _bt.Refresh();
+    }
+
+    // Opciones del selector como tarjetas grandes: la elegida resaltada.
+    void StyleAdapterChips()
+    {
+        for (int i = 0; i < _adapterGroup.ChildCount; i++)
+        {
+            if (_adapterGroup.GetChildAt(i) is not RadioButton rb) continue;
+            bool on = rb.Checked;
+            rb.SetBackgroundResource(on ? Resource.Drawable.bg_card_primary : Resource.Drawable.bg_card);
+            rb.SetTextColor(UiUtil.Res(this, on ? Resource.Color.m_on_primary : Resource.Color.m_text));
+        }
+    }
+
+    static readonly System.Text.RegularExpressions.Regex EnetRx = new(@"^[A-Za-z0-9.\-]+$");
+    static readonly System.Text.RegularExpressions.Regex WifiRx = new(@"^([A-Za-z0-9.\-]+)(?::(\d+))?$");
+
+    bool ValidateEnet()
+    {
+        string raw = _enetHost.Text?.Trim() ?? "";
+        bool ok = raw.Length == 0 || raw.Equals("auto", StringComparison.OrdinalIgnoreCase) || EnetRx.IsMatch(raw);
+        ShowFieldError(_enetError, ok ? null : GetString(Resource.String.set_err_enet));
+        return ok;
+    }
+
+    bool ValidateWifi()
+    {
+        string raw = _wifiHost.Text?.Trim() ?? "";
+        bool ok = true;
+        if (raw.Length > 0)
+        {
+            var m = WifiRx.Match(raw);
+            ok = m.Success && (!m.Groups[2].Success
+                               || (int.TryParse(m.Groups[2].Value, out int port) && port >= 1 && port <= 65535));
+        }
+        ShowFieldError(_wifiError, ok ? null : GetString(Resource.String.set_err_wifi));
+        return ok;
+    }
+
+    static void ShowFieldError(TextView tv, string? msg)
+    {
+        tv.Text = msg ?? "";
+        tv.Visibility = msg == null ? ViewStates.Gone : ViewStates.Visible;
     }
 
     AdapterType SelectedType()
@@ -131,11 +180,13 @@ public class SettingsActivity : InpaActivity
         int index = parent.IndexOfChild(_adapterGroup) + 1;
         int p = UiUtil.Dp(this, 4);
 
+        p = UiUtil.Dp(this, 12);
         var note = new TextView(this) { Text = KLineNote };
         note.SetPadding(p, p, p, p);
-        note.SetTextColor(Android.Graphics.Color.Black);
+        note.SetTextSize(Android.Util.ComplexUnitType.Sp, 13);
+        note.SetTextColor(UiUtil.Res(this, Resource.Color.m_text_secondary));
         note.SetBackgroundColor(UiUtil.InfoBg);
-        parent.AddView(note, index++);
+        parent.AddView(note, index++, new LinearLayout.LayoutParams(-1, -2) { TopMargin = UiUtil.Dp(this, 8) });
 
         _adapterWarn = new TextView(this) { Visibility = ViewStates.Gone };
         _adapterWarn.SetPadding(p, p, p, p);
@@ -206,7 +257,7 @@ public class SettingsActivity : InpaActivity
 
     async void ShowEcuCount(string path)
     {
-        _ecuInfo.SetTextColor(Android.Graphics.Color.Black);
+        _ecuInfo.SetTextColor(UiUtil.Res(this, Resource.Color.m_text_secondary));
         _ecuInfo.Text = $"Por defecto: {_defaultPath}\nBuscando .prg/.grp…";
         try
         {
@@ -235,25 +286,20 @@ public class SettingsActivity : InpaActivity
             s.Type = SelectedType();
             s.BluetoothAddress = _bt.Address;
 
-            string enetRaw = _enetHost.Text?.Trim() ?? "";
-            if (enetRaw.Length > 0 && !enetRaw.Equals("auto", StringComparison.OrdinalIgnoreCase)
-                && !System.Text.RegularExpressions.Regex.IsMatch(enetRaw, @"^[A-Za-z0-9.\-]+$"))
+            // Solo cuenta el campo del adaptador elegido: los otros están ocultos y el usuario no podría corregirlos.
+            bool hostOk = s.Type switch
             {
-                ShowStatus("Host ENET inválido: usa una IP, un hostname o \"auto\".", true);
+                AdapterType.Enet => ValidateEnet(),
+                AdapterType.Elm327Wifi => ValidateWifi(),
+                _ => true,
+            };
+            if (!hostOk)
+            {
+                ShowStatus("Revisa el campo marcado en rojo.", true);
                 return;
             }
-
+            string enetRaw = _enetHost.Text?.Trim() ?? "";
             string wifiRaw = _wifiHost.Text?.Trim() ?? "";
-            if (wifiRaw.Length > 0)
-            {
-                var wifiMatch = System.Text.RegularExpressions.Regex.Match(wifiRaw, @"^([A-Za-z0-9.\-]+)(?::(\d+))?$");
-                if (!wifiMatch.Success
-                    || (wifiMatch.Groups[2].Success && (int.TryParse(wifiMatch.Groups[2].Value, out int port) ? port < 1 || port > 65535 : true)))
-                {
-                    ShowStatus("Host WiFi inválido: usa el formato «host:puerto», p.ej. 192.168.0.10:35000.", true);
-                    return;
-                }
-            }
 
             s.EnetHost = enetRaw.Length == 0 ? "auto" : enetRaw;
             s.ElmWifiHost = wifiRaw.Length == 0 ? "192.168.0.10:35000" : wifiRaw;

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Cabecera común INPA: barra de título azul + línea Batería / Encendido. -->
+<!-- Cabecera común: app bar con atrás/título + línea Batería / Encendido. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -8,19 +8,27 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/inpa_blue"
+        android:background="@color/m_primary"
+        android:elevation="4dp"
         android:gravity="center_vertical"
+        android:minHeight="56dp"
         android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp">
+        android:paddingEnd="16dp">
+
+        <ImageButton
+            android:id="@+id/inpa_back"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Atrás"
+            android:src="@drawable/ic_back" />
 
         <TextView
             android:id="@+id/inpa_title"
             style="@style/InpaTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
             android:text="InpaDroid" />
 
@@ -30,10 +38,10 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:ellipsize="start"
-            android:maxWidth="220dp"
+            android:maxWidth="180dp"
             android:singleLine="true"
-            android:textColor="#DDE8FF"
-            android:textSize="12sp" />
+            android:textColor="#D6E4FA"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -42,10 +50,10 @@
         android:background="@color/inpa_status_bg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="3dp"
-        android:paddingBottom="3dp">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
         <TextView
             style="@style/InpaMono"
@@ -87,5 +95,5 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#808080" />
+        android:background="@color/m_divider" />
 </LinearLayout>

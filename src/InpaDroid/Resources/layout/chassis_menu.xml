@@ -1,32 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Menú BMW del chasis: lista de centralitas del catálogo (como la selección de SG de INPA). -->
+<!-- Menú BMW del chasis: lista de centralitas del catálogo en tarjetas tocables. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/inpa_bg"
+    android:background="@color/m_bg"
     android:orientation="vertical">
 
     <include layout="@layout/inpa_header" />
 
     <TextView
         android:id="@+id/chassis_menu_heading"
-        style="@style/InpaHeading"
+        style="@style/MText_Title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="4dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
         android:paddingBottom="4dp"
-        android:text="Selección de centralita" />
+        android:text="@string/ecu_choose_function" />
+
+    <EditText
+        android:id="@+id/chassis_menu_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:minHeight="48dp"
+        android:hint="@string/ecu_search_chassis_hint"
+        android:imeOptions="actionSearch"
+        android:inputType="textNoSuggestions"
+        android:singleLine="true" />
 
     <ListView
         android:id="@+id/chassis_menu_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@color/inpa_panel"
-        android:divider="#B0B0B0"
-        android:dividerHeight="1dp" />
+        android:background="@color/m_bg"
+        android:clipToPadding="false"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp" />
 
     <include layout="@layout/inpa_fkeys" />
 </LinearLayout>

@@ -1,4 +1,3 @@
-using System.Globalization;
 using Android.Content;
 using Android.Graphics;
 using Android.Util;
@@ -7,8 +6,9 @@ using Android.Views;
 namespace InpaDroid.Ui.Live;
 
 /// <summary>
-/// Gráfica de líneas multiserie con ventana deslizante y autoescala. Cada serie se normaliza a su propio
-/// min/max visible (RPM, temperaturas y tensiones tienen escalas muy distintas). Solo se toca desde el hilo de UI.
+/// Gráfica de líneas multiserie con ventana deslizante. Cada serie se normaliza a su propio min/max visible
+/// (RPM, temperaturas y tensiones tienen escalas muy distintas). Los datos viven en <see cref="LiveSeriesData"/>;
+/// las series ocultas no se dibujan. La leyenda con valores es interactiva y está en la Activity. Solo hilo de UI.
 /// </summary>
 public sealed class LiveChartView : View
 {
@@ -18,94 +18,30 @@ public sealed class LiveChartView : View
         Color.ParseColor("#9C27B0"), Color.ParseColor("#E69500"), Color.ParseColor("#00897B"),
     ];
 
-    static readonly Color TextColor = Color.ParseColor("#303030");
+    public static Color ColorOf(int index) => Palette[index % Palette.Length];
 
-    sealed class Series(string name, Color color)
-    {
-        public readonly string Name = name;
-        public readonly Color Color = color;
-        public readonly List<float> Values = [];   // NaN = sin dato
-    }
-
-    readonly List<Series> _series = [];
-    readonly Paint _line = new(PaintFlags.AntiAlias) { StrokeWidth = 3f };
-    readonly Paint _grid = new() { Color = Color.ParseColor("#D0D0D0"), StrokeWidth = 1f };
-    readonly Paint _text = new(PaintFlags.AntiAlias);
+    readonly LiveSeriesData _data;
+    readonly Paint _line = new(PaintFlags.AntiAlias);
+    readonly Paint _grid = new() { Color = Color.ParseColor("#D0D0D0") };
     readonly Android.Graphics.Path _path = new();
-    int _window = 120;
 
-    public LiveChartView(Context context) : base(context)
+    public LiveChartView(Context context, LiveSeriesData data) : base(context)
     {
-        _text.TextSize = TypedValue.ApplyDimension(ComplexUnitType.Sp, 12, Resources!.DisplayMetrics);
+        _data = data;
+        float density = Resources?.DisplayMetrics?.Density ?? 1f;
+        _line.StrokeWidth = 2.5f * density;
+        _line.StrokeJoin = Paint.Join.Round;
+        _line.StrokeCap = Paint.Cap.Round;
         _line.SetStyle(Paint.Style.Stroke);
+        _grid.StrokeWidth = Math.Max(1f, density * 0.75f);
         SetBackgroundColor(Color.White);
-    }
-
-    /// <summary>Número máximo de muestras visibles.</summary>
-    public int WindowSize
-    {
-        get => _window;
-        set
-        {
-            _window = Math.Max(10, value);
-            // Al reducir la ventana se descartan las muestras sobrantes; si no, OnDraw las pintaría fuera del área.
-            foreach (var s in _series)
-                TrimToWindow(s.Values);
-            Invalidate();
-        }
-    }
-
-    void TrimToWindow(List<float> values)
-    {
-        if (values.Count > _window)
-            values.RemoveRange(0, values.Count - _window);
-    }
-
-    public int SampleCount => _series.Count == 0 ? 0 : _series[0].Values.Count;
-
-    public void Clear()
-    {
-        _series.Clear();
-        Invalidate();
-    }
-
-    /// <summary>Añade una muestra (nombre -> valor); las series ausentes reciben un hueco.</summary>
-    public void AddSample(IReadOnlyDictionary<string, double> sample)
-    {
-        foreach (var name in sample.Keys)
-        {
-            if (_series.Any(s => s.Name == name))
-                continue;
-            var s = new Series(name, Palette[_series.Count % Palette.Length]);
-            for (int i = SampleCount; i > 0; i--)
-                s.Values.Add(float.NaN);
-            _series.Add(s);
-        }
-        foreach (var s in _series)
-        {
-            s.Values.Add(sample.TryGetValue(s.Name, out double v) ? (float)v : float.NaN);
-            TrimToWindow(s.Values);
-        }
-        Invalidate();
     }
 
     protected override void OnDraw(Canvas canvas)
     {
         base.OnDraw(canvas);
-        float lh = _text.TextSize * 1.3f;
-        float pad = lh * 0.6f;
-        var plot = new RectF(pad, pad * 2 + lh * _series.Count, Width - pad, Height - pad);
-
-        for (int i = 0; i < _series.Count; i++)
-        {
-            var s = _series[i];
-            float last = s.Values[^1];
-            _text.Color = s.Color;
-            canvas.DrawText($"{s.Name}  {(float.IsNaN(last) ? "--" : last.ToString("0.##", CultureInfo.InvariantCulture))}",
-                pad, pad + lh * (i + 1), _text);
-        }
-        _text.Color = TextColor;
-
+        float pad = TypedValue.ApplyDimension(ComplexUnitType.Dip, 6, Resources!.DisplayMetrics);
+        var plot = new RectF(pad, pad, Width - pad, Height - pad);
         if (plot.Width() < 10 || plot.Height() < 10)
             return;
         for (int g = 0; g <= 4; g++)
@@ -114,43 +50,51 @@ public sealed class LiveChartView : View
             canvas.DrawLine(plot.Left, y, plot.Right, y, _grid);
         }
 
-        float dx = plot.Width() / (_window - 1);
-        foreach (var s in _series)
+        int window = _data.Window, start = _data.WindowStart, n = _data.Count - start;
+        float dx = plot.Width() / (window - 1);
+        int offset = window - n;
+        foreach (var s in _data.Series)
         {
-            float min = float.MaxValue, max = float.MinValue;
-            foreach (float v in s.Values)
+            if (!s.Visible)
+                continue;
+            var values = s.Values;
+            double min = double.MaxValue, max = double.MinValue;
+            for (int i = start; i < values.Count; i++)
             {
-                if (float.IsNaN(v))
+                if (double.IsNaN(values[i]))
                     continue;
-                min = Math.Min(min, v);
-                max = Math.Max(max, v);
+                min = Math.Min(min, values[i]);
+                max = Math.Max(max, values[i]);
             }
             if (min > max)
                 continue;
-            float range = max - min;
-            if (range < 1e-6f)
+            double range = max - min;
+            if (range < 1e-9)
             {
-                min -= 0.5f;
-                range = 1f;
+                min -= 0.5;
+                range = 1;
             }
-            _line.Color = s.Color;
+            _line.Color = ColorOf(s.ColorIndex);
             _path.Reset();
             bool pen = false;
-            int offset = _window - s.Values.Count;
-            for (int i = 0; i < s.Values.Count; i++)
+            for (int i = 0; i < n; i++)
             {
-                float v = s.Values[i];
-                if (float.IsNaN(v))
+                double v = values[start + i];
+                if (double.IsNaN(v))
                 {
                     pen = false;
                     continue;
                 }
                 float x = plot.Left + (offset + i) * dx;
-                float y = plot.Bottom - (v - min) / range * plot.Height();
+                float y = plot.Bottom - (float)((v - min) / range) * plot.Height();
                 if (pen)
                     _path.LineTo(x, y);
                 else
+                {
+                    // MoveTo + LineTo al mismo punto: con cap redondo dibuja un punto aislado.
                     _path.MoveTo(x, y);
+                    _path.LineTo(x, y);
+                }
                 pen = true;
             }
             canvas.DrawPath(_path, _line);

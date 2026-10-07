@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Colores y estilos de la interfaz estilo INPA. Dueño: agente UI. -->
 <resources>
-    <color name="inpa_blue">#1C69D4</color>
-    <color name="inpa_blue_dark">#0B3E8A</color>
-    <color name="inpa_bg">#D4D0C8</color>
-    <color name="inpa_panel">#ECE9E2</color>
-    <color name="inpa_status_bg">#C8C4BC</color>
-    <color name="inpa_keybar_bg">#808080</color>
-    <color name="inpa_text">#000000</color>
-    <color name="inpa_text_dim">#505050</color>
+    <color name="inpa_blue">@color/m_primary</color>
+    <color name="inpa_blue_dark">@color/m_primary_dark</color>
+    <color name="inpa_bg">@color/m_bg</color>
+    <color name="inpa_panel">@color/m_surface</color>
+    <color name="inpa_status_bg">@color/m_primary_container</color>
+    <color name="inpa_keybar_bg">@color/m_bg</color>
+    <color name="inpa_text">@color/m_text</color>
+    <color name="inpa_text_dim">@color/m_text_secondary</color>
     <color name="inpa_busy_bg">#FFF4C2</color>
 
     <style name="InpaTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
@@ -22,20 +22,18 @@
 
     <style name="InpaTitle">
         <item name="android:textColor">#FFFFFF</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">end</item>
     </style>
 
     <style name="InpaMono">
-        <item name="android:fontFamily">monospace</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textColor">@color/inpa_text</item>
     </style>
 
     <style name="InpaHeading">
-        <item name="android:fontFamily">monospace</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/inpa_blue_dark</item>
@@ -53,6 +51,6 @@
         <item name="android:layout_height">14dp</item>
         <item name="android:layout_marginStart">6dp</item>
         <item name="android:layout_marginEnd">4dp</item>
-        <item name="android:background">#808080</item>
+        <item name="android:background">@drawable/bg_led</item>
     </style>
 </resources>

@@ -14,7 +14,7 @@ internal static class ResultExporter
 
     // Los extras de un Intent viajan por Binder (~1 MB por transacción, texto en UTF-16): por encima de
     // esto el CSV se recorta para no provocar TransactionTooLargeException.
-    const int MaxShareChars = 200_000;
+    const int MaxShareChars = 100_000;
 
     public static string ToCsv(IEnumerable<Entry> entries)
     {

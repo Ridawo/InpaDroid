@@ -111,16 +111,17 @@ internal sealed class ResultPanel
         }
         if (!append)
             _root.RemoveAllViews();
-        int m = UiUtil.Dp(ctx, 3);
+        int m = UiUtil.Dp(ctx, 5);
         foreach (var b in blocks)
         {
             var tv = new TextView(ctx)
             {
                 Typeface = Typeface.Monospace,
             };
-            tv.SetTextSize(ComplexUnitType.Sp, 13);
+            tv.SetTextSize(ComplexUnitType.Sp, 14);
+            tv.SetLineSpacing(0, 1.25f);
             tv.SetTextIsSelectable(true);
-            int p = UiUtil.Dp(ctx, 6);
+            int p = UiUtil.Dp(ctx, 14);
             tv.SetPadding(p, p, p, p);
             Apply(tv, b);
             var lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent,
@@ -135,20 +136,20 @@ internal sealed class ResultPanel
         tv.TextFormatted = b.Text;
         if (b.Kind == Kind.Header)
             tv.MovementMethod = LinkMovementMethod.Instance;
-        tv.SetTextColor(b.Kind == Kind.Error ? UiUtil.ErrorText : Color.Black);
-        tv.SetBackgroundColor(b.Kind switch
-        {
-            Kind.Header => UiUtil.HeaderBg,
-            Kind.Error => UiUtil.ErrorBg,
-            Kind.Info => UiUtil.InfoBg,
-            Kind.Fault => UiUtil.FaultBlockBg,
-            _ => UiUtil.BlockBg,
-        });
+        var ctx = tv.Context!;
+        tv.SetTextColor(b.Kind == Kind.Error ? UiUtil.ErrorText : new Color(ctx.GetColor(Resource.Color.m_text)));
+        // Tarjetas; errores y fallos de la centralita en la variante de peligro. El padding se conserva.
+        int l = tv.PaddingLeft, t = tv.PaddingTop, r = tv.PaddingRight, bt = tv.PaddingBottom;
+        tv.SetBackgroundResource(b.Kind is Kind.Error or Kind.Fault ? Resource.Drawable.bg_card_danger : Resource.Drawable.bg_card);
+        tv.SetPadding(l, t, r, bt);
     }
 
     sealed class ShareSpan(ResultPanel panel) : ClickableSpan
     {
         public override void OnClick(Android.Views.View widget) => panel.Share();
+
+        // Sin color de enlace ni subrayado: el aspecto de chip lo dan los spans de fondo y texto.
+        public override void UpdateDrawState(TextPaint ds) => ds.UnderlineText = false;
     }
 
     List<Block> BuildResult(string sgbd, string job, JobResult r, string note)
@@ -163,7 +164,12 @@ internal sealed class ResultPanel
         if (note.Length > 0)
             h.Append("   " + note);
         h.Append("   ");
-        AppendSpan(h, _root.Context!.GetString(Resource.String.share_results)!, new ShareSpan(this));
+        // Chip visible (el texto va dentro del span para que PlainText lo quite entero).
+        var ctx = _root.Context!;
+        AppendSpan(h, "  " + ctx.GetString(Resource.String.share_results) + "  ", new ShareSpan(this),
+            new BackgroundColorSpan(new Color(ctx.GetColor(Resource.Color.m_primary))),
+            new ForegroundColorSpan(new Color(ctx.GetColor(Resource.Color.m_on_primary))),
+            new StyleSpan(TypefaceStyle.Bold));
         if (r.JobStatus.Length > 0)
         {
             h.Append("\nJOB_STATUS : ");

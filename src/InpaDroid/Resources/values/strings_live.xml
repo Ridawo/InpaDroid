@@ -3,9 +3,18 @@
   <string name="live_title">Monitor en vivo</string>
   <string name="live_pause">Pausar</string>
   <string name="live_resume">Reanudar</string>
-  <string name="live_clear">Borrar</string>
+  <string name="live_clear">Limpiar</string>
+  <string name="live_export">Exportar CSV de la sesión</string>
+  <string name="live_export_title">Exportar sesión</string>
+  <string name="live_export_empty">No hay muestras que exportar</string>
+  <string name="live_export_truncated">CSV recortado: había demasiados datos para compartirlo entero</string>
+  <string name="live_export_failed">No se pudo compartir: %1$s</string>
+  <string name="live_interval">Intervalo: %1$s s</string>
+  <string name="live_window">Ventana: %1$s muestras</string>
+  <string name="live_series_hint">Toca una serie para ocultarla o mostrarla</string>
+  <string name="live_series_stats">%1$s\nAct %2$s   Mín %3$s   Máx %4$s</string>
   <string name="live_waiting">Esperando datos…</string>
   <string name="live_no_numeric">Sin valores numéricos</string>
   <string name="live_error">Error: %1$s</string>
-  <string name="live_status">%1$s : %2$s   muestras: %3$d</string>
+  <string name="live_status">%1$s : %2$s   muestras: %3$s</string>
 </resources>

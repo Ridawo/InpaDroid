@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Contenedor de la barra de teclas F; los botones se crean en código (FKeyBar). -->
+<!-- Contenedor de las tarjetas de opciones; se rellena en código (InpaActivity.BuildKeyGrid). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/inpa_fkeys"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/inpa_keybar_bg"
+    android:background="@color/m_bg"
     android:orientation="vertical"
-    android:padding="2dp" />
+    android:padding="8dp" />

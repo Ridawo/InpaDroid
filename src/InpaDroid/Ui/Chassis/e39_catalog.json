@@ -3,7 +3,7 @@
   "name": "BMW E39",
   "subtitle": "Línea K (DS2/KWP2000)",
   "infoTitle": "Información E39",
-  "info": "BMW E39 (Serie 5, 1995-2004)\n\nLas centralitas del E39 van por línea K (DS2 / KWP2000).\nInterfaz: cable USB K+DCAN (FTDI) con los pines 7 y 8 puenteados (modo K-line).\nENET y ELM327 no sirven para este coche.\n\n{iface}\n{ecupath}\n\nCopia ahí los .prg/.grp de tu instalación INPA (carpeta ecu).\nAl abrir una centralita se identifica la variante (.grp -> .prg) y se muestran las teclas:\nF2 Ident, F4 errores, Shift+F4 borrar, F5 Status, F6 Steuern, F7 todos los jobs.",
+  "info": "BMW E39 (Serie 5, 1995-2004)\n\nLas centralitas del E39 van por línea K (DS2 / KWP2000).\nInterfaz: cable USB K+DCAN (FTDI) con los pines 7 y 8 puenteados (modo K-line).\nENET y ELM327 no sirven para este coche.\n\n{iface}\n{ecupath}\n\nCopia ahí los .prg/.grp de tu instalación INPA (carpeta ecu).\nAl abrir una centralita se identifica la variante (.grp -> .prg) y puedes tocar: Identificación, Errores, Borrar errores, Valores en vivo, Activaciones, Todos los jobs y Gráfica.",
   "verified": true,
   "ecus": [
     {

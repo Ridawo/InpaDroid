@@ -82,7 +82,7 @@ public class EcuSelectActivity : InpaActivity
             if (files.Count == 0)
             {
                 _count.SetTextColor(UiUtil.ErrorText);
-                _count.Text = $"No hay archivos .prg/.grp en:\n{path}\nCópialos ahí o cambia la carpeta en Ajustes (F9).";
+                _count.Text = $"No hay archivos .prg/.grp en:\n{path}\nCópialos ahí o cambia la carpeta en Ajustes.";
             }
             else
             {

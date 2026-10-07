@@ -77,23 +77,24 @@ class BluetoothPanel
                 var row = new TextView(_activity)
                 {
                     Text = $"{name}\n{address}",
-                    Typeface = Android.Graphics.Typeface.Monospace,
                     Clickable = true,
                 };
-                int p = UiUtil.Dp(_activity, 8);
+                int p = UiUtil.Dp(_activity, 12);
                 row.SetPadding(p, p, p, p);
-                row.SetTextColor(Android.Graphics.Color.Black);
-                if (address == Address)
-                    row.SetBackgroundColor(UiUtil.HeaderBg);
+                row.SetMinHeight(UiUtil.Dp(_activity, 56));
+                row.SetTextSize(Android.Util.ComplexUnitType.Sp, 15);
+                row.Gravity = GravityFlags.CenterVertical;
+                Style(row, address == Address);
                 row.Click += (_, _) =>
                 {
                     Address = address;
                     UpdateSelected(name);
                     for (int i = 0; i < _list.ChildCount; i++)
-                        _list.GetChildAt(i)?.SetBackgroundColor(Android.Graphics.Color.Transparent);
-                    row.SetBackgroundColor(UiUtil.HeaderBg);
+                        if (_list.GetChildAt(i) is TextView tv && tv.Clickable)
+                            Style(tv, false);
+                    Style(row, true);
                 };
-                _list.AddView(row);
+                _list.AddView(row, new LinearLayout.LayoutParams(-1, -2) { BottomMargin = UiUtil.Dp(_activity, 8) });
             }
         }
         catch (Exception ex)
@@ -102,12 +103,18 @@ class BluetoothPanel
         }
     }
 
+    void Style(TextView row, bool selected)
+    {
+        row.SetBackgroundResource(selected ? Resource.Drawable.bg_card_primary : Resource.Drawable.bg_card);
+        row.SetTextColor(UiUtil.Res(_activity, selected ? Resource.Color.m_on_primary : Resource.Color.m_text));
+    }
+
     void AddMessage(string text, bool error)
     {
         var tv = new TextView(_activity) { Text = text };
         int p = UiUtil.Dp(_activity, 8);
         tv.SetPadding(p, p, p, p);
-        tv.SetTextColor(error ? UiUtil.ErrorText : Android.Graphics.Color.Black);
+        tv.SetTextColor(error ? UiUtil.ErrorText : UiUtil.Res(_activity, Resource.Color.m_text));
         _list.AddView(tv);
     }
 
@@ -123,6 +130,7 @@ class BluetoothPanel
             AddMessage("Permiso de Bluetooth denegado. Si marcaste \"No volver a preguntar\", actívalo manualmente:", true);
             var btn = new Button(_activity) { Text = "Abrir Ajustes de Android" };
             btn.SetAllCaps(false);
+            btn.SetMinHeight(UiUtil.Dp(_activity, UiUtil.TouchDp));
             btn.Click += (_, _) =>
             {
                 var intent = new Android.Content.Intent(Android.Provider.Settings.ActionApplicationDetailsSettings,
@@ -130,7 +138,7 @@ class BluetoothPanel
                 try { _activity.StartActivity(intent); } catch (Exception) { }
             };
             _list.AddView(btn, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent));
+                ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent));
         }
     }
 }

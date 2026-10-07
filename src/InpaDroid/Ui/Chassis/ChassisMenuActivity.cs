@@ -37,7 +37,7 @@ public class ChassisMenuActivity : InpaActivity
         var heading = FindViewById<TextView>(Resource.Id.chassis_menu_heading)!;
         var list = FindViewById<ListView>(Resource.Id.chassis_menu_list)!;
         var ecus = _chassis.Ecus;
-        heading.Text = ecus.Count == 0 ? $"Catálogo {_chassis.Name} vacío" : $"Selección de centralita ({ecus.Count})";
+        heading.Text = ecus.Count == 0 ? $"Catálogo {_chassis.Name} vacío" : $"Elige una centralita ({ecus.Count})";
         if (!_chassis.Verified && ecus.Count > 0)
             heading.Text += " - sin verificar";
 
@@ -45,8 +45,10 @@ public class ChassisMenuActivity : InpaActivity
             e.Title, e.Sgbd, (i + 1).ToString("00"), UiUtil.Blue, i)));
         list.Adapter = adapter;
         list.ItemClick += (_, e) => OpenEcu((int)adapter.GetRow(e.Position).Tag);
+        var search = FindViewById<EditText>(Resource.Id.chassis_menu_search)!;
+        search.TextChanged += (_, _) => adapter.Filter(search.Text);
 
-        SetKey(1, "Info", ShowInfo);
+        SetKey(1, "Información", ShowInfo);
         SetKey(10, "Volver", Finish);
         RefreshKeys();
     }

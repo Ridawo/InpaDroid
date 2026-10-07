@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/inpa_bg"
+    android:background="@color/m_bg"
     android:orientation="vertical">
 
     <include layout="@layout/inpa_header" />
@@ -10,82 +10,120 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="12dp">
 
-            <TextView
-                style="@style/InpaLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:text="Interfaz de diagnóstico" />
-
-            <RadioGroup
-                android:id="@+id/set_adapter_group"
+            <!-- Tipo de conexion. Las notas/avisos y el panel USB se insertan tras el RadioGroup por codigo. -->
+            <LinearLayout
+                android:id="@+id/set_card_adapter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-                <RadioButton
-                    android:id="@+id/set_adapter_usb"
+                <TextView
+                    style="@style/MText_Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cable USB K+DCAN (FTDI)" />
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/set_sec_connection" />
 
-                <RadioButton
-                    android:id="@+id/set_adapter_enet"
-                    android:layout_width="wrap_content"
+                <RadioGroup
+                    android:id="@+id/set_adapter_group"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="ENET (cable Ethernet, series F/G)" />
+                    android:orientation="vertical">
 
-                <RadioButton
-                    android:id="@+id/set_adapter_elmbt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="ELM327 Bluetooth" />
+                    <RadioButton
+                        android:id="@+id/set_adapter_usb"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:minHeight="56dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="@string/set_adapter_usb"
+                        android:textSize="16sp" />
 
-                <RadioButton
-                    android:id="@+id/set_adapter_elmwifi"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="ELM327 WiFi" />
-            </RadioGroup>
+                    <RadioButton
+                        android:id="@+id/set_adapter_enet"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:minHeight="56dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="@string/set_adapter_enet"
+                        android:textSize="16sp" />
 
+                    <RadioButton
+                        android:id="@+id/set_adapter_elmbt"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:minHeight="56dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="@string/set_adapter_elmbt"
+                        android:textSize="16sp" />
+
+                    <RadioButton
+                        android:id="@+id/set_adapter_elmwifi"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="56dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="@string/set_adapter_elmwifi"
+                        android:textSize="16sp" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <!-- Detalles segun el tipo elegido. -->
             <LinearLayout
                 android:id="@+id/set_bt_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp">
 
                 <TextView
-                    style="@style/InpaLabel"
+                    style="@style/MText_Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Dispositivo Bluetooth (emparejado)" />
+                    android:text="@string/set_bt_device" />
 
                 <TextView
                     android:id="@+id/set_bt_selected"
-                    style="@style/InpaMono"
+                    style="@style/MText_Body"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
 
                 <Button
                     android:id="@+id/set_bt_refresh"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Buscar dispositivos emparejados"
+                    android:layout_marginTop="8dp"
+                    android:minHeight="48dp"
+                    android:text="@string/set_bt_search"
                     android:textAllCaps="false" />
 
                 <LinearLayout
                     android:id="@+id/set_bt_list"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/inpa_panel"
+                    android:layout_marginTop="8dp"
                     android:orientation="vertical" />
             </LinearLayout>
 
@@ -93,103 +131,149 @@
                 android:id="@+id/set_enet_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp">
 
                 <TextView
-                    style="@style/InpaLabel"
+                    style="@style/MText_Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Host ENET (IP o &quot;auto&quot;)" />
+                    android:text="@string/set_enet_host" />
 
                 <EditText
                     android:id="@+id/set_enet_host"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
+                    android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-"
                     android:hint="auto"
-                    android:inputType="textUri"
+                    android:imeOptions="actionDone"
+                    android:inputType="textUri|textNoSuggestions"
+                    android:minHeight="48dp"
                     android:singleLine="true" />
+
+                <TextView
+                    android:id="@+id/set_enet_error"
+                    style="@style/MText_Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/m_error"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/set_wifi_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp">
 
                 <TextView
-                    style="@style/InpaLabel"
+                    style="@style/MText_Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Host ELM327 WiFi (IP:puerto)" />
+                    android:text="@string/set_wifi_host" />
 
                 <EditText
                     android:id="@+id/set_wifi_host"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
+                    android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:"
                     android:hint="192.168.0.10:35000"
-                    android:inputType="textUri"
+                    android:imeOptions="actionDone"
+                    android:inputType="textUri|textNoSuggestions"
+                    android:minHeight="48dp"
                     android:singleLine="true" />
+
+                <TextView
+                    android:id="@+id/set_wifi_error"
+                    style="@style/MText_Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/m_error"
+                    android:visibility="gone" />
             </LinearLayout>
-
-            <TextView
-                style="@style/InpaLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Carpeta ECU (.prg / .grp)" />
-
-            <EditText
-                android:id="@+id/set_ecu_path"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:inputType="textUri|textNoSuggestions"
-                android:textSize="13sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-                <Button
-                    android:id="@+id/set_ecu_pick"
+                <TextView
+                    style="@style/MText_Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Elegir…"
-                    android:textAllCaps="false" />
+                    android:text="@string/set_sec_ecu" />
 
-                <Button
-                    android:id="@+id/set_ecu_default"
-                    android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/set_ecu_path"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Por defecto"
-                    android:textAllCaps="false" />
+                    android:fontFamily="monospace"
+                    android:imeOptions="actionDone"
+                    android:inputType="textUri|textNoSuggestions"
+                    android:minHeight="48dp"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/set_ecu_pick"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        android:text="@string/set_ecu_pick"
+                        android:textAllCaps="false" />
+
+                    <Button
+                        android:id="@+id/set_ecu_default"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        android:text="@string/set_ecu_default"
+                        android:textAllCaps="false" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/set_ecu_info"
+                    style="@style/MText_Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
             </LinearLayout>
 
             <TextView
-                android:id="@+id/set_ecu_info"
-                style="@style/InpaMono"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/set_save"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Guardar"
-                android:textAllCaps="false" />
-
-            <TextView
                 android:id="@+id/set_status"
-                style="@style/InpaMono"
+                style="@style/MText_Body"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp" />
+                android:layout_height="wrap_content" />
         </LinearLayout>
     </ScrollView>
+
+    <!-- Boton fijo abajo. -->
+    <Button
+        android:id="@+id/set_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:background="@drawable/bg_card_primary"
+        android:minHeight="56dp"
+        android:text="@string/set_save"
+        android:textAllCaps="false"
+        android:textColor="@color/m_on_primary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <include layout="@layout/inpa_fkeys" />
 </LinearLayout>

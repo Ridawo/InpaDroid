@@ -3,7 +3,7 @@
   "name": "BMW E46",
   "subtitle": "Línea K / D-CAN (DS2/KWP2000 / CAN)",
   "infoTitle": "Información E46",
-  "info": "BMW E46 (Serie 3, 1998-2006)\n\nLas centralitas del E46 van por línea K (DS2 / KWP2000).\nInterfaz: cable USB K+DCAN (FTDI) con los pines 7 y 8 puenteados (modo K-line).\nNota: los E46 del facelift 2006 con módulo D-CAN de fábrica requieren modo D-CAN\n(no implementado aún; usa la pantalla de ECU genérica para esos casos).\n\n{iface}\n{ecupath}\n\nCopia ahí los .prg/.grp de tu instalación INPA (carpeta ecu).\nTeclas disponibles: F2 Ident, F4 errores, Shift+F4 borrar, F5 Status, F6 Steuern, F7 todos los jobs.",
+  "info": "BMW E46 (Serie 3, 1998-2006)\n\nLas centralitas del E46 van por línea K (DS2 / KWP2000).\nInterfaz: cable USB K+DCAN (FTDI) con los pines 7 y 8 puenteados (modo K-line).\nNota: los E46 del facelift 2006 con módulo D-CAN de fábrica requieren modo D-CAN\n(no implementado aún; usa la pantalla de ECU genérica para esos casos).\n\n{iface}\n{ecupath}\n\nCopia ahí los .prg/.grp de tu instalación INPA (carpeta ecu).\nAl abrir una centralita puedes tocar: Identificación, Errores, Borrar errores, Valores en vivo, Activaciones, Todos los jobs y Gráfica.",
   "verified": true,
   "ecus": [
     {

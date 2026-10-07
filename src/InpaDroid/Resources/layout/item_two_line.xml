@@ -1,52 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Fila de lista: distintivo opcional + nombre (mono) + comentario. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Fila de lista en tarjeta: distintivo opcional + título + subtítulo. Alto mínimo táctil 64dp. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:minHeight="44dp"
-    android:orientation="horizontal"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-    android:paddingTop="4dp"
-    android:paddingBottom="4dp">
-
-    <TextView
-        android:id="@+id/item_badge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:background="@color/inpa_blue"
-        android:fontFamily="monospace"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:text="GRP"
-        android:textColor="#FFFFFF"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:background="@drawable/bg_card"
+        android:gravity="center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
 
         <TextView
-            android:id="@+id/item_title"
-            style="@style/InpaMono"
-            android:layout_width="match_parent"
+            android:id="@+id/item_badge"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:layout_marginEnd="12dp"
+            android:background="@color/m_primary"
+            android:fontFamily="monospace"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="GRP"
+            android:textColor="@color/m_on_primary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/item_sub"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:textColor="@color/inpa_text_dim"
-            android:textSize="12sp" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/item_title"
+                style="@style/MText_Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/item_sub"
+                style="@style/MText_Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="2" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>

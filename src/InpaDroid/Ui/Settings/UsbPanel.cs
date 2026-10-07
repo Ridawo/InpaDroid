@@ -21,17 +21,16 @@ class UsbPanel
     {
         _activity = activity;
         var usb = new LinearLayout(activity) { Orientation = Orientation.Vertical };
-        _info = new TextView(activity) { Typeface = Android.Graphics.Typeface.Monospace };
+        _info = new TextView(activity);
         _info.SetPadding(padding, padding, padding, padding);
         usb.AddView(_info);
-        var detect = new Button(activity) { Text = "Detectar cable" };
-        detect.SetAllCaps(false);
+        var detect = UiUtil.BigButton(activity, "Detectar cable");
         detect.Click += (_, _) =>
         {
             UsbPermission.RequestIfNeeded(activity, force: true);
             Update();
         };
-        usb.AddView(detect, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent));
+        usb.AddView(detect, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent));
         Section = usb;
     }
 

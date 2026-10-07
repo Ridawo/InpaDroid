@@ -39,34 +39,22 @@ public class EcuActivity : InpaActivity
         _results = new ResultPanel(FindViewById<LinearLayout>(Resource.Id.ecu_results)!);
         UpdateSubtitle();
 
-        SetKey(1, "Info", () => RunOnce("INFO", "Información de la SGBD"));
-        SetKey(2, "Ident", () => RunOnce("IDENT", "Identificación"));
+        SetKey(1, "Información", () => RunOnce("INFO", "Información de la SGBD"));
+        SetKey(2, "Identificación", () => RunOnce("IDENT", "Identificación"));
         SetKey(4, "Errores", () => RunOnce("FS_LESEN", "Memoria de errores"));
-        SetShiftKey(4, "Borrar err.", ConfirmClearFaults);
-        SetKey(5, "Status", StatusMenu);
-        SetKey(6, "Steuern", SteuernMenu);
-        SetKey(7, "Jobs", JobsMenu);
+        SetShiftKey(4, "Borrar errores", ConfirmClearFaults);
+        SetKey(5, "Valores en vivo", StatusMenu);
+        SetKey(6, "Activaciones", SteuernMenu);
+        SetKey(7, "Todos los jobs", JobsMenu);
         SetKey(9, "Copiar", CopyResults);
         SetKey(10, "Volver", Back);
         RefreshKeys();
 
-        _heading.Text = "Seleccione una función";
-        var menu = string.Join("\n", DefinedKeys().Select(k => KeyCaption(k.F, k.Shift, KeyText(k.F, k.Shift, k.Label))));
-        _results.ShowInfo(_isGroup ? $"Grupo {_ecuName}" : $"SGBD {_ecuName}", menu);
+        _heading.Text = GetString(Resource.String.ecu_choose_function);
+        _results.ShowInfo(_isGroup ? $"Grupo {_ecuName}" : $"SGBD {_ecuName}", GetString(Resource.String.ecu_choose_hint)!);
         if (_isGroup)
             Exclusive(async () => { await EnsureSgbdAsync(); });
     }
-
-    static string KeyText(int f, bool shift, string label) => (f, shift) switch
-    {
-        (4, false) => "Leer memoria de errores",
-        (4, true) => "Borrar memoria de errores",
-        (5, false) => "Status (lectura continua)",
-        (6, false) => "Steuern (activar componentes)",
-        (7, false) => "Todos los jobs (Tool32)",
-        (9, false) => "Copiar resultados",
-        _ => label,
-    };
 
     void UpdateSubtitle() =>
         SetSubtitle(_isGroup ? $"{_ecuName}.grp → {(_sgbd ?? "?")}" : $"{_ecuName}.prg");
@@ -76,10 +64,10 @@ public class EcuActivity : InpaActivity
         bool isBack = f == 10 && !shift;
         if (_busyJob && !isBack)
         {
-            UiUtil.Toast(this, "Hay un job en curso: espera o pulsa Abortar");
+            UiUtil.Toast(this, GetString(Resource.String.ecu_busy_job)!);
             return false;
         }
-        // Cualquier tecla detiene la lectura continua de Status (como en INPA).
+        // Cualquier acción detiene la lectura continua de Status.
         StopPolling();
         return true;
     }
@@ -128,7 +116,7 @@ public class EcuActivity : InpaActivity
         {
             _results.ShowError($"Grupo {_ecuName}",
                 "No se pudo identificar la variante de la centralita. Comprueba el cable, el encendido y la " +
-                "configuración de la interfaz. Pulsa cualquier tecla F para reintentar.");
+                "configuración de la interfaz. " + GetString(Resource.String.ecu_retry_hint) + "");
             return null;
         }
         _sgbd = variant;
@@ -192,7 +180,7 @@ public class EcuActivity : InpaActivity
                 if (sgbd == null)
                     return;
                 await RunJobCore(sgbd, "FS_LOESCHEN", "Borrar memoria de errores", "", "");
-                _results.ShowInfo("Memoria de errores", "Pulsa F4 para volver a leerla.", append: true);
+                _results.ShowInfo("Memoria de errores", GetString(Resource.String.ecu_reread_faults)!, append: true);
             }));
     }
 
@@ -251,7 +239,7 @@ public class EcuActivity : InpaActivity
         int count = 0;
         _heading.Text = "Status: " + job;
         _results.Clear();
-        ShowBusy($"{job} cada 1 s. Pulsa cualquier tecla para parar.", "Parar", StopPolling);
+        ShowBusy($"{job}: " + GetString(Resource.String.ecu_polling_hint), "Parar", StopPolling);
         _poll.Start(async ct =>
         {
             var r = await Diag.RunJobAsync(sgbd, job, args, results);
