@@ -1,5 +1,4 @@
 using InpaDroid.Ui.Live;
-using System.Diagnostics;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -23,7 +22,7 @@ public class ChassisEcuActivity : InpaActivity
     internal const int MaxValuePad = 12;
 
     ChassisInfo _chassis = null!;
-    E39Ecu _ecu = null!;
+    ChassisEcu _ecu = null!;
     string? _sgbd;                          // variante real (.prg) una vez resuelta
     ResultPanel _results = null!;
     TextView _heading = null!;
@@ -31,9 +30,9 @@ public class ChassisEcuActivity : InpaActivity
     bool _busyJob;                          // job puntual en curso (bloquea otras teclas salvo F10)
     bool _pollInFlight;
     int _generation;                        // descarta resultados de operaciones ya sustituidas
-    CancellationTokenSource? _pollCts;
+    readonly PollRunner _poll = new();
 
-    protected override bool PauseHeader => _busyJob || _pollCts != null;
+    protected override bool PauseHeader => _busyJob || _poll.Running;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -129,7 +128,7 @@ public class ChassisEcuActivity : InpaActivity
         finally
         {
             _busyJob = false;
-            if (_pollCts == null)   // si la operación ha arrancado el Status, su barra "Parar" se queda
+            if (!_poll.Running)   // si la operación ha arrancado el Status, su barra "Parar" se queda
                 HideBusy();
         }
     }
@@ -178,7 +177,7 @@ public class ChassisEcuActivity : InpaActivity
             if (gen != _generation)
                 return null;
             _results.ShowResult(sgbd, job, r);
-            if (r.Ok && E39StatusTable.StatusError(r) is string err)
+            if (r.Ok && StatusTable.StatusError(r) is string err)
                 _results.ShowError("La centralita no ha respondido OKAY", err, append: true);
             return r;
         }
@@ -212,7 +211,7 @@ public class ChassisEcuActivity : InpaActivity
             if (sgbd == null)
                 return;
             var r = await RunJobCore(sgbd, _ecu.FsReadJob, "Memoria de errores", "");
-            if (r != null && E39StatusTable.StatusError(r) == null)
+            if (r != null && StatusTable.StatusError(r) == null)
             {
                 int faults = r.Sets.Count(s => s.ContainsKey("F_ORT_NR"));
                 _heading.Text = faults == 0 ? "Memoria de errores: sin errores" : $"Memoria de errores: {faults} error(es)";
@@ -346,21 +345,14 @@ public class ChassisEcuActivity : InpaActivity
         _status.Visibility = results ? ViewStates.Gone : ViewStates.Visible;
     }
 
-    void StartPolling(string sgbd, E39Page page)
+    void StartPolling(string sgbd, ChassisPage page)
     {
         StopPolling();
-        var cts = new CancellationTokenSource();
-        _pollCts = cts;
         int gen = ++_generation;
         _heading.Text = "Status: " + page.Title;
         ShowResults(false);
         _status.Text = "Leyendo…";
         ShowBusy("Status cada 1 s. Pulsa cualquier tecla para parar.", "Parar", StopPolling);
-        PollLoop(sgbd, page, cts, gen);
-    }
-
-    async void PollLoop(string sgbd, E39Page page, CancellationTokenSource cts, int gen)
-    {
         // Un job por llamada (job + argumentos distintos), pidiendo solo los resultados necesarios.
         var groups = page.Values
             .GroupBy(v => (Job: v.Job.Trim().ToUpperInvariant(), v.Args))
@@ -369,10 +361,9 @@ public class ChassisEcuActivity : InpaActivity
                     .Distinct(StringComparer.OrdinalIgnoreCase))))
             .ToList();
         int count = 0;
-        while (!cts.IsCancellationRequested)
+        _poll.Start(async ct =>
         {
-            var sw = Stopwatch.StartNew();
-            var cells = new Dictionary<E39Value, (string Text, bool Error)>();
+            var cells = new Dictionary<ChassisValue, (string Text, bool Error)>();
             foreach (var g in groups)
             {
                 JobResult r;
@@ -389,34 +380,25 @@ public class ChassisEcuActivity : InpaActivity
                 {
                     _pollInFlight = false;
                 }
-                if (cts.IsCancellationRequested || gen != _generation)
-                    return;
-                var error = E39StatusTable.StatusError(r);
+                if (ct.IsCancellationRequested || gen != _generation)
+                    return false;
+                var error = StatusTable.StatusError(r);
                 foreach (var v in g.Values)
                 {
                     cells[v] = error != null ? ("ERROR " + error, true)
-                        : E39StatusTable.FindResult(r, v.Result) is string text ? (text, false)
+                        : StatusTable.FindResult(r, v.Result) is string text ? (text, false)
                         : ($"ERROR sin resultado {v.Result}", true);
                 }
             }
-            _status.TextFormatted = E39StatusTable.BuildTable(page, cells, ++count);
-            try
-            {
-                await Task.Delay((int)Math.Max(100, StatusPollMs - sw.ElapsedMilliseconds), cts.Token);
-            }
-            catch (System.OperationCanceledException)
-            {
-                break;
-            }
-        }
+            _status.TextFormatted = StatusTable.BuildTable(page, cells, ++count);
+            return true;
+        }, ex => _status.Text = UiUtil.Describe(ex), StatusPollMs, 100);
     }
 
     void StopPolling()
     {
-        if (_pollCts == null)
+        if (!_poll.Stop())
             return;
-        _pollCts.Cancel();
-        _pollCts = null;
         HideBusy();
         _heading.Text += " (detenido)";
     }

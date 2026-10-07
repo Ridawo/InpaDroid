@@ -1,4 +1,3 @@
-using Stopwatch = System.Diagnostics.Stopwatch;
 using System.Globalization;
 using Android.App;
 using Android.Content;
@@ -31,7 +30,7 @@ public class LiveMonitorActivity : Activity
     LiveChartView _chart = null!;
     TextView _status = null!;
     Button _pauseBtn = null!;
-    CancellationTokenSource? _cts;
+    readonly PollRunner _poll = new();
     DiagService? _inFlight;   // servicio con un job de este monitor en curso
     bool _userPaused;         // pausado con el botón: al volver a primer plano no se reanuda solo
 
@@ -71,7 +70,7 @@ public class LiveMonitorActivity : Activity
         _pauseBtn = new Button(this) { Text = GetString(Resource.String.live_pause) };
         _pauseBtn.Click += (_, _) =>
         {
-            _userPaused = _cts != null;
+            _userPaused = _poll.Running;
             if (_userPaused)
                 Stop();
             else
@@ -107,66 +106,42 @@ public class LiveMonitorActivity : Activity
 
     void Start()
     {
-        if (_cts != null || _sgbd.Length == 0 || _job.Length == 0)
+        if (_poll.Running || _sgbd.Length == 0 || _job.Length == 0)
             return;
-        _cts = new CancellationTokenSource();
         _pauseBtn.Text = GetString(Resource.String.live_pause);
-        PollLoop(_cts);
-    }
-
-    void Stop()
-    {
-        if (_cts == null)
-            return;
-        _cts.Cancel();
-        _cts = null;
-        _pauseBtn.Text = GetString(Resource.String.live_resume);
-        // Interrumpe el job en curso para liberar el adaptador cuanto antes. Solo si es nuestro: Abort cancela
-        // también lo que otras pantallas tengan en cola, y DiagHolder.Get crearía un servicio solo para abortar.
-        _inFlight?.Abort();
-        _inFlight = null;
-    }
-
-    async void PollLoop(CancellationTokenSource cts)
-    {
         // Solo se piden al ECU los resultados elegidos; DiagService añade JOB_STATUS por su cuenta.
         string results = string.Join(";", _names);
         // Se espera cada respuesta antes de encolar el siguiente job, así la cola nunca se acumula.
-        while (!cts.IsCancellationRequested)
+        _poll.Start(async ct =>
         {
-            var sw = Stopwatch.StartNew();
             try
             {
                 var diag = DiagHolder.Get(this);
                 _inFlight = diag;
                 var r = await diag.RunJobAsync(_sgbd, _job, _args, results);
-                if (cts.IsCancellationRequested)
-                    break;
+                if (ct.IsCancellationRequested)
+                    return false;
                 Show(r);
-            }
-            catch (Exception ex)
-            {
-                if (cts.IsCancellationRequested)
-                    break;
-                _status.Text = GetString(Resource.String.live_error, UiUtil.Describe(ex));
+                return true;
             }
             finally
             {
                 // Tras Stop/Start rápido otro bucle puede tener ya su propio job en curso: no se le pisa.
-                if (_cts == cts)
+                if (_poll.IsCurrent(ct))
                     _inFlight = null;
             }
-            try
-            {
-                await Task.Delay((int)Math.Max(50, IntervalMs - sw.ElapsedMilliseconds), cts.Token);
-            }
-            catch (System.OperationCanceledException)
-            {
-                break;
-            }
-        }
-        // Solo se sale tras Stop (ya cancelado) y nadie más usa este token.
-        cts.Dispose();
+        }, ex => _status.Text = GetString(Resource.String.live_error, UiUtil.Describe(ex)), IntervalMs, 50);
+    }
+
+    void Stop()
+    {
+        if (!_poll.Stop())
+            return;
+        _pauseBtn.Text = GetString(Resource.String.live_resume);
+        // Interrumpe el job en curso para liberar el adaptador cuanto antes. Solo si es nuestro: Abort cancela
+        // también lo que otras pantallas tengan en cola, y DiagHolder.Get crearía un servicio solo para abortar.
+        _inFlight?.Abort();
+        _inFlight = null;
     }
 
     void Show(JobResult r)

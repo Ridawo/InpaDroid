@@ -31,13 +31,13 @@ public sealed class ChassisCatalogTests : IDisposable
         ChassisInfo c = ChassisCatalog.Get(id);
         Assert.Equal(id, c.Id);
         Assert.NotEmpty(c.Ecus);
-        foreach (E39Ecu ecu in c.Ecus)
+        foreach (ChassisEcu ecu in c.Ecus)
         {
             Assert.False(string.IsNullOrWhiteSpace(ecu.Title));
             Assert.False(string.IsNullOrWhiteSpace(ecu.Sgbd));
             Assert.DoesNotContain('.', ecu.Sgbd);
-            foreach (E39Page page in ecu.StatusPages)
-                foreach (E39Value v in page.Values)
+            foreach (ChassisPage page in ecu.StatusPages)
+                foreach (ChassisValue v in page.Values)
                 {
                     Assert.False(string.IsNullOrWhiteSpace(v.Job));
                     Assert.False(string.IsNullOrWhiteSpace(v.Result));
@@ -110,8 +110,23 @@ public sealed class ChassisCatalogTests : IDisposable
                 { "job": "STATUS_X", "result": "A" }, { "job": "STEUERN_X", "result": "B" }, { "job": null, "result": "C" } ] } ] } ] }
             """);
         ChassisCatalog.TryLoadFromFolder(_dir);
-        E39Ecu ecu = Assert.Single(ChassisCatalog.Get("e46").Ecus);
+        ChassisEcu ecu = Assert.Single(ChassisCatalog.Get("e46").Ecus);
         Assert.Equal("", ecu.Title);
         Assert.Equal("STATUS_X", Assert.Single(Assert.Single(ecu.StatusPages).Values).Job);
+    }
+
+    [Fact]
+    public void FolderOverride_NonReadOnlyIdentAndFsReadJobs_FallBackToDefaults()
+    {
+        File.WriteAllText(Path.Combine(_dir, "e46_catalog.json"), """
+            { "ecus": [ { "title": "T", "sgbd": "D_TEST", "identJob": "STEUERN_X", "fsReadJob": "FS_LOESCHEN" },
+                        { "title": "U", "sgbd": "D_TEST", "identJob": "INFO", "fsReadJob": "FS_LESEN_DETAIL" } ] }
+            """);
+        ChassisCatalog.TryLoadFromFolder(_dir);
+        var ecus = ChassisCatalog.Get("e46").Ecus;
+        Assert.Equal("IDENT", ecus[0].IdentJob);
+        Assert.Equal("FS_LESEN", ecus[0].FsReadJob);
+        Assert.Equal("INFO", ecus[1].IdentJob);
+        Assert.Equal("FS_LESEN_DETAIL", ecus[1].FsReadJob);
     }
 }

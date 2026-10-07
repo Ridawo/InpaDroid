@@ -5,7 +5,7 @@ using InpaDroid.Diag;
 
 namespace InpaDroid.Ui.Chassis;
 
-public static class E39StatusTable
+public static class StatusTable
 {
     internal static string? StatusError(JobResult r)
     {
@@ -29,7 +29,7 @@ public static class E39StatusTable
         return null;
     }
 
-    internal static SpannableStringBuilder BuildTable(E39Page page, Dictionary<E39Value, (string Text, bool Error)> cells, int count)
+    internal static SpannableStringBuilder BuildTable(ChassisPage page, Dictionary<ChassisValue, (string Text, bool Error)> cells, int count)
     {
         int labelPad = Math.Min(ChassisEcuActivity.MaxLabelPad, page.Values.Count == 0 ? 0 : page.Values.Max(v => v.Label.Length)) + 3;
         int valuePad = Math.Min(ChassisEcuActivity.MaxValuePad, cells.Values.Where(c => !c.Error).Select(c => c.Text.Length).DefaultIfEmpty(0).Max());

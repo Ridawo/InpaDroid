@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -23,9 +22,9 @@ public class EcuActivity : InpaActivity
     TextView _heading = null!;
     bool _busyJob;                          // job puntual en curso (bloquea otras teclas salvo F10)
     int _generation;                        // descarta resultados de operaciones ya sustituidas
-    CancellationTokenSource? _pollCts;
+    readonly PollRunner _poll = new();
 
-    protected override bool PauseHeader => _busyJob || _pollCts != null;
+    protected override bool PauseHeader => _busyJob || _poll.Running;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -248,51 +247,25 @@ public class EcuActivity : InpaActivity
     void StartPolling(string sgbd, string job, string args, string results)
     {
         StopPolling();
-        var cts = new CancellationTokenSource();
-        _pollCts = cts;
         int gen = ++_generation;
+        int count = 0;
         _heading.Text = "Status: " + job;
         _results.Clear();
         ShowBusy($"{job} cada 1 s. Pulsa cualquier tecla para parar.", "Parar", StopPolling);
-        PollLoop(sgbd, job, args, results, cts, gen);
-    }
-
-    async void PollLoop(string sgbd, string job, string args, string results, CancellationTokenSource cts, int gen)
-    {
-        int count = 0;
-        while (!cts.IsCancellationRequested)
+        _poll.Start(async ct =>
         {
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                var r = await Diag.RunJobAsync(sgbd, job, args, results);
-                if (cts.IsCancellationRequested || gen != _generation)
-                    break;
-                _results.ShowResult(sgbd, job, r, note: $"#{++count}");
-            }
-            catch (Exception ex)
-            {
-                if (cts.IsCancellationRequested || gen != _generation)
-                    break;
-                _results.ShowException(sgbd, job, ex);
-            }
-            try
-            {
-                await Task.Delay((int)Math.Max(100, StatusPollMs - sw.ElapsedMilliseconds), cts.Token);
-            }
-            catch (System.OperationCanceledException)
-            {
-                break;
-            }
-        }
+            var r = await Diag.RunJobAsync(sgbd, job, args, results);
+            if (ct.IsCancellationRequested || gen != _generation)
+                return false;
+            _results.ShowResult(sgbd, job, r, note: $"#{++count}");
+            return true;
+        }, ex => _results.ShowException(sgbd, job, ex), StatusPollMs, 100);
     }
 
     void StopPolling()
     {
-        if (_pollCts == null)
+        if (!_poll.Stop())
             return;
-        _pollCts.Cancel();
-        _pollCts = null;
         HideBusy();
         _heading.Text += " (detenido)";
     }

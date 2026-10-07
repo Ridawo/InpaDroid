@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using InpaDroid.Diag;
 using System.Text.Json;
 
@@ -22,12 +23,17 @@ public static class ChassisCatalog
         ReadCommentHandling = JsonCommentHandling.Skip,
     };
 
-    static readonly IReadOnlyDictionary<string, ChassisInfo> Embedded = LoadEmbedded();
-    static IReadOnlyDictionary<string, ChassisInfo> _chassis = Embedded;
+    // Los incrustados se parsean por id en el primer uso; _chassis solo guarda los que sustituye la carpeta ECU.
+    static readonly Lazy<string[]> EmbeddedIds = new(() => typeof(ChassisCatalog).Assembly.GetManifestResourceNames()
+        .Where(n => n.StartsWith(ResourcePrefix, StringComparison.Ordinal) && n.EndsWith(ResourceSuffix, StringComparison.Ordinal))
+        .Select(n => n[ResourcePrefix.Length..^ResourceSuffix.Length]).ToArray());
+    static readonly ConcurrentDictionary<string, ChassisInfo?> Embedded = new();
+    static IReadOnlyDictionary<string, ChassisInfo>? _chassis;
 
     /// <summary>Chasis por id; si no existe devuelve uno vacío (la UI lo muestra como catálogo vacío).</summary>
     public static ChassisInfo Get(string id) =>
-        _chassis.TryGetValue(id, out var c) ? c : new ChassisInfo(id, id.ToUpperInvariant(), "", DefaultInfoTitle, "", false, []);
+        (_chassis != null && _chassis.TryGetValue(id, out var c) ? c : GetEmbedded(id))
+        ?? new ChassisInfo(id, id.ToUpperInvariant(), "", DefaultInfoTitle, "", false, []);
 
     /// <summary>
     /// Sustituye los catálogos incrustados por los JSON de la carpeta ECU, si existen y son válidos. Parte siempre
@@ -37,11 +43,11 @@ public static class ChassisCatalog
     {
         if (string.IsNullOrWhiteSpace(ecuPath))
         {
-            _chassis = Embedded;
+            _chassis = null;
             return;
         }
-        var merged = new Dictionary<string, ChassisInfo>(Embedded);
-        foreach (var id in Embedded.Keys)
+        var merged = new Dictionary<string, ChassisInfo>();
+        foreach (var id in EmbeddedIds.Value)
         {
             string file = Path.Combine(ecuPath, id + ResourceSuffix);
             if (!File.Exists(file))
@@ -49,7 +55,7 @@ public static class ChassisCatalog
             try
             {
                 using var stream = File.OpenRead(file);
-                merged[id] = Parse(stream, id, merged[id]);
+                merged[id] = Parse(stream, id, GetEmbedded(id));
             }
             catch (Exception)
             {
@@ -59,25 +65,20 @@ public static class ChassisCatalog
         _chassis = merged;
     }
 
-    static Dictionary<string, ChassisInfo> LoadEmbedded()
+    static ChassisInfo? GetEmbedded(string id) =>
+        Array.IndexOf(EmbeddedIds.Value, id) < 0 ? null : Embedded.GetOrAdd(id, LoadEmbedded);
+
+    static ChassisInfo? LoadEmbedded(string id)
     {
-        var asm = typeof(ChassisCatalog).Assembly;
-        var result = new Dictionary<string, ChassisInfo>();
-        foreach (var name in asm.GetManifestResourceNames()
-                     .Where(n => n.StartsWith(ResourcePrefix, StringComparison.Ordinal) && n.EndsWith(ResourceSuffix, StringComparison.Ordinal)))
+        try
         {
-            try
-            {
-                using var stream = asm.GetManifestResourceStream(name)!;
-                string id = name[ResourcePrefix.Length..^ResourceSuffix.Length];
-                result[id] = Parse(stream, id, null);
-            }
-            catch (Exception)
-            {
-                // Recurso corrupto: se omite ese chasis.
-            }
+            using var stream = typeof(ChassisCatalog).Assembly.GetManifestResourceStream(ResourcePrefix + id + ResourceSuffix)!;
+            return Parse(stream, id, null);
         }
-        return result;
+        catch (Exception)
+        {
+            return null;   // Recurso corrupto: se omite ese chasis.
+        }
     }
 
     // El id sale siempre del nombre de archivo (<id>_catalog.json): es la clave con la que la UI pide el chasis,
@@ -104,13 +105,15 @@ public static class ChassisCatalog
 
     // Un JSON editado a mano puede traer null explícitos: se normalizan aquí para que la UI nunca los vea.
     // Los valores de status se repiten en bucle sin confirmar, así que solo se admiten jobs de lectura.
-    static E39Ecu ToEcu(EcuDto d) => new(
+    static ChassisEcu ToEcu(EcuDto d) => new(
         d.Title ?? "", d.Sgbd ?? "",
-        (d.StatusPages ?? []).Select(p => new E39Page(p.Title ?? "",
+        (d.StatusPages ?? []).Select(p => new ChassisPage(p.Title ?? "",
             (p.Values ?? []).Where(v => JobPolicy.IsReadOnly(v.Job ?? ""))
-                .Select(v => new E39Value(v.Job!, v.Result ?? "", v.Label ?? "", v.Unit ?? "", v.Args ?? "")).ToList())).ToList(),
-        (d.Actions ?? []).Select(a => new E39Action(a.Title ?? "", a.Job ?? "", a.Args ?? "", a.Warning ?? "")).ToList(),
-        d.IdentJob ?? "IDENT", d.FsReadJob ?? "FS_LESEN", d.FsClearJob ?? "FS_LOESCHEN");
+                .Select(v => new ChassisValue(v.Job!, v.Result ?? "", v.Label ?? "", v.Unit ?? "", v.Args ?? "")).ToList())).ToList(),
+        (d.Actions ?? []).Select(a => new ChassisAction(a.Title ?? "", a.Job ?? "", a.Args ?? "", a.Warning ?? "")).ToList(),
+        ReadJobOr(d.IdentJob, "IDENT"), ReadJobOr(d.FsReadJob, "FS_LESEN"), d.FsClearJob ?? "FS_LOESCHEN");
+
+    static string ReadJobOr(string? job, string fallback) => job != null && JobPolicy.IsReadOnly(job) ? job : fallback;
 
     sealed class ChassisDto
     {
