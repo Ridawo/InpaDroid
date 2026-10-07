@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+# The jobs only read the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Third-party actions are pinned to full commit SHAs (tag in the comment).
+jobs:
+  catalog-check:
+    name: Catalog check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.x'
+      - name: Syntax check
+        run: python3 -m py_compile tools/catalog_check.py
+      - name: Run catalog_check.py (only if PrgProbe dumps are present)
+        # tools/catalog_check.py reads datos_bmw/e39/analisis/prg/*.txt, which come
+        # from proprietary BMW files and are never committed. In CI the script can
+        # therefore only be syntax-checked; run it locally.
+        run: |
+          if [ -d datos_bmw/e39/analisis/prg ]; then
+            python3 tools/catalog_check.py
+          else
+            echo "::notice::datos_bmw dumps not available in CI; catalog_check.py was only syntax-checked (run it locally)."
+          fi
+
+  json-validity:
+    name: JSON validity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Validate src/**/*.json
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          bad = 0
+          for p in sorted(pathlib.Path('src').rglob('*.json')):
+              if any(part in ('bin', 'obj') for part in p.parts):
+                  continue
+              try:
+                  json.loads(p.read_text(encoding='utf-8-sig'))
+                  print('ok  ', p)
+              except Exception as e:
+                  bad += 1
+                  print(f'::error file={p}::{e}')
+          sys.exit(1 if bad else 0)
+          PY
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet test tests/InpaDroid.Tests
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: 10.x
+      - name: Install Android workload
+        run: dotnet workload install android
+      - name: Build
+        # EnableAndroidTargets / EnableWindowsTargeting come from src/InpaDroid/Directory.Build.rsp
+        run: >
+          dotnet build src/InpaDroid/InpaDroid.csproj -c Release
+          -f net10.0-android36.1
+          -p:JavaSdkDirectory="$JAVA_HOME"
+          -p:AcceptAndroidSDKLicenses=True
+          -p:InstallAndroidDependencies=True

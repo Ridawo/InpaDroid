@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+# Third-party actions are pinned to full commit SHAs (tag in the comment).
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write   # create the GitHub Release
+    env:
+      TFM: net10.0-android36.1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: 10.x
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Prepare signing key
+        id: sign
+        # Only the keystore file is produced here; passwords stay in the env of the build step.
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$KEYSTORE_PASS" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASS" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "release_key=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning title=Debug signing::Android signing secrets are missing; the APK is signed with a DEBUG key. It is published as a pre-release and must not be distributed as an official build."
+            keytool -genkeypair -keystore "$RUNNER_TEMP/release.keystore" -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+            echo "release_key=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build signed APK
+        # Passwords go through env vars (env:NAME syntax) so they stay off the command line.
+        env:
+          RELEASE_KEY: ${{ steps.sign.outputs.release_key }}
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ "$RELEASE_KEY" = true ]; then
+            export SIGN_STORE_PASS="$KEYSTORE_PASS" SIGN_KEY_PASS="$KEY_PASS" SIGN_ALIAS="$KEY_ALIAS"
+          else
+            export SIGN_STORE_PASS=android SIGN_KEY_PASS=android SIGN_ALIAS=androiddebugkey
+          fi
+          dotnet publish src/InpaDroid/InpaDroid.csproj -c Release -f "$TFM" \
+            -p:JavaSdkDirectory="$JAVA_HOME" \
+            -p:AcceptAndroidSDKLicenses=True \
+            -p:InstallAndroidDependencies=True \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="$RUNNER_TEMP/release.keystore" \
+            -p:AndroidSigningKeyAlias="$SIGN_ALIAS" \
+            -p:AndroidSigningKeyPass=env:SIGN_KEY_PASS \
+            -p:AndroidSigningStorePass=env:SIGN_STORE_PASS
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.keystore"
+
+      - name: Collect APK
+        run: |
+          APK="src/InpaDroid/bin/Release/$TFM/publish/com.inpadroid.app-Signed.apk"
+          test -f "$APK"
+          mkdir -p out
+          cp "$APK" "out/InpaDroid-${GITHUB_REF_NAME}.apk"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          files: out/InpaDroid-*.apk
+          generate_release_notes: true
+          prerelease: ${{ steps.sign.outputs.release_key != 'true' }}

@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Catálogos de chasis: un <id>_catalog.json por chasis, leídos por ChassisCatalog. -->
+    <EmbeddedResource Include="Ui\Chassis\*_catalog.json" LogicalName="chassis.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../external/ediabaslib/EdiabasLib/EdiabasLib/EdiabasLib.csproj" />
     <ProjectReference Include="../../external/ediabaslib/EdiabasLib/AndroidNetBindings/UsbSerialNetBinding/UsbSerialNetBinding.csproj" />
   </ItemGroup>

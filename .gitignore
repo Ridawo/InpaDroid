@@ -3,12 +3,20 @@ obj/
 out/
 # BMW proprietary files (EDIABAS .prg/.grp, INPA, Standard Tools): never commit
 datos_bmw/
-*.prg
-*.grp
-*.ipo
-*.ips
+# EDIABAS/INPA files usually come upper-case from Windows (D_MOTOR.PRG, *.IPO)
+*.[pP][rR][gG]
+*.[gG][rR][pP]
+*.[iI][pP][oO]
+*.[iI][pP][sS]
+[sS][tT]212*.[eE][xX][eE]
 *.apk
+# Signing keys (and their base64 form for CI secrets, see docs/RELEASING.md)
 *.keystore
+*.keystore.b64
+*.jks
+graphify-out/
 .vs/
 *.user
 /daten*/
+.claude/
+__pycache__/

@@ -5,7 +5,7 @@ using Android.OS;
 using Android.Util;
 using Android.Widget;
 using InpaDroid.Diag;
-using InpaDroid.Ui.E46;
+using InpaDroid.Ui.Chassis;
 
 namespace InpaDroid.Ui;
 
@@ -29,8 +29,11 @@ public class MainActivity : InpaActivity
         SetKey(1, "Info", ShowInfo);
         SetKey(2, "Centralita", () => StartActivity(new Intent(this, typeof(EcuSelectActivity))));
         SetKey(3, "Identificar", IdentifyVehicle);
-        SetKey(4, "E39", () => StartActivity(new Intent(this, typeof(E39.E39MenuActivity))));
-        SetKey(5, "E46", () => StartActivity(new Intent(this, typeof(E46MenuActivity))));
+        // Chasis nuevo: su <id>_catalog.json en Ui/Chassis + una línea aquí y su texto en BuildMenu.
+        SetKey(4, "E39", () => ChassisMenuActivity.Start(this, "e39"));
+        SetKey(5, "E46", () => ChassisMenuActivity.Start(this, "e46"));
+        SetKey(6, "E60", () => ChassisMenuActivity.Start(this, "e60"));
+        SetKey(7, "E90", () => ChassisMenuActivity.Start(this, "e90"));
         SetKey(9, "Ajustes", () => StartActivity(new Intent(this, typeof(SettingsActivity))));
         SetKey(10, "Salir", Exit);
         SetShiftKey(10, "Salir", Exit);
@@ -49,6 +52,8 @@ public class MainActivity : InpaActivity
             [(3, false)] = "Identificar vehículo",
             [(4, false)] = "Vehículo BMW E39",
             [(5, false)] = "Vehículo BMW E46",
+            [(6, false)] = "Vehículo BMW E60 (sin verificar)",
+            [(7, false)] = "Vehículo BMW E90 (sin verificar)",
             [(9, false)] = "Ajustes de interfaz",
             [(10, false)] = "Fin",
             [(10, true)] = "Salir",

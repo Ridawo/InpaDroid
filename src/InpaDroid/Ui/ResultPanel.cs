@@ -1,6 +1,7 @@
 using System.Text;
 using Android.Graphics;
 using Android.Text;
+using Android.Text.Method;
 using Android.Text.Style;
 using Android.Util;
 using Android.Widget;
@@ -25,7 +26,20 @@ internal sealed class ResultPanel
 
     public ResultPanel(LinearLayout root) => _root = root;
 
-    public void Clear() => _root.RemoveAllViews();
+    readonly List<ResultExporter.Entry> _exports = [];
+
+    public void Clear()
+    {
+        _exports.Clear();
+        _root.RemoveAllViews();
+    }
+
+    /// <summary>Comparte (hoja de compartir de Android) los resultados mostrados como CSV.</summary>
+    public void Share()
+    {
+        if (_exports.Count > 0)
+            ResultExporter.Share(_root.Context!, _exports, _root.Context!.GetString(Resource.String.share_results)!);
+    }
 
     /// <summary>Texto plano de todo lo mostrado (para copiar al portapapeles).</summary>
     public string PlainText()
@@ -34,13 +48,39 @@ internal sealed class ResultPanel
         for (int i = 0; i < _root.ChildCount; i++)
         {
             if (_root.GetChildAt(i) is TextView tv)
-                sb.AppendLine(tv.Text).AppendLine();
+                sb.AppendLine(WithoutLinks(tv.TextFormatted)).AppendLine();
         }
         return sb.ToString();
     }
 
-    public void ShowResult(string sgbd, string job, JobResult result, bool append = false, string note = "") =>
+    /// <summary>Quita los enlaces de la UI (p. ej. "Compartir CSV" de la cabecera) y el espacio que los precede.</summary>
+    static string WithoutLinks(ICharSequence? text)
+    {
+        if (text is not ISpanned spanned)
+            return text?.ToString() ?? "";
+        var links = spanned.GetSpans(0, spanned.Length(), Java.Lang.Class.FromType(typeof(ClickableSpan)));
+        if (links is not { Length: > 0 })
+            return spanned.ToString();
+        var sb = new SpannableStringBuilder(spanned);
+        foreach (var link in links)
+        {
+            int start = sb.GetSpanStart(link), end = sb.GetSpanEnd(link);
+            if (start < 0)
+                continue;
+            while (start > 0 && sb.CharAt(start - 1) == ' ')
+                start--;
+            sb.Delete(start, end);
+        }
+        return sb.ToString();
+    }
+
+    public void ShowResult(string sgbd, string job, JobResult result, bool append = false, string note = "")
+    {
+        if (!append)
+            _exports.Clear();
+        _exports.Add(new ResultExporter.Entry(DateTime.Now, sgbd, job, result));
         Show(BuildResult(sgbd, job, result, note), append);
+    }
 
     public void ShowError(string title, string message, bool append = false) =>
         Show(new List<Block> { new(Styled(title, message, UiUtil.ErrorText), Kind.Error) }, append);
@@ -53,6 +93,8 @@ internal sealed class ResultPanel
 
     void Show(List<Block> blocks, bool append)
     {
+        if (!append && blocks.Count > 0 && blocks[0].Kind != Kind.Header)
+            _exports.Clear();
         var ctx = _root.Context!;
         if (!append && _root.ChildCount == blocks.Count)
         {
@@ -88,6 +130,8 @@ internal sealed class ResultPanel
     static void Apply(TextView tv, Block b)
     {
         tv.TextFormatted = b.Text;
+        if (b.Kind == Kind.Header)
+            tv.MovementMethod = LinkMovementMethod.Instance;
         tv.SetTextColor(b.Kind == Kind.Error ? UiUtil.ErrorText : Color.Black);
         tv.SetBackgroundColor(b.Kind switch
         {
@@ -99,7 +143,12 @@ internal sealed class ResultPanel
         });
     }
 
-    static List<Block> BuildResult(string sgbd, string job, JobResult r, string note)
+    sealed class ShareSpan(ResultPanel panel) : ClickableSpan
+    {
+        public override void OnClick(Android.Views.View widget) => panel.Share();
+    }
+
+    List<Block> BuildResult(string sgbd, string job, JobResult r, string note)
     {
         var blocks = new List<Block>();
         bool faultJob = job.StartsWith("FS_LESEN", StringComparison.OrdinalIgnoreCase);
@@ -110,6 +159,8 @@ internal sealed class ResultPanel
         h.Append($"   {DateTime.Now:HH:mm:ss}");
         if (note.Length > 0)
             h.Append("   " + note);
+        h.Append("   ");
+        AppendSpan(h, _root.Context!.GetString(Resource.String.share_results)!, new ShareSpan(this));
         if (r.JobStatus.Length > 0)
         {
             h.Append("\nJOB_STATUS : ");

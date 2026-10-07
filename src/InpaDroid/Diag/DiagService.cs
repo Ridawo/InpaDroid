@@ -13,16 +13,28 @@ public sealed class DiagService : IDisposable
 {
     private const string ResultSetStatus = "JOB_STATUS";
 
+    // Tope de inactividad por operación en el hilo de trabajo: si EDIABAS pasa este tiempo sin avanzar ni una
+    // instrucción (adaptador que no contesta), se cancela la trama en curso y se devuelve un error legible en vez
+    // de dejar la UI esperando. Un job largo que sigue avanzando no se corta. EDIABAS tiene sus propios timeouts,
+    // esto es la red de seguridad. Los jobs virtuales (lista de jobs) no tocan el adaptador pero son largos.
+    internal static readonly TimeSpan JobTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan VirtualJobsTimeout = TimeSpan.FromSeconds(120);
+
     private readonly Context _context;
     private readonly AdapterSettings _settings;
     private readonly TcpClientWithTimeout.NetworkData _networkData;
     private readonly EdiabasNet _ediabas;
     private readonly BlockingCollection<Action> _queue = new();
     private readonly Thread _worker;
+    // Solo lo activa el watchdog; las cancelaciones del usuario van por _abortGeneration.
     private volatile bool _abort;
     private volatile bool _disposed;
     // Se incrementa en cada Abort: cancela el job en curso y también los que ya estaban en cola.
     private int _abortGeneration;
+    // Generación con la que se encoló el job en curso (solo hilo de trabajo). Si Abort la deja atrás, se cancela.
+    private int _jobGeneration;
+    // Watchdog de la operación en curso; AbortJobFunc lo rearma en cada instrucción.
+    private volatile InactivityWatchdog? _watchdog;
 
     // EdiabasNet usa la codificación 1252, que en Android no existe sin este proveedor (como BmwDeepObd MyApplication).
     static DiagService() => System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -37,7 +49,12 @@ public sealed class DiagService : IDisposable
         _ediabas = new EdiabasNet
         {
             EdInterfaceClass = _settings.Type == AdapterType.Enet ? new EdInterfaceEnet() : new EdInterfaceObd(),
-            AbortJobFunc = () => _abort
+            // EDIABAS lo consulta antes de cada instrucción del job: sirve a la vez de señal de actividad.
+            AbortJobFunc = () =>
+            {
+                _watchdog?.Kick();
+                return IsAborted;
+            }
         };
         _ediabas.SetConfigProperty("EcuPath", _settings.EcuPath);
         _ediabas.SetConfigProperty("IfhTrace", "0");
@@ -82,11 +99,13 @@ public sealed class DiagService : IDisposable
             ResolveSgbd(sgbd);
             ExecuteJob(job, args, results);
             return ToJobResult(_ediabas.ResultSets);
-        }, error => new JobResult { Ok = false, Error = error });
+        }, error => new JobResult { Ok = false, Error = error },
+        // Solo se reenvían solos los jobs de lectura; borrados, activaciones y codificación los decide el usuario.
+        allowReconnect: JobPolicy.IsReadOnly(job));
 
     // Virtual jobs (_JOBS/_JOBCOMMENTS etc.) — no ECU communication.
     public Task<IReadOnlyList<JobInfo>> GetJobsAsync(string sgbd) =>
-        Enqueue(() => ReadJobs(sgbd), _ => (IReadOnlyList<JobInfo>)[]);
+        Enqueue(() => ReadJobs(sgbd), _ => (IReadOnlyList<JobInfo>)[], VirtualJobsTimeout, allowReconnect: false);
 
     public Task<string> ResolveVariantAsync(string sgbd) =>
         Enqueue(() =>
@@ -111,10 +130,12 @@ public sealed class DiagService : IDisposable
             return (ubatt, ignition == null ? (bool?)null : ignition != 0);
         }, _ => (null, null));
 
+    // Cancela el job en curso y los encolados hasta ahora; los que se encolen después no se ven afectados.
+    // No toca _abort: el hilo de trabajo lo pone a false al empezar cada job y, si coincidiera con este Abort,
+    // la cancelación se perdería. La generación no tiene esa carrera.
     public void Abort()
     {
         Interlocked.Increment(ref _abortGeneration);
-        _abort = true;
         if (_disposed)
         {
             return;
@@ -162,10 +183,11 @@ public sealed class DiagService : IDisposable
         }
     }
 
-    private Task<T> Enqueue<T>(Func<T> work, Func<string, T> onError)
+    private Task<T> Enqueue<T>(Func<T> work, Func<string, T> onError, TimeSpan? timeout = null, bool allowReconnect = true)
     {
         var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
         int generation = Volatile.Read(ref _abortGeneration);
+        TimeSpan limit = timeout ?? JobTimeout;
 
         void Run()
         {
@@ -179,17 +201,26 @@ public sealed class DiagService : IDisposable
                 tcs.SetResult(onError("Cancelado"));
                 return;
             }
+            _jobGeneration = generation;
             _abort = false;
+            var watchdog = new InactivityWatchdog(limit, OnWatchdogExpired);
+            _watchdog = watchdog;
             try
             {
-                // Re-arm after abort; a cancelled interface rejects all subsequent jobs immediately.
-                _ediabas.EdInterfaceClass?.TransmitCancel(false);
-                RefreshNetworks();
-                tcs.SetResult(work());
+                tcs.SetResult(RunWithReconnect(work, allowReconnect, watchdog));
             }
             catch (Exception ex)
             {
-                tcs.SetResult(onError(_abort ? "Cancelado" : EdiabasNet.GetExceptionText(ex, false, false)));
+                bool timedOut = watchdog.Finish();
+                tcs.SetResult(onError(
+                    timedOut ? TimeoutMessage(limit) :
+                    IsAborted ? "Cancelado" :
+                    DescribeError(ex)));
+            }
+            finally
+            {
+                _watchdog = null;
+                watchdog.Finish();
             }
         }
 
@@ -202,6 +233,98 @@ public sealed class DiagService : IDisposable
             tcs.SetResult(onError("Servicio de diagnóstico cerrado"));
         }
         return tcs.Task;
+    }
+
+    // Un intento; si falla por pérdida de conexión con el adaptador (no con la centralita) y no ha sido
+    // cancelación ni timeout, se cierra la conexión y se reintenta una sola vez. Todo en el hilo de trabajo.
+    private T RunWithReconnect<T>(Func<T> work, bool allowReconnect, InactivityWatchdog watchdog)
+    {
+        for (int attempt = 0; ; attempt++)
+        {
+            try
+            {
+                // Re-arm after abort; a cancelled interface rejects all subsequent jobs immediately.
+                _ediabas.EdInterfaceClass?.TransmitCancel(false);
+                RefreshNetworks();
+                // El plazo cuenta desde aquí: la preparación y la reconexión anterior no consumen el del intento.
+                watchdog.Kick();
+                return work();
+            }
+            catch (Exception ex) when (attempt == 0 && allowReconnect && !IsAborted && !_disposed &&
+                                       !watchdog.Fired && IsAdapterConnectionError(ex))
+            {
+                ResetConnection();
+            }
+        }
+    }
+
+    private void ResetConnection()
+    {
+        try
+        {
+            _ediabas.EdInterfaceClass?.InterfaceDisconnect();
+            // Fuerza a reabrir el SGBD (y con él la conexión) en el siguiente job.
+            _ediabas.CloseSgbd();
+        }
+        catch (Exception)
+        {
+            // si no se puede cerrar limpiamente, el reintento fallará y se informará del error
+        }
+    }
+
+    // Errores del adaptador/enlace (UART, sin respuesta del interfaz, init, acceso al dispositivo, sockets).
+    // IFH-0008/0009/0010 (centralita) no cuentan: reconectar al adaptador no los arregla.
+    internal static bool IsAdapterConnectionError(Exception ex)
+    {
+        for (Exception? e = ex; e != null; e = e.InnerException)
+        {
+            if (e is EdiabasNet.EdiabasNetException net)
+            {
+                switch (net.ErrorCode)
+                {
+                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0001:
+                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0002:
+                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0003:
+                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0017:
+                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0018:
+                    case EdiabasNet.ErrorCodes.EDIABAS_IFH_0019:
+                        return true;
+                }
+            }
+            else if (e is System.IO.IOException or System.Net.Sockets.SocketException)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static string TimeoutMessage(TimeSpan limit) =>
+        $"El adaptador no responde (sin respuesta tras {(int)limit.TotalSeconds} s). " +
+        "Comprueba que está conectado y que el contacto del coche está puesto.";
+
+    // Texto de EDIABAS más una pista para el usuario cuando el fallo es del adaptador.
+    private static string DescribeError(Exception ex)
+    {
+        string text = EdiabasNet.GetExceptionText(ex, false, false);
+        return IsAdapterConnectionError(ex) ? "Se ha perdido la conexión con el adaptador. " + text : text;
+    }
+
+    // Cancelado por el watchdog o por un Abort posterior a encolar el job en curso. Se lee en el hilo de trabajo.
+    private bool IsAborted => _abort || _jobGeneration != Volatile.Read(ref _abortGeneration);
+
+    // Hilo del temporizador, bajo el lock del watchdog: cancela la trama en curso para desbloquear a EDIABAS.
+    private void OnWatchdogExpired()
+    {
+        _abort = true;
+        try
+        {
+            _ediabas.EdInterfaceClass?.TransmitCancel(true);
+        }
+        catch (Exception)
+        {
+            // ignorado
+        }
     }
 
     private void ConfigureInterface()

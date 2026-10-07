@@ -1,0 +1,202 @@
+{
+  "id": "e46",
+  "name": "BMW E46",
+  "subtitle": "Línea K / D-CAN (DS2/KWP2000 / CAN)",
+  "infoTitle": "Información E46",
+  "info": "BMW E46 (Serie 3, 1998-2006)\n\nLas centralitas del E46 van por línea K (DS2 / KWP2000).\nInterfaz: cable USB K+DCAN (FTDI) con los pines 7 y 8 puenteados (modo K-line).\nNota: los E46 del facelift 2006 con módulo D-CAN de fábrica requieren modo D-CAN\n(no implementado aún; usa la pantalla de ECU genérica para esos casos).\n\n{iface}\n{ecupath}\n\nCopia ahí los .prg/.grp de tu instalación INPA (carpeta ecu).\nTeclas disponibles: F2 Ident, F4 errores, Shift+F4 borrar, F5 Status, F6 Steuern, F7 todos los jobs.",
+  "verified": true,
+  "ecus": [
+    {
+      "title": "Motor diésel (DDE)",
+      "sgbd": "D_0012",
+      "statusPages": [
+        {
+          "title": "Valores básicos",
+          "values": [
+            {
+              "job": "STATUS_MOTORDREHZAHL",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Régimen motor",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_MOTORTEMPERATUR",
+              "result": "STAT_MOTORTEMPERATUR_WERT",
+              "label": "Temperatura refrigerante",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_UBATT",
+              "result": "STAT_UBATT_WERT",
+              "label": "Tensión batería (DDE)",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_LMM_MASSE",
+              "result": "STAT_LMM_MASSE_WERT",
+              "label": "Caudalímetro (HFM)",
+              "unit": "%"
+            },
+            {
+              "job": "STATUS_LADEDRUCK",
+              "result": "STAT_LADEDRUCK_WERT",
+              "label": "Presión turbo (absoluta)",
+              "unit": "mbar"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Motor gasolina (MS43/MSS54)",
+      "sgbd": "D_MOTOR",
+      "statusPages": [
+        {
+          "title": "Valores básicos",
+          "values": [
+            {
+              "job": "STATUS_MOTORDREHZAHL",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Régimen motor",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_MOTORTEMPERATUR",
+              "result": "STAT_MOTORTEMPERATUR_WERT",
+              "label": "Temperatura refrigerante",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_UBATT",
+              "result": "STAT_UBATT_WERT",
+              "label": "Tensión batería (DME)",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_LAMBDAREGELUNG",
+              "result": "STAT_LAMBDAREGELUNG_WERT",
+              "label": "Control lambda",
+              "unit": ""
+            },
+            {
+              "job": "STATUS_LADEDRUCK",
+              "result": "STAT_LADEDRUCK_WERT",
+              "label": "Presión turbo (abs.)",
+              "unit": "mbar"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Cambio automático (EGS)",
+      "sgbd": "D_EGS",
+      "statusPages": [
+        {
+          "title": "Valores básicos",
+          "values": [
+            {
+              "job": "STATUS_GETRIEBE",
+              "result": "STAT_GETRIEBE_STUFE_WERT",
+              "label": "Marcha actual",
+              "unit": ""
+            },
+            {
+              "job": "STATUS_GETRIEBE",
+              "result": "STAT_FAHRSTUFE_WERT",
+              "label": "Selector de marcha",
+              "unit": ""
+            },
+            {
+              "job": "STATUS_TEMPERATUR",
+              "result": "STAT_GETRIEBETEMPERATUR_WERT",
+              "label": "Temperatura aceite caja",
+              "unit": "°C"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "ABS / DSC III",
+      "sgbd": "D_ABSI",
+      "statusPages": [
+        {
+          "title": "Velocidades de rueda",
+          "values": [
+            {
+              "job": "STATUS_RADDREHZAHL",
+              "result": "STAT_RADDREHZAHL_VL_WERT",
+              "label": "Rueda delantera izq.",
+              "unit": "km/h"
+            },
+            {
+              "job": "STATUS_RADDREHZAHL",
+              "result": "STAT_RADDREHZAHL_VR_WERT",
+              "label": "Rueda delantera der.",
+              "unit": "km/h"
+            },
+            {
+              "job": "STATUS_RADDREHZAHL",
+              "result": "STAT_RADDREHZAHL_HL_WERT",
+              "label": "Rueda trasera izq.",
+              "unit": "km/h"
+            },
+            {
+              "job": "STATUS_RADDREHZAHL",
+              "result": "STAT_RADDREHZAHL_HR_WERT",
+              "label": "Rueda trasera der.",
+              "unit": "km/h"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Airbag (MRS)",
+      "sgbd": "D_MRS",
+      "statusPages": [],
+      "actions": []
+    },
+    {
+      "title": "Cuadro de instrumentos (IKE)",
+      "sgbd": "D_KOMBI",
+      "statusPages": [
+        {
+          "title": "Valores básicos",
+          "values": [
+            {
+              "job": "STATUS_UBATT",
+              "result": "STAT_UBATT_WERT",
+              "label": "Tensión de red",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_TANKSTAND",
+              "result": "STAT_TANKSTAND_WERT",
+              "label": "Nivel depósito",
+              "unit": "l"
+            },
+            {
+              "job": "STATUS_KMH",
+              "result": "STAT_KMH_WERT",
+              "label": "Velocidad (IKE)",
+              "unit": "km/h"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Carrocería (GM/ZKE)",
+      "sgbd": "D_ZKE5",
+      "statusPages": [],
+      "actions": []
+    }
+  ]
+}

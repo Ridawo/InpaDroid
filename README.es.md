@@ -14,14 +14,16 @@ La app no trae ningún archivo de BMW. Los `.prg` y `.grp` los pones tú, copiá
 
 Esta versión es genérica: no lee los scripts `.ipo` de INPA, sino que monta las pantallas a partir de los jobs que hay dentro de cada `.prg`. Por eso sirve para cualquier centralita que tengas, aunque las pantallas no tengan el diseño específico de cada script de INPA.
 
-Tiene cuatro pantallas genéricas, más un menú propio para el BMW E39 (ver [BMW E39](#bmw-e39)):
+Tiene cuatro pantallas genéricas, más un menú por chasis que se monta a partir de catálogos JSON (ver [Menús por chasis](#menús-por-chasis)):
 
-- **Inicio** — la pantalla de arranque, parecida a la de INPA. Desde aquí se abre la lista de centralitas, se identifica el vehículo y se entra en Ajustes.
+- **Inicio** — la pantalla de arranque, parecida a la de INPA. Desde aquí se abre la lista de centralitas, se identifica el vehículo, se entra en los menús de chasis y en Ajustes.
 - **Selección de centralita** — lista de todos los `.prg` y `.grp` de la carpeta, con buscador. Los grupos (`.grp`) salen arriba y marcados.
 - **Pantalla de centralita** — Info, Ident, leer y borrar la memoria de errores, Status, Steuern y una lista de todos los jobs al estilo Tool32.
 - **Ajustes** — tipo de adaptador, datos de conexión y carpeta de archivos.
 
 Como en INPA, abajo hay una barra con las teclas F1 a F10 y un botón Shift que cambia las etiquetas a Shift+F1…F10. Arriba, en todas las pantallas, hay dos indicadores: Batería y Encendido.
+
+En la cabecera de cada resultado hay un enlace **Compartir CSV**. Manda los resultados que ves en pantalla como texto CSV con el menú de compartir de Android (correo, mensajería, Drive…). Si el resultado es enorme, se recorta y se avisa, para que el envío no falle.
 
 ---
 
@@ -52,7 +54,15 @@ Desde la carpeta `InpaDroid` ejecuta:
 ./build.sh
 ```
 
-La APK queda en `out/InpaDroid.apk`.
+La APK queda en `out/InpaDroid.apk`. `build.sh` la firma con la clave de depuración de Android y crea `~/.android/debug.keystore` si todavía no existe. Las variables de entorno `JAVA_HOME`, `ANDROID_HOME` y `DOTNET_ROOT` sustituyen las rutas de arriba.
+
+Las pruebas unitarias (lectura de catálogos y modelos de datos) corren en .NET normal, sin Android ni móvil:
+
+```sh
+dotnet test tests/InpaDroid.Tests
+```
+
+GitHub Actions pasa esas mismas pruebas, comprueba que los JSON de catálogo son válidos y compila la app en cada push y pull request (`.github/workflows/ci.yml`). Al subir una etiqueta `v*` se compila una APK firmada y se publica como GitHub Release; los detalles están en [docs/RELEASING.md](docs/RELEASING.md).
 
 Para instalarla en el móvil tienes dos opciones:
 
@@ -132,8 +142,11 @@ Conecta el móvil a la red WiFi del ELM327 y escribe su dirección en host ELM W
    |-------|---------|
    | F1 | Info |
    | F2 | Selección de centralita |
-   | F3 | Identificar vehículo (necesita `FA` o `UTILITY`) |
+   | F3 | Identificar vehículo (necesita `UTILITY` o `CAS`) |
    | F4 | Menú BMW E39 |
+   | F5 | Menú BMW E46 |
+   | F6 | Menú BMW E60 (sin verificar) |
+   | F7 | Menú BMW E90 (sin verificar) |
    | F9 | Ajustes |
    | F10 | Salir |
 
@@ -149,6 +162,7 @@ Conecta el móvil a la red WiFi del ELM327 y escribe su dirección en host ELM W
    | F5 | Status (lectura continua) | jobs `STATUS_*` |
    | F6 | Steuern (activar componentes) | jobs `STEUERN_*` |
    | F7 | Todos los jobs (Tool32) | — |
+   | F9 | Copiar resultados al portapapeles | — |
    | F10 | Volver | — |
 
 Status repite el job elegido cada segundo. Para en cuanto pulsas cualquier tecla.
@@ -156,6 +170,25 @@ Status repite el job elegido cada segundo. Para en cuanto pulsas cualquier tecla
 Steuern muestra un aviso y pide confirmación antes de enviar el job.
 
 F7 funciona como Tool32: eliges cualquier job, escribes los argumentos separados por `;` y lo ejecutas. La lista de jobs se lee directamente del `.prg`, así que funciona sin coche conectado.
+
+---
+
+## Menús por chasis
+
+En la pantalla de inicio, F4 a F7 abren el menú del E39, E46, E60 o E90. Cada menú muestra las centralitas de un catálogo incorporado (`src/InpaDroid/Ui/Chassis/<id>_catalog.json`). Los del E39 y el E46 tienen jobs y nombres de resultado comprobados. Los del E60 y el E90 son esqueletos marcados como "sin verificar" hasta que alguien los pruebe en un coche.
+
+Dentro de una centralita de un menú de chasis:
+
+| Tecla | Función |
+|-------|---------|
+| F1 | Info: SGBD, variante identificada, páginas de status y acciones del catálogo |
+| F2 | Ident |
+| F4 / Shift+F4 | Leer / borrar la memoria de errores (borrar pide confirmación) |
+| F5 | Páginas de status con valores en directo, cada segundo |
+| F6 | Steuern: tests de actuadores del catálogo, cada uno con aviso de seguridad y confirmación |
+| F7 | Todos los jobs del `.prg` (abre la pantalla genérica de centralita) |
+| F8 | Gráfica en vivo: repite el primer job de una página de status unas dos veces por segundo y dibuja sus valores numéricos, con botones Pausar y Borrar |
+| F10 | Volver |
 
 ---
 
@@ -181,15 +214,7 @@ El resto de carpetas (`sgdat`, `daten`, `data`, `work`, `cfgdat`) no hace falta 
 
 ### Menú Vehículo E39
 
-En la pantalla de inicio, **F4** abre el menú BMW E39. Sale la lista de centralitas del E39, con la del motor diésel (DDE) la primera.
-
-Dentro de cada centralita las teclas siguen la misma idea que la pantalla genérica:
-
-- Ident, para leer la identificación de la centralita.
-- Leer la memoria de errores, y borrarla (pide confirmación).
-- Páginas de status, con valores que se refrescan en directo.
-- Tests de actuadores (Steuern). Antes de lanzar cada uno sale un aviso y hay que confirmar.
-- F7 para ver todos los jobs del `.prg` y lanzar cualquiera, como en Tool32.
+En la pantalla de inicio, **F4** abre el menú BMW E39. Sale la lista de centralitas del E39, con la del motor diésel (DDE) la primera. Las teclas dentro de cada centralita son las de [Menús por chasis](#menús-por-chasis).
 
 ### Primera prueba en el coche
 
@@ -223,11 +248,11 @@ Si denegaste un permiso, la app no puede volver a pedirlo sola. Ve a Ajustes de 
 
 ---
 
-## Ampliar el catálogo E39
+## Ampliar los catálogos de chasis
 
-La app incluye un catálogo de nueve centralitas E39. Puedes reemplazarlo o ampliarlo dejando un archivo `e39_catalog.json` en tu carpeta ECU. La app lo carga automáticamente al arrancar; si falta o tiene errores, usa el catálogo incorporado.
+Los catálogos incorporados son archivos JSON metidos en la app: nueve centralitas del E39, siete del E46 y unas listas cortas sin verificar para el E60 y el E90. Puedes sustituir cualquiera sin recompilar dejando un archivo con el mismo nombre (`e39_catalog.json`, `e46_catalog.json`, `e60_catalog.json` o `e90_catalog.json`) en tu carpeta ECU. La app lo lee al arrancar; si tiene errores, se queda con el incorporado.
 
-El esquema JSON está documentado en [`src/InpaDroid/Ui/E39/e39_catalog.json`](src/InpaDroid/Ui/E39/e39_catalog.json), que también sirve como ejemplo completo.
+El formato está explicado en [CONTRIBUTING.md](CONTRIBUTING.md#formato-del-catálogo), y [`src/InpaDroid/Ui/Chassis/e39_catalog.json`](src/InpaDroid/Ui/Chassis/e39_catalog.json) es un ejemplo completo.
 
 ---
 

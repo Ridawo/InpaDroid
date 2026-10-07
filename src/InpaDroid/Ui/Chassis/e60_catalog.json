@@ -1,0 +1,31 @@
+{
+  "id": "e60",
+  "name": "BMW E60",
+  "subtitle": "CAN / D-CAN (sin verificar)",
+  "infoTitle": "Información E60",
+  "info": "BMW E60\n\nCatálogo mínimo SIN VERIFICAR: solo lista centralitas, sin páginas de status ni activaciones.\nEste chasis usa CAN (D-CAN): necesita el cable K+DCAN con el interruptor en modo D-CAN (o ENET en F/G).\n\n{iface}\n{ecupath}\n\nCopia ahí los .prg/.grp de tu instalación INPA (carpeta ecu).\nUsa F2 Ident, F4 errores y F7 (todos los jobs) para explorar; añade páginas de status al JSON cuando las hayas comprobado.",
+  "verified": false,
+  "ecus": [
+    {
+      "title": "Motor (DME/DDE)",
+      "sgbd": "D_MOTOR",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    },
+    {
+      "title": "Acceso de confort (CAS)",
+      "sgbd": "CAS",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    },
+    {
+      "title": "Cuadro de instrumentos (KOMBI)",
+      "sgbd": "KOMBI60",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    }
+  ]
+}

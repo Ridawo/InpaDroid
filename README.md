@@ -14,14 +14,16 @@ The app ships with no BMW files. You supply your own `.prg` and `.grp`, copied f
 
 This version is generic: it does not parse `.ipo` scripts; instead, it builds screens from the jobs inside each `.prg`. This means it works with any ECU you have files for, even if the screens do not look exactly like an INPA script.
 
-There are four generic screens plus a dedicated menu for the BMW E39 (see [BMW E39](#bmw-e39)):
+There are four generic screens plus per-chassis vehicle menus built from JSON catalogs (see [Chassis menus](#chassis-menus)):
 
-- **Home** — startup screen similar to INPA. Opens the ECU list, identifies the vehicle, and goes to Settings.
+- **Home** — startup screen similar to INPA. Opens the ECU list, identifies the vehicle, opens the chassis menus and goes to Settings.
 - **ECU selection** — lists all `.prg` and `.grp` files in the configured folder, with a search box. Group files (`.grp`) appear first and are labeled.
 - **ECU screen** — Info, Ident, read and clear fault memory, Status, Steuern, and a full job list (Tool32 style).
 - **Settings** — adapter type, connection details, and ECU folder.
 
 The bottom of every screen shows an F1–F10 function key bar with a Shift button. The top header shows a Battery and Ignition indicator that refresh roughly every two seconds.
+
+Every job result has a **Compartir CSV** link in its header. It sends the displayed results as CSV text through Android's share sheet (mail, messaging, Drive…). Very large results are cut short with a notice so the share does not fail.
 
 ---
 
@@ -52,7 +54,15 @@ From the `InpaDroid` folder:
 ./build.sh
 ```
 
-The APK lands at `out/InpaDroid.apk`.
+The APK lands at `out/InpaDroid.apk`. `build.sh` signs it with the Android debug key and creates `~/.android/debug.keystore` if it does not exist yet; the environment variables `JAVA_HOME`, `ANDROID_HOME` and `DOTNET_ROOT` override the default paths above.
+
+The unit tests (catalog parsing and data models) run on plain .NET, without Android or a device:
+
+```sh
+dotnet test tests/InpaDroid.Tests
+```
+
+GitHub Actions runs the same tests, a JSON check of the catalogs and an Android build on every push and pull request (`.github/workflows/ci.yml`). Pushing a `v*` tag builds a signed APK and publishes it as a GitHub Release; see [docs/RELEASING.md](docs/RELEASING.md).
 
 ---
 
@@ -123,8 +133,11 @@ Connect the phone to the ELM327's Wi-Fi network, then set the host in ELM Wi-Fi 
    |-----|----------|
    | F1 | Info |
    | F2 | ECU selection |
-   | F3 | Identify vehicle (needs `FA` or `UTILITY`) |
+   | F3 | Identify vehicle (needs `UTILITY` or `CAS`) |
    | F4 | BMW E39 menu |
+   | F5 | BMW E46 menu |
+   | F6 | BMW E60 menu (unverified) |
+   | F7 | BMW E90 menu (unverified) |
    | F9 | Settings |
    | F10 | Exit |
 
@@ -140,6 +153,7 @@ Connect the phone to the ELM327's Wi-Fi network, then set the host in ELM Wi-Fi 
    | F5 | Status (live polling) | `STATUS_*` jobs |
    | F6 | Steuern (actuator tests) | `STEUERN_*` jobs |
    | F7 | All jobs (Tool32 style) | — |
+   | F9 | Copy results to the clipboard | — |
    | F10 | Back | — |
 
 Status polls the selected job roughly once per second. It stops when you press any key.
@@ -147,6 +161,25 @@ Status polls the selected job roughly once per second. It stops when you press a
 Steuern shows a warning and asks for confirmation before sending the job.
 
 F7 lets you pick any job, enter arguments separated by `;`, and run it. The job list is read from the `.prg` itself, so it works without a car connected.
+
+---
+
+## Chassis menus
+
+F4–F7 on the home screen open a vehicle menu for the E39, E46, E60 or E90. Each menu lists the ECUs of a built-in catalog (`src/InpaDroid/Ui/Chassis/<id>_catalog.json`). The E39 and E46 catalogs hold checked jobs and result names. The E60 and E90 ones are skeletons marked "sin verificar" (unverified) until someone tests them on a car.
+
+Inside an ECU of a chassis menu:
+
+| Key | Function |
+|-----|----------|
+| F1 | Info: SGBD, identified variant, status pages and actions in the catalog |
+| F2 | Ident |
+| F4 / Shift+F4 | Read / clear fault memory (clear asks for confirmation) |
+| F5 | Status pages with live values, refreshed every second |
+| F6 | Steuern: catalog actuator tests, each with a safety warning and a confirmation |
+| F7 | All jobs in the `.prg` (opens the generic ECU screen) |
+| F8 | Live chart: repeats the first job of a status page about twice per second and plots its numeric values, with Pause and Clear buttons |
+| F10 | Back |
 
 ---
 
@@ -172,15 +205,7 @@ The other folders (`sgdat`, `daten`, `data`, `work`, `cfgdat`) are not needed on
 
 ### E39 menu
 
-Press **F4** on the home screen to open the E39 vehicle menu. It shows the list of catalogued ECUs, with the diesel engine control unit (DDE) at the top.
-
-Each ECU screen follows the same layout as the generic screen:
-
-- **Ident** — reads the ECU identification.
-- **Fault memory** — read and clear (with confirmation).
-- **Status pages** — predefined pages with live values, refreshed every second.
-- **Steuern** — actuator tests; each one shows a safety warning and asks for confirmation.
-- **F7** — all jobs in the `.prg`, same as the generic screen.
+Press **F4** on the home screen to open the E39 vehicle menu. It shows the list of catalogued ECUs, with the diesel engine control unit (DDE) at the top. The keys inside each ECU are the ones in [Chassis menus](#chassis-menus).
 
 ### First test
 
@@ -224,11 +249,11 @@ BMW files (`.prg`, `.grp`, `.ipo`, INPA, EDIABAS) are the property of BMW AG. Th
 
 ---
 
-## Extending the E39 catalog
+## Extending the chassis catalogs
 
-The app ships with a hardcoded catalog of nine E39 ECUs. You can override or extend it by placing an `e39_catalog.json` file in your ECU folder. The app loads it automatically at startup; if the file is missing or malformed, it falls back to the built-in catalog.
+The built-in catalogs are JSON files embedded in the app: nine E39 ECUs, seven E46 ECUs, and short unverified lists for the E60 and E90. You can replace one without recompiling by placing a file with the same name (`e39_catalog.json`, `e46_catalog.json`, `e60_catalog.json` or `e90_catalog.json`) in your ECU folder. The app reads it when it starts; if the file is malformed, it keeps the built-in catalog.
 
-The JSON schema is documented in [`src/InpaDroid/Ui/E39/e39_catalog.json`](src/InpaDroid/Ui/E39/e39_catalog.json). The same file contains the full built-in catalog as an example.
+The format is described in [CONTRIBUTING.md](CONTRIBUTING.md#catalog-format), and [`src/InpaDroid/Ui/Chassis/e39_catalog.json`](src/InpaDroid/Ui/Chassis/e39_catalog.json) is a complete example.
 
 ---
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Menú BMW E46: lista de centralitas del catálogo (como la selección de SG de INPA). -->
+<!-- Menú BMW del chasis: lista de centralitas del catálogo (como la selección de SG de INPA). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,7 +9,7 @@
     <include layout="@layout/inpa_header" />
 
     <TextView
-        android:id="@+id/e46_menu_heading"
+        android:id="@+id/chassis_menu_heading"
         style="@style/InpaHeading"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,7 +20,7 @@
         android:text="Selección de centralita" />
 
     <ListView
-        android:id="@+id/e46_menu_list"
+        android:id="@+id/chassis_menu_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

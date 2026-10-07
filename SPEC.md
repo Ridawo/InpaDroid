@@ -112,6 +112,9 @@ Datos del usuario: `InpaDroid/daten E39 v70/` (`ecu/` 700 `.prg` + 241 `.grp`, `
 Se copian `ecu/`, `sgdat/` y `cfgdat/` a `datos_bmw/e39/` (en .gitignore; nunca dentro de la APK).
 El E39 va por línea K (DS2/KWP2000): solo sirve el cable K+DCAN USB (FTDI) con el puente de los pines 7/8.
 
+> Nota: esta sección y el contrato de abajo son históricos (fase 2). Hoy los catálogos son JSON genéricos en
+> `src/InpaDroid/Ui/Chassis/<id>_catalog.json` y los tipos viven en `Ui/Chassis/ChassisModel.cs`; ver CONTRIBUTING.md.
+
 ## Propiedad de archivos (fase 2)
 | Dueño | Archivos |
 |---|---|

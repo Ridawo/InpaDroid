@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="live_title">Monitor en vivo</string>
+  <string name="live_pause">Pausar</string>
+  <string name="live_resume">Reanudar</string>
+  <string name="live_clear">Borrar</string>
+  <string name="live_waiting">Esperando datos…</string>
+  <string name="live_no_numeric">Sin valores numéricos</string>
+  <string name="live_error">Error: %1$s</string>
+  <string name="live_status">%1$s : %2$s   muestras: %3$d</string>
+</resources>

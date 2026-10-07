@@ -1,3 +1,4 @@
+using InpaDroid.Ui.Live;
 using System.Diagnostics;
 using Android.App;
 using Android.Content;
@@ -7,19 +8,21 @@ using Android.Views;
 using Android.Widget;
 using InpaDroid.Diag;
 
-namespace InpaDroid.Ui.E39;
+namespace InpaDroid.Ui.Chassis;
 
-[Activity(Label = "Centralita E39", Theme = "@style/InpaTheme",
+[Activity(Label = "Centralita", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
-public class E39EcuActivity : InpaActivity
+public class ChassisEcuActivity : InpaActivity
 {
-    public const string ExtraEcuIndex = "e39_ecu_index";
+    public const string ExtraChassisId = "chassis_id";
+    public const string ExtraEcuIndex = "chassis_ecu_index";
 
     const int StatusPollMs = 1000;
     internal const int MaxLabelPad = 30;
     internal const int MaxValuePad = 12;
 
+    ChassisInfo _chassis = null!;
     E39Ecu _ecu = null!;
     string? _sgbd;                          // variante real (.prg) una vez resuelta
     ResultPanel _results = null!;
@@ -36,19 +39,23 @@ public class E39EcuActivity : InpaActivity
     {
         base.OnCreate(savedInstanceState);
         int index = Intent?.GetIntExtra(ExtraEcuIndex, -1) ?? -1;
-        var ecus = E39Catalog.Ecus;
+        // Recreada tras matar el proceso: el índice se refiere al catálogo con el override de la carpeta ECU.
+        if (savedInstanceState != null)
+            ChassisCatalog.TryLoadFromFolder(DiagHolder.LoadSettings(this).EcuPath);
+        _chassis = ChassisCatalog.Get(Intent?.GetStringExtra(ExtraChassisId) ?? "");
+        var ecus = _chassis.Ecus;
         if (index < 0 || index >= ecus.Count)
         {
-            UiUtil.Toast(this, "Centralita E39 no válida");
+            UiUtil.Toast(this, "Centralita no válida");
             Finish();
             return;
         }
         _ecu = ecus[index];
 
-        InitInpa(Resource.Layout.e39_ecu, _ecu.Title);
-        _heading = FindViewById<TextView>(Resource.Id.e39_heading)!;
-        _status = FindViewById<TextView>(Resource.Id.e39_status)!;
-        _results = new ResultPanel(FindViewById<LinearLayout>(Resource.Id.e39_results)!);
+        InitInpa(Resource.Layout.chassis_ecu, _ecu.Title);
+        _heading = FindViewById<TextView>(Resource.Id.chassis_heading)!;
+        _status = FindViewById<TextView>(Resource.Id.chassis_status)!;
+        _results = new ResultPanel(FindViewById<LinearLayout>(Resource.Id.chassis_results)!);
         UpdateSubtitle();
 
         SetKey(1, "Info", ShowInfo);
@@ -58,6 +65,7 @@ public class E39EcuActivity : InpaActivity
         SetKey(5, "Status", StatusMenu);
         SetKey(6, "Steuern", SteuernMenu);
         SetKey(7, "Jobs", OpenAllJobs);
+        SetKey(8, "Gráfica", ChartMenu);
         SetKey(10, "Volver", Back);
         RefreshKeys();
 
@@ -246,7 +254,7 @@ public class E39EcuActivity : InpaActivity
         if (_ecu.StatusPages.Count == 0)
         {
             ShowResults();
-            _results.ShowInfo("Status", "Esta centralita no tiene páginas de status en el catálogo E39. Usa F7 (todos los jobs).");
+            _results.ShowInfo("Status", $"Esta centralita no tiene páginas de status en el catálogo {_chassis.Name}. Usa F7 (todos los jobs).");
             return;
         }
         PickItem("Status - " + _ecu.Title, _ecu.StatusPages.Select(p => p.Title).ToList(), i =>
@@ -258,12 +266,44 @@ public class E39EcuActivity : InpaActivity
             }));
     }
 
+    void ChartMenu()
+    {
+        if (_ecu.StatusPages.Count == 0)
+        {
+            ShowResults();
+            _results.ShowInfo("Gráfica", $"Esta centralita no tiene páginas de status en el catálogo {_chassis.Name}.");
+            return;
+        }
+        PickItem("Gráfica - " + _ecu.Title, _ecu.StatusPages.Select(p => p.Title).ToList(), i =>
+            Exclusive(async () =>
+            {
+                if (_ecu.StatusPages[i].Values.Count == 0)
+                {
+                    ShowResults();
+                    _results.ShowInfo("Gráfica", "Esta página no tiene valores que graficar.");
+                    return;
+                }
+                var sgbd = await EnsureSgbdAsync();
+                if (sgbd == null)
+                    return;
+                // El monitor repite un único job: se grafican los valores de la página que lo comparten.
+                // Misma agrupación que PollLoop (job sin espacios ni mayúsculas/minúsculas, mismos argumentos).
+                var first = _ecu.StatusPages[i].Values[0];
+                string job = first.Job.Trim();
+                var names = _ecu.StatusPages[i].Values
+                    .Where(v => v.Job.Trim().Equals(job, StringComparison.OrdinalIgnoreCase) && v.Args == first.Args)
+                    .Select(v => v.Result.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+                StopPolling();
+                StartActivity(LiveMonitorActivity.CreateIntent(this, _ecu.Title, sgbd, job, first.Args, names));
+            }));
+    }
+
     void SteuernMenu()
     {
         if (_ecu.Actions.Count == 0)
         {
             ShowResults();
-            _results.ShowInfo("Steuern", "Esta centralita no tiene activaciones en el catálogo E39. Usa F7 (todos los jobs).");
+            _results.ShowInfo("Steuern", $"Esta centralita no tiene activaciones en el catálogo {_chassis.Name}. Usa F7 (todos los jobs).");
             return;
         }
         PickItem("Steuern - " + _ecu.Title, _ecu.Actions.Select(a => a.Title).ToList(), i =>

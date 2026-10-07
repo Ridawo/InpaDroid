@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Centralita E39: resultados (Ident, errores, Steuern) o tabla de Status refrescada cada ~1 s. -->
+<!-- Centralita: resultados (Ident, errores, Steuern) o tabla de Status refrescada cada ~1 s. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,7 +9,7 @@
     <include layout="@layout/inpa_header" />
 
     <TextView
-        android:id="@+id/e39_heading"
+        android:id="@+id/chassis_heading"
         style="@style/InpaHeading"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,13 +32,13 @@
             android:padding="6dp">
 
             <LinearLayout
-                android:id="@+id/e39_results"
+                android:id="@+id/chassis_results"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
 
             <TextView
-                android:id="@+id/e39_status"
+                android:id="@+id/chassis_status"
                 style="@style/InpaMono"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

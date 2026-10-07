@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Comprueba E39Catalog.cs contra los volcados de PrgProbe (datos_bmw/e39/analisis/prg/*.txt).
+"""Comprueba e39_catalog.json contra los volcados de PrgProbe (datos_bmw/e39/analisis/prg/*.txt).
 
 Para cada valor (job + resultado) y cada acción (job + nº de argumentos) dice en qué variantes del grupo
 falta. También revisa que los jobs IDENT / FS_LESEN / FS_LOESCHEN existan en todas las variantes.
 
 Uso: tools/catalog_check.py   (desde la carpeta InpaDroid)
 """
-import re
+import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / 'src/InpaDroid/Ui/E39/E39Catalog.cs'
+CATALOG = ROOT / 'src/InpaDroid/Ui/Chassis/e39_catalog.json'
 DUMPS = ROOT / 'datos_bmw/e39/analisis/prg'
 
 # Variantes E39 de cada grupo (elegidas a mano a partir de los .grp; ver RESUMEN.md).
@@ -45,42 +45,37 @@ def parse_dump(name):
 
 
 def main():
-    text = CATALOG.read_text(encoding='utf-8')
-    # Cada centralita: "E39Ecu Nombre = new(" o "new E39Ecu(".
-    blocks = re.split(r'E39Ecu \w+ = new\(|new E39Ecu\(', text)[1:]
+    catalog = json.loads(CATALOG.read_text(encoding='utf-8'))
     problems = 0
-    for block in blocks:
-        title, sgbd = re.match(r'\s*"([^"]*)",\s*"([^"]*)"', block).groups()
+    for ecu in catalog['ecus']:
+        title, sgbd = ecu['title'], ecu['sgbd']
         variants = VARIANTS[sgbd]
         dumps = {v: parse_dump(v) for v in variants}
         print(f'\n### {title} ({sgbd}): {", ".join(variants)}')
-        for job in ('IDENT', 'FS_LESEN', 'FS_LOESCHEN'):
+        for job in (ecu.get('identJob', 'IDENT'), ecu.get('fsReadJob', 'FS_LESEN'), ecu.get('fsClearJob', 'FS_LOESCHEN')):
             missing = [v for v in variants if job not in dumps[v]]
             if missing:
                 print(f'  [{job}] falta en {missing}')
-        page = ''
-        for m in re.finditer(r'new E39Page\("([^"]*)"|new E39Value\("([^"]*)", "([^"]*)"|new E39Action\("([^"]*)", "([^"]*)", "([^"]*)"', block):
-            if m.group(1):
-                page = m.group(1)
-                print(f'  -- {page}')
-            elif m.group(2):
-                job, res = m.group(2), m.group(3)
+        for page in ecu.get('statusPages', []):
+            print(f'  -- {page["title"]}')
+            for val in page['values']:
+                job, res = val['job'], val['result']
                 missing = [v for v in variants if job not in dumps[v] or res not in dumps[v][job]['results']]
                 ok = [v for v in variants if v not in missing]
                 flag = 'OK ' if not missing else ('?? ' if ok else 'XX ')
                 if not ok:
                     problems += 1
                 print(f'     {flag}{job}.{res}' + (f'  falta en {missing}' if missing else ''))
-            else:
-                title_a, job, args = m.group(4), m.group(5), m.group(6)
-                nargs = len(args.split(';')) if args else 0
-                missing = [v for v in variants if job not in dumps[v]]
-                few = [v for v in variants if job in dumps[v] and len(dumps[v][job]['args']) < nargs]
-                ok = [v for v in variants if v not in missing and v not in few]
-                if not ok:
-                    problems += 1
-                info = (f'  falta en {missing}' if missing else '') + (f'  admite menos args en {few}' if few else '')
-                print(f'     ACT {"OK " if not info else "?? "}{job}({args}) "{title_a}"{info}')
+        for act in ecu.get('actions', []):
+            job, args = act['job'], act.get('args', '')
+            nargs = len(args.split(';')) if args else 0
+            missing = [v for v in variants if job not in dumps[v]]
+            few = [v for v in variants if job in dumps[v] and len(dumps[v][job]['args']) < nargs]
+            ok = [v for v in variants if v not in missing and v not in few]
+            if not ok:
+                problems += 1
+            info = (f'  falta en {missing}' if missing else '') + (f'  admite menos args en {few}' if few else '')
+            print(f'     ACT {"OK " if not info else "?? "}{job}({args}) "{act["title"]}"{info}')
     print(f'\nValores/acciones sin ninguna variante válida: {problems}')
     return 1 if problems else 0
 

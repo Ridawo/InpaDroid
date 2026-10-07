@@ -3,7 +3,7 @@ using Android.Text;
 using Android.Text.Style;
 using InpaDroid.Diag;
 
-namespace InpaDroid.Ui.E39;
+namespace InpaDroid.Ui.Chassis;
 
 public static class E39StatusTable
 {
@@ -31,8 +31,8 @@ public static class E39StatusTable
 
     internal static SpannableStringBuilder BuildTable(E39Page page, Dictionary<E39Value, (string Text, bool Error)> cells, int count)
     {
-        int labelPad = Math.Min(E39EcuActivity.MaxLabelPad, page.Values.Count == 0 ? 0 : page.Values.Max(v => v.Label.Length)) + 3;
-        int valuePad = Math.Min(E39EcuActivity.MaxValuePad, cells.Values.Where(c => !c.Error).Select(c => c.Text.Length).DefaultIfEmpty(0).Max());
+        int labelPad = Math.Min(ChassisEcuActivity.MaxLabelPad, page.Values.Count == 0 ? 0 : page.Values.Max(v => v.Label.Length)) + 3;
+        int valuePad = Math.Min(ChassisEcuActivity.MaxValuePad, cells.Values.Where(c => !c.Error).Select(c => c.Text.Length).DefaultIfEmpty(0).Max());
 
         var sb = new SpannableStringBuilder();
         Append(sb, page.Title, new StyleSpan(TypefaceStyle.Bold), new ForegroundColorSpan(UiUtil.BlueDark));
