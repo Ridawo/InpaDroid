@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="InpaTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/inpa_bg</item>
+        <item name="android:colorPrimary">@color/inpa_blue</item>
+        <item name="android:colorPrimaryDark">@color/inpa_blue_dark</item>
+        <item name="android:colorAccent">@color/m_accent_text</item>
+        <item name="android:statusBarColor">@color/inpa_blue_dark</item>
+        <item name="android:textColor">@color/inpa_text</item>
+    </style>
+</resources>
