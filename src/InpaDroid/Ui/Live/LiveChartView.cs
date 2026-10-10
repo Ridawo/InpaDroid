@@ -22,7 +22,7 @@ public sealed class LiveChartView : View
 
     readonly LiveSeriesData _data;
     readonly Paint _line = new(PaintFlags.AntiAlias);
-    readonly Paint _grid = new() { Color = Color.ParseColor("#D0D0D0") };
+    readonly Paint _grid = new();
     readonly Android.Graphics.Path _path = new();
 
     public LiveChartView(Context context, LiveSeriesData data) : base(context)
@@ -33,8 +33,9 @@ public sealed class LiveChartView : View
         _line.StrokeJoin = Paint.Join.Round;
         _line.StrokeCap = Paint.Cap.Round;
         _line.SetStyle(Paint.Style.Stroke);
+        _grid.Color = UiUtil.Res(context, Resource.Color.m_divider);
         _grid.StrokeWidth = Math.Max(1f, density * 0.75f);
-        SetBackgroundColor(Color.White);
+        SetBackgroundColor(UiUtil.Res(context, Resource.Color.m_surface));
     }
 
     protected override void OnDraw(Canvas canvas)
