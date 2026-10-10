@@ -36,7 +36,7 @@
     <style name="InpaHeading">
         <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/inpa_blue_dark</item>
+        <item name="android:textColor">@color/m_accent_text</item>
     </style>
 
     <style name="InpaLabel">
