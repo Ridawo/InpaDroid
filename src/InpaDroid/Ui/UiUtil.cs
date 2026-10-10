@@ -8,22 +8,24 @@ namespace InpaDroid.Ui;
 internal static class UiUtil
 {
     public static readonly Color Blue = Color.ParseColor("#1C69D4");
-    public static readonly Color BlueDark = Color.ParseColor("#0B3E8A");
+    public static Color BlueDark => Res(Android.App.Application.Context, Resource.Color.m_accent_text);
     public static readonly Color LedOn = Color.ParseColor("#18B818");
     public static readonly Color LedOff = Color.ParseColor("#707070");
-    public static readonly Color ErrorText = Color.ParseColor("#C00000");
-    public static readonly Color ErrorBg = Color.ParseColor("#FFE2E2");
-    public static readonly Color OkText = Color.ParseColor("#006A00");
-    public static readonly Color FaultBg = Color.ParseColor("#FFE97F");
-    public static readonly Color FaultText = Color.ParseColor("#A00000");
+    public static Color ErrorText => Res(Android.App.Application.Context, Resource.Color.m_error);
+    public static Color ErrorBg => Res(Android.App.Application.Context, Resource.Color.m_error_container);
+    public static Color OkText => Res(Android.App.Application.Context, Resource.Color.m_ok);
+    public static Color FaultBg => Res(Android.App.Application.Context, Resource.Color.m_fault_bg);
+    public static Color FaultText => Res(Android.App.Application.Context, Resource.Color.m_fault_text);
     public static readonly Color FaultBlockBg = Color.ParseColor("#FFF6E0");
     public static readonly Color BlockBg = Color.ParseColor("#FFFFFF");
     public static readonly Color HeaderBg = Color.ParseColor("#DCE6F6");
-    public static readonly Color InfoBg = Color.ParseColor("#ECE9E2");
+    public static Color InfoBg => Res(Android.App.Application.Context, Resource.Color.m_info_bg);
     public static readonly Color KeyBg = Color.ParseColor("#E4E1DA");
     public static readonly Color KeyPressed = Color.ParseColor("#A9C4EE");
     public static readonly Color KeyBorder = Color.ParseColor("#404040");
     public static readonly Color ShiftOn = Color.ParseColor("#F2C200");
+
+    public static Color WarnText => Res(Android.App.Application.Context, Resource.Color.m_warn);
 
     public static int Dp(Context ctx, float dp) =>
         (int)(dp * (ctx.Resources?.DisplayMetrics?.Density ?? 1f) + 0.5f);
@@ -48,6 +50,10 @@ internal static class UiUtil
         return b;
     }
 
+    /// <summary>Recurso de texto con argumentos "%1$s" (los argumentos se pasan como cadenas).</summary>
+    public static string Str(Context ctx, int resId, params object?[] args) =>
+        ctx.GetString(resId, args.Select(a => (Java.Lang.Object)new Java.Lang.String(a?.ToString() ?? "")).ToArray());
+
     public static void Toast(Context ctx, string text) =>
         Android.Widget.Toast.MakeText(ctx, text, ToastLength.Short)?.Show();
 
@@ -56,6 +62,6 @@ internal static class UiUtil
     {
         var inner = ex.GetBaseException();
         var msg = string.IsNullOrWhiteSpace(inner.Message) ? inner.GetType().Name : inner.Message;
-        return ex is OperationCanceledException ? "Cancelado" : msg;
+        return ex is OperationCanceledException ? Android.App.Application.Context.GetString(Resource.String.g_cancelled) : msg;
     }
 }
