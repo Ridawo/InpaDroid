@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tema oscuro: mismos nombres que styles_mobile.xml. -->
+<resources>
+    <color name="m_bg">#12151B</color>
+    <color name="m_surface">#1D222B</color>
+    <color name="m_primary_dark">#0A2A5C</color>
+    <color name="m_primary_container">#1E2F4A</color>
+    <color name="m_text">#E6E9EF</color>
+    <color name="m_text_secondary">#A0A8B6</color>
+    <color name="m_error">#FF8A80</color>
+    <color name="m_error_container">#3A1E1E</color>
+    <color name="m_divider">#343B47</color>
+    <color name="m_ripple">#335B9BF5</color>
+    <color name="m_ripple_danger">#33FF8A80</color>
+    <color name="m_accent_text">#9CC1F7</color>
+    <color name="m_ok">#7ED68A</color>
+    <color name="m_warn">#FFB366</color>
+    <color name="m_fault_text">#FFB4A8</color>
+    <color name="m_fault_bg">#5A4A00</color>
+    <color name="m_info_bg">#2A2E37</color>
+    <color name="inpa_busy_bg">#4A4220</color>
+</resources>
