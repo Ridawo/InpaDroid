@@ -14,6 +14,13 @@
     <color name="m_divider">#D5DAE3</color>
     <color name="m_ripple">#331C69D4</color>
     <color name="m_ripple_danger">#33C62828</color>
+    <!-- Colores usados desde código (UiUtil); cada uno tiene su variante en values-night. -->
+    <color name="m_accent_text">#0B3E8A</color>
+    <color name="m_ok">#006A00</color>
+    <color name="m_warn">#C05800</color>
+    <color name="m_fault_text">#A00000</color>
+    <color name="m_fault_bg">#FFE97F</color>
+    <color name="m_info_bg">#ECE9E2</color>
 
     <style name="MText_Title">
         <item name="android:textSize">20sp</item>
