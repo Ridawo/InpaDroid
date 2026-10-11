@@ -91,7 +91,7 @@ public class LiveChartDataTests
         var d = new LiveSeriesData();
         d.AddSample(T0, S(("A", 1)));
         d.Series[0].Visible = false;
-        string csv = d.ToCsv(Id, 1000, out _);
+        string csv = d.ToCsv(Id);
         Assert.Contains(",1\r\n", csv);
     }
 
@@ -101,8 +101,7 @@ public class LiveChartDataTests
         var d = new LiveSeriesData();
         d.AddSample(T0, S(("A", 1.5)));
         d.AddSample(T0.AddSeconds(1), S(("B", -3)));
-        string csv = d.ToCsv(Id, 10_000, out bool truncated);
-        Assert.False(truncated);
+        string csv = d.ToCsv(Id);
         Assert.Equal("timestamp,A,B\r\n" +
                      "2026-01-02 03:04:05.006,1.5,\r\n" +
                      "2026-01-02 03:04:06.006,,-3\r\n", csv);
@@ -113,32 +112,14 @@ public class LiveChartDataTests
     {
         var d = new LiveSeriesData();
         d.AddSample(T0, S(("=cmd", 1)));
-        string csv = d.ToCsv(s => "<" + s + ">", 10_000, out _);
+        string csv = d.ToCsv(s => "<" + s + ">");
         Assert.StartsWith("timestamp,<=cmd>\r\n", csv);
         Assert.Contains(",1\r\n", csv);
     }
 
     [Fact]
-    public void Csv_truncation_keeps_latest_whole_rows()
-    {
-        var d = new LiveSeriesData();
-        for (int i = 0; i < 10; i++)
-            d.AddSample(T0.AddSeconds(i), S(("A", i)));
-        string full = d.ToCsv(Id, int.MaxValue, out bool t0);
-        Assert.False(t0);
-        int headerLen = "timestamp,A\r\n".Length;
-        int rowLen = (full.Length - headerLen) / 10;
-        string cut = d.ToCsv(Id, headerLen + rowLen * 3 + rowLen / 2, out bool t1);
-        Assert.True(t1);
-        var lines = cut.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
-        Assert.Equal(4, lines.Length);   // cabecera + 3 filas
-        Assert.EndsWith(",9", lines[^1]);
-        Assert.EndsWith(",7", lines[1]);
-    }
-
-    [Fact]
     public void Csv_of_empty_session_is_only_header()
     {
-        Assert.Equal("timestamp\r\n", new LiveSeriesData().ToCsv(Id, 100, out bool t));
+        Assert.Equal("timestamp\r\n", new LiveSeriesData().ToCsv(Id));
     }
 }
