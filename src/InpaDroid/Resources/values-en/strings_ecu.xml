@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ecu_pick_cancel">Cancel</string>
+    <string name="ecu_choose_function">Choose a function</string>
+    <string name="ecu_choose_hint">Tap a card to start. To stop a continuous reading, tap Stop.</string>
+    <string name="ecu_search_chassis_hint">Search ECU</string>
+    <string name="ecu_search_hint">Search ECU (e.g. D_MOTOR, DME, EGS…)</string>
+    <string name="ecu_busy_job">A job is running: wait or tap Abort</string>
+    <string name="ecu_retry_hint">Tap a function again to retry.</string>
+    <string name="ecu_retry">Retry</string>
+    <string name="ecu_open_settings">Settings</string>
+    <string name="ecu_reread_faults">Tap Faults to read it again.</string>
+    <string name="ecu_polling_hint">Updates every second. Tap Stop to stop.</string>
+</resources>

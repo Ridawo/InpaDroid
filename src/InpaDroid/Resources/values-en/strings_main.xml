@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="main_greeting">Hello</string>
+    <string name="main_adapter_none">Adapter not configured</string>
+    <string name="main_card_identify">Identify vehicle</string>
+    <string name="main_card_identify_desc">Reads VIN, battery and ignition</string>
+    <string name="main_card_ecu">ECU (generic)</string>
+    <string name="main_card_ecu_desc">Pick any ECU and its jobs</string>
+    <string name="main_card_e39">BMW E39</string>
+    <string name="main_card_e39_desc">5 Series diagnostic menu</string>
+    <string name="main_card_e46">BMW E46</string>
+    <string name="main_card_e46_desc">3 Series diagnostic menu</string>
+    <string name="main_card_e60">BMW E60 · unverified</string>
+    <string name="main_card_e60_desc">5 Series, not yet tested on a car</string>
+    <string name="main_card_e90">BMW E90 · unverified</string>
+    <string name="main_card_e90_desc">3 Series, not yet tested on a car</string>
+    <string name="main_card_settings">Settings</string>
+    <string name="main_card_settings_desc">Adapter, ECU folder and connection</string>
+    <string name="main_card_exit">Exit</string>
+    <string name="main_card_exit_desc">Closes the connection to the adapter</string>
+    <string name="main_card_info">Information</string>
+    <string name="main_card_info_desc">Version and EDIABAS details</string>
+</resources>

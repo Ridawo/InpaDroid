@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="live_title">Live monitor</string>
+  <string name="live_pause">Pause</string>
+  <string name="live_resume">Resume</string>
+  <string name="live_clear">Clear</string>
+  <string name="live_export">Export session CSV</string>
+  <string name="live_export_title">Export session</string>
+  <string name="live_export_empty">No samples to export</string>
+  <string name="live_export_failed">Could not share: %1$s</string>
+  <string name="live_interval">Interval: %1$s s</string>
+  <string name="live_window">Window: %1$s samples</string>
+  <string name="live_series_stats">%1$s\nCur %2$s   Min %3$s   Max %4$s</string>
+  <string name="live_waiting">Waiting for data…</string>
+  <string name="live_no_numeric">No numeric values</string>
+  <string name="live_error">Error: %1$s</string>
+  <string name="live_status">%1$s : %2$s   samples: %3$s</string>
+</resources>
