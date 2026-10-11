@@ -26,11 +26,18 @@
         android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/ecu_results"
+            android:id="@+id/inpa_scroll_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp" />
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/ecu_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="10dp" />
+        </LinearLayout>
     </ScrollView>
 
     <include layout="@layout/inpa_busy" />
