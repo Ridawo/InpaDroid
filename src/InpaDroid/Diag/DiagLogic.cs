@@ -53,6 +53,31 @@ internal static class DiagLogic
         }
     }
 
+    /// <summary>Motivo de fallo de un job (fallo EDIABAS o JOB_STATUS distinto de OKAY), o null si fue bien.</summary>
+    public static string? StatusError(JobResult r)
+    {
+        if (!r.Ok)
+            return r.Error.Length > 0 ? r.Error : "El job ha fallado";
+        if (r.JobStatus.Length > 0 && !r.JobStatus.Equals("OKAY", StringComparison.OrdinalIgnoreCase))
+            return "JOB_STATUS: " + r.JobStatus;
+        return null;
+    }
+
+    /// <summary>Primer valor con ese nombre (sin distinguir mayúsculas) en cualquier set, o null.</summary>
+    public static string? FindResult(JobResult r, string name)
+    {
+        name = name.Trim();
+        foreach (var set in r.Sets)
+        {
+            foreach (var (key, value) in set)
+            {
+                if (key.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    return value;
+            }
+        }
+        return null;
+    }
+
     public static string FormatValue(object? value) => value switch
     {
         null => "",

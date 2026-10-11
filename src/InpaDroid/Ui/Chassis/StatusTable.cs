@@ -7,28 +7,6 @@ namespace InpaDroid.Ui.Chassis;
 
 public static class StatusTable
 {
-    internal static string? StatusError(JobResult r)
-    {
-        if (!r.Ok)
-            return r.Error.Length > 0 ? r.Error : "El job ha fallado";
-        if (r.JobStatus.Length > 0 && !r.JobStatus.Equals("OKAY", StringComparison.OrdinalIgnoreCase))
-            return "JOB_STATUS: " + r.JobStatus;
-        return null;
-    }
-
-    internal static string? FindResult(JobResult r, string name)
-    {
-        foreach (var set in r.Sets)
-        {
-            foreach (var (key, value) in set)
-            {
-                if (key.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))
-                    return value;
-            }
-        }
-        return null;
-    }
-
     internal static SpannableStringBuilder BuildTable(ChassisPage page, Dictionary<ChassisValue, (string Text, bool Error)> cells, int count)
     {
         int labelPad = Math.Min(ChassisEcuActivity.MaxLabelPad, page.Values.Count == 0 ? 0 : page.Values.Max(v => v.Label.Length)) + 3;
