@@ -32,8 +32,8 @@ class BluetoothPanel
     public void UpdateSelected(string? name)
     {
         _selected.Text = Address.Length == 0
-            ? "Seleccionado: (ninguno)"
-            : $"Seleccionado: {Address}" + (string.IsNullOrEmpty(name) ? "" : $"  ({name})");
+            ? _activity.GetString(Resource.String.st_bt_selected_none)
+            : _activity.GetString(Resource.String.st_bt_selected, Address) + (string.IsNullOrEmpty(name) ? "" : $"  ({name})");
     }
 
     bool HasPermission() =>
@@ -54,24 +54,24 @@ class BluetoothPanel
             var adapter = manager?.Adapter;
             if (adapter == null)
             {
-                AddMessage("Este dispositivo no tiene Bluetooth.", true);
+                AddMessage(_activity.GetString(Resource.String.st_bt_none), true);
                 return;
             }
             if (!adapter.IsEnabled)
             {
-                AddMessage("El Bluetooth está desactivado. Actívalo y pulsa de nuevo.", true);
+                AddMessage(_activity.GetString(Resource.String.st_bt_disabled), true);
                 return;
             }
             var devices = adapter.BondedDevices?.ToList() ?? new List<BluetoothDevice>();
             if (devices.Count == 0)
             {
-                AddMessage("No hay dispositivos emparejados. Empareja el ELM327 en los ajustes de Android (PIN habitual 1234 o 0000).", true);
+                AddMessage(_activity.GetString(Resource.String.st_bt_no_paired), true);
                 return;
             }
             foreach (var d in devices.OrderBy(d => d.Name ?? ""))
             {
                 string address = d.Address ?? "";
-                string name = d.Name ?? "(sin nombre)";
+                string name = d.Name ?? _activity.GetString(Resource.String.st_bt_unnamed);
                 if (address == Address)
                     UpdateSelected(name);
                 var row = new TextView(_activity)
@@ -99,7 +99,7 @@ class BluetoothPanel
         }
         catch (Exception ex)
         {
-            AddMessage("Error Bluetooth: " + UiUtil.Describe(ex), true);
+            AddMessage(_activity.GetString(Resource.String.st_bt_error, UiUtil.Describe(ex)), true);
         }
     }
 
@@ -127,8 +127,8 @@ class BluetoothPanel
         else
         {
             _list.RemoveAllViews();
-            AddMessage("Permiso de Bluetooth denegado. Si marcaste \"No volver a preguntar\", actívalo manualmente:", true);
-            var btn = new Button(_activity) { Text = "Abrir Ajustes de Android" };
+            AddMessage(_activity.GetString(Resource.String.st_bt_denied), true);
+            var btn = new Button(_activity) { Text = _activity.GetString(Resource.String.st_open_android_settings) };
             btn.SetAllCaps(false);
             btn.SetMinHeight(UiUtil.Dp(_activity, UiUtil.TouchDp));
             btn.Click += (_, _) =>

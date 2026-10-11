@@ -11,17 +11,12 @@ using InpaDroid.Ui.Settings;
 namespace InpaDroid.Ui;
 
 /// <summary>Ajustes: interfaz, dispositivo Bluetooth, hosts ENET / ELM WiFi y carpeta ECU.</summary>
-[Activity(Label = "Ajustes", Theme = "@style/InpaTheme",
+[Activity(Label = "@string/set_title", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
 public class SettingsActivity : InpaActivity
 {
     const int RequestFolder = 2;
-
-    const string KLineNote =
-        "E39 y coches anteriores a 2007 (línea K): usa el cable K+DCAN USB con el interruptor de pines 7/8 " +
-        "en posición antigua (puenteado). ELM327 y ENET no sirven con estos coches. En E39 anteriores a 09/2000 " +
-        "puede hacer falta el adaptador del conector redondo de 20 pines del vano motor.";
 
     RadioGroup _adapterGroup = null!;
     View _btSection = null!, _enetSection = null!, _wifiSection = null!;
@@ -36,7 +31,7 @@ public class SettingsActivity : InpaActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        InitInpa(Resource.Layout.activity_settings, "Ajustes");
+        InitInpa(Resource.Layout.activity_settings, GetString(Resource.String.set_title));
         SetSubtitle(GetString(Resource.String.set_subtitle));
 
         _adapterGroup = FindViewById<RadioGroup>(Resource.Id.set_adapter_group)!;
@@ -86,7 +81,7 @@ public class SettingsActivity : InpaActivity
         FindViewById<Button>(Resource.Id.set_save)!.Click += (_, _) => Save();
 
         // "Guardar" es el botón fijo del layout (set_save): no se duplica como tecla.
-        SetKey(10, "Volver", Finish);
+        SetKey(10, GetString(Resource.String.st_back), Finish);
         RefreshKeys();
 
         ShowEcuCount(s.EcuPath);
@@ -155,9 +150,9 @@ public class SettingsActivity : InpaActivity
         _usb.Section.Visibility = type == AdapterType.UsbKDcan ? ViewStates.Visible : ViewStates.Gone;
         _adapterWarn.Text = type switch
         {
-            AdapterType.Enet => "Aviso: ENET solo funciona con las series F/G (conexión Ethernet). No sirve para un E39.",
+            AdapterType.Enet => GetString(Resource.String.st_warn_enet),
             AdapterType.Elm327Bluetooth or AdapterType.Elm327Wifi =>
-                "Aviso: el ELM327 solo funciona con coches D-CAN (aprox. 2007 en adelante). No sirve para un E39.",
+                GetString(Resource.String.st_warn_elm),
             _ => "",
         };
         _adapterWarn.Visibility = _adapterWarn.Text.Length > 0 ? ViewStates.Visible : ViewStates.Gone;
@@ -181,7 +176,7 @@ public class SettingsActivity : InpaActivity
         int p = UiUtil.Dp(this, 4);
 
         p = UiUtil.Dp(this, 12);
-        var note = new TextView(this) { Text = KLineNote };
+        var note = new TextView(this) { Text = GetString(Resource.String.st_kline_note) };
         note.SetPadding(p, p, p, p);
         note.SetTextSize(Android.Util.ComplexUnitType.Sp, 13);
         note.SetTextColor(UiUtil.Res(this, Resource.Color.m_text_secondary));
@@ -190,7 +185,7 @@ public class SettingsActivity : InpaActivity
 
         _adapterWarn = new TextView(this) { Visibility = ViewStates.Gone };
         _adapterWarn.SetPadding(p, p, p, p);
-        _adapterWarn.SetTextColor(UsbPanel.WarnText);
+        _adapterWarn.SetTextColor(UiUtil.WarnText);
         _adapterWarn.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
         parent.AddView(_adapterWarn, index++);
 
@@ -214,7 +209,7 @@ public class SettingsActivity : InpaActivity
         }
         catch (Exception ex)
         {
-            ShowStatus("No se puede abrir el selector de carpetas: " + UiUtil.Describe(ex), true);
+            ShowStatus(GetString(Resource.String.st_folder_picker_error, UiUtil.Describe(ex)), true);
         }
     }
 
@@ -236,8 +231,7 @@ public class SettingsActivity : InpaActivity
                             || System.Text.RegularExpressions.Regex.IsMatch(volume, "^[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}$");
             if (data.Data.Authority != "com.android.externalstorage.documents" || !isVolume)
             {
-                ShowStatus("Esa carpeta no se puede usar como ruta. Elígela desde el almacenamiento interno " +
-                           "o la tarjeta SD, o usa la carpeta por defecto.", true);
+                ShowStatus(GetString(Resource.String.st_folder_unusable), true);
                 return;
             }
             string root = volume.Equals("primary", StringComparison.OrdinalIgnoreCase)
@@ -246,32 +240,31 @@ public class SettingsActivity : InpaActivity
 #pragma warning restore CS0618, CA1422
                 : "/storage/" + volume;
             _ecuPath.Text = rel.Length > 0 ? Path.Combine(root, rel) : root;
-            ShowStatus("Carpeta elegida. Si después no aparecen archivos, Android no deja leerla: " +
-                       "usa la carpeta por defecto de la app.", false);
+            ShowStatus(GetString(Resource.String.st_folder_chosen), false);
         }
         catch (Exception ex)
         {
-            ShowStatus("Carpeta no válida: " + UiUtil.Describe(ex), true);
+            ShowStatus(GetString(Resource.String.st_folder_invalid, UiUtil.Describe(ex)), true);
         }
     }
 
     async void ShowEcuCount(string path)
     {
         _ecuInfo.SetTextColor(UiUtil.Res(this, Resource.Color.m_text_secondary));
-        _ecuInfo.Text = $"Por defecto: {_defaultPath}\nBuscando .prg/.grp…";
+        _ecuInfo.Text = GetString(Resource.String.st_ecu_default_searching, _defaultPath);
         try
         {
             var svc = Diag;
             var files = await Task.Run(() => svc.ScanEcuFolder());
             int groups = files.Count(f => f.IsGroup);
-            _ecuInfo.Text = $"Por defecto: {_defaultPath}\nEn {path}: {files.Count - groups} .prg, {groups} .grp";
+            _ecuInfo.Text = GetString(Resource.String.st_ecu_default_count, _defaultPath, path, (files.Count - groups).ToString(), groups.ToString());
             if (files.Count == 0)
                 _ecuInfo.SetTextColor(UiUtil.ErrorText);
         }
         catch (Exception ex)
         {
             _ecuInfo.SetTextColor(UiUtil.ErrorText);
-            _ecuInfo.Text = $"Por defecto: {_defaultPath}\nError: {UiUtil.Describe(ex)}";
+            _ecuInfo.Text = GetString(Resource.String.st_ecu_default_error, _defaultPath, UiUtil.Describe(ex));
         }
     }
 
@@ -295,7 +288,7 @@ public class SettingsActivity : InpaActivity
             };
             if (!hostOk)
             {
-                ShowStatus("Revisa el campo marcado en rojo.", true);
+                ShowStatus(GetString(Resource.String.st_check_red_field), true);
                 return;
             }
             string enetRaw = _enetHost.Text?.Trim() ?? "";
@@ -308,18 +301,18 @@ public class SettingsActivity : InpaActivity
             DiagHolder.TryCreateDirectory(s.EcuPath);
             s.Save(this);
 
-            ShowStatus("Guardando y reiniciando la interfaz…", false);
+            ShowStatus(GetString(Resource.String.st_saving), false);
             await DiagHolder.Reset();   // el siguiente uso crea un DiagService con los ajustes nuevos
 
             if (s.Type == AdapterType.Elm327Bluetooth && s.BluetoothAddress.Length == 0)
-                ShowStatus("Guardado, pero falta elegir el dispositivo Bluetooth.", true);
+                ShowStatus(GetString(Resource.String.st_saved_no_bt), true);
             else
-                ShowStatus("Ajustes guardados.", false);
+                ShowStatus(GetString(Resource.String.st_saved), false);
             ShowEcuCount(s.EcuPath);
         }
         catch (Exception ex)
         {
-            ShowStatus("Error al guardar: " + UiUtil.Describe(ex), true);
+            ShowStatus(GetString(Resource.String.st_save_error, UiUtil.Describe(ex)), true);
         }
         finally
         {
