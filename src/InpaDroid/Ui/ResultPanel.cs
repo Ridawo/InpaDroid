@@ -20,7 +20,7 @@ internal sealed class ResultPanel
 
     enum Kind { Header, Set, Fault, Error, Info }
 
-    sealed record Block(ICharSequence Text, Kind Kind);
+    sealed record Block(ICharSequence Text, Kind Kind, string Title = "", IReadOnlyList<KeyValuePair<string, string>>? Rows = null);
 
     readonly LinearLayout _root;
 
@@ -48,8 +48,17 @@ internal sealed class ResultPanel
         var sb = new StringBuilder();
         for (int i = 0; i < _root.ChildCount; i++)
         {
-            if (_root.GetChildAt(i) is TextView tv)
+            var child = _root.GetChildAt(i);
+            if (child is TextView tv)
                 sb.AppendLine(WithoutLinks(tv.TextFormatted)).AppendLine();
+            else if (child.Tag is TableTag tag)
+            {
+                sb.AppendLine(tag.Block.Title);
+                int pad = Math.Min(MaxNamePad, tag.Block.Rows!.Select(r => r.Key.Length).DefaultIfEmpty(0).Max());
+                foreach (var (name, value) in tag.Block.Rows!)
+                    sb.AppendLine(name.PadRight(pad) + " : " + value.Replace("\n", "\n" + new string(' ', pad + 3)));
+                sb.AppendLine();
+            }
         }
         return sb.ToString();
     }
@@ -94,6 +103,25 @@ internal sealed class ResultPanel
     public void ShowInfo(string title, string text, bool append = false) =>
         Show(new List<Block> { new(Styled(title, text, null), Kind.Info) }, append);
 
+    /// <summary>Fila de botones táctiles bajo el último bloque (p. ej. Reintentar / Ajustes).</summary>
+    public void AddActions(params (string Label, Action Click)[] actions)
+    {
+        var ctx = _root.Context!;
+        var row = new LinearLayout(ctx) { Orientation = Android.Widget.Orientation.Horizontal };
+        foreach (var (label, click) in actions)
+        {
+            var b = UiUtil.BigButton(ctx, label);
+            b.SetBackgroundResource(Resource.Drawable.bg_card_primary);
+            b.SetTextColor(new Color(ctx.GetColor(Resource.Color.m_on_primary)));
+            b.Click += (_, _) => click();
+            var lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WrapContent, 1f);
+            int m = UiUtil.Dp(ctx, 4);
+            lp.SetMargins(m, m, m, m);
+            row.AddView(b, lp);
+        }
+        _root.AddView(row);
+    }
+
     void Show(List<Block> blocks, bool append)
     {
         if (!append && blocks.Count > 0 && blocks[0].Kind != Kind.Header)
@@ -104,16 +132,36 @@ internal sealed class ResultPanel
             // Misma estructura: actualizar en el sitio para no perder la posición de scroll.
             for (int i = 0; i < blocks.Count; i++)
             {
-                if (_root.GetChildAt(i) is TextView tv)
+                var child = _root.GetChildAt(i);
+                if (child is TextView tv && blocks[i].Rows == null)
                     Apply(tv, blocks[i]);
+                else if (child is LinearLayout card && blocks[i].Rows != null)
+                    FillTable(card, blocks[i]);
+                else
+                {
+                    // Cambió el tipo de bloque en esa posición: se reconstruye todo.
+                    _root.RemoveAllViews();
+                    break;
+                }
             }
-            return;
+            if (_root.ChildCount == blocks.Count)
+                return;
         }
         if (!append)
             _root.RemoveAllViews();
         int m = UiUtil.Dp(ctx, 5);
         foreach (var b in blocks)
         {
+            if (b.Rows != null)
+            {
+                var card = new LinearLayout(ctx) { Orientation = Android.Widget.Orientation.Vertical };
+                FillTable(card, b);
+                var clp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MatchParent,
+                    LinearLayout.LayoutParams.WrapContent);
+                clp.SetMargins(0, m, 0, m);
+                _root.AddView(card, clp);
+                continue;
+            }
             var tv = new TextView(ctx)
             {
                 Typeface = Typeface.Monospace,
@@ -128,6 +176,66 @@ internal sealed class ResultPanel
                 LinearLayout.LayoutParams.WrapContent);
             lp.SetMargins(0, m, 0, m);
             _root.AddView(tv, lp);
+        }
+    }
+
+    sealed class TableTag(Block block) : Java.Lang.Object
+    {
+        public Block Block { get; set; } = block;
+    }
+
+    /// <summary>Tarjeta clave/valor: título del set y una fila por resultado (nombre tenue a la izquierda, valor a la derecha).</summary>
+    static void FillTable(LinearLayout card, Block b)
+    {
+        var ctx = card.Context!;
+        // Refresco del Status (cada ~1 s): mismas filas, solo cambian los valores; no se reconstruyen las vistas.
+        if (card.Tag is TableTag prev && prev.Block.Kind == b.Kind && prev.Block.Title == b.Title
+            && prev.Block.Rows!.Select(r => r.Key).SequenceEqual(b.Rows!.Select(r => r.Key)))
+        {
+            prev.Block = b;
+            for (int i = 0; i < b.Rows!.Count; i++)
+            {
+                if (card.GetChildAt(i + 1) is LinearLayout row && row.GetChildAt(1) is TextView val
+                    && val.Text != b.Rows[i].Value)
+                    val.Text = b.Rows[i].Value;
+            }
+            return;
+        }
+        card.Tag = new TableTag(b);
+        card.RemoveAllViews();
+        int p = UiUtil.Dp(ctx, 14);
+        card.SetPadding(p, p, p, p);
+        card.SetBackgroundResource(b.Kind == Kind.Fault ? Resource.Drawable.bg_card_danger : Resource.Drawable.bg_card);
+
+        var title = new TextView(ctx) { Text = b.Title };
+        title.SetTypeface(null, TypefaceStyle.Bold);
+        title.SetTextSize(ComplexUnitType.Sp, 14);
+        title.SetTextColor(UiUtil.Blue);
+        card.AddView(title);
+
+        int gap = UiUtil.Dp(ctx, 4);
+        var secondary = UiUtil.Res(ctx, Resource.Color.m_text_secondary);
+        var normal = UiUtil.Res(ctx, Resource.Color.m_text);
+        var faultText = UiUtil.FaultText;
+        var faultBg = UiUtil.FaultBg;
+        foreach (var (name, value) in b.Rows!)
+        {
+            bool fault = name is "F_ORT_NR" or "F_ORT_TEXT";
+            var row = new LinearLayout(ctx) { Orientation = Android.Widget.Orientation.Horizontal };
+            row.SetPadding(0, gap, 0, gap);
+            var key = new TextView(ctx) { Text = name };
+            key.SetTextSize(ComplexUnitType.Sp, 12);
+            key.SetTextColor(secondary);
+            row.AddView(key, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WrapContent, 1f));
+            var val = new TextView(ctx) { Text = value, Gravity = Android.Views.GravityFlags.End };
+            val.SetTextSize(ComplexUnitType.Sp, 14);
+            val.SetTextIsSelectable(true);
+            val.SetTypeface(null, TypefaceStyle.Bold);
+            val.SetTextColor(fault ? faultText : normal);
+            if (fault)
+                val.SetBackgroundColor(faultBg);
+            row.AddView(val, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WrapContent, 1.4f));
+            card.AddView(row);
         }
     }
 
@@ -178,45 +286,26 @@ internal sealed class ResultPanel
                 new ForegroundColorSpan(okay ? UiUtil.OkText : UiUtil.ErrorText));
         }
         if (faultJob && r.Ok)
-            h.Append(faults == 0 ? "\nMemoria de errores: sin errores almacenados" : $"\nErrores almacenados: {faults}");
+            h.Append("\n" + (faults == 0 ? ctx.GetString(Resource.String.g_rp_no_faults) : UiUtil.Str(ctx, Resource.String.g_rp_faults_count, faults)));
         blocks.Add(new Block(h, Kind.Header));
 
         if (!r.Ok)
-            blocks.Add(new Block(Styled("ERROR", r.Error.Length > 0 ? r.Error : "El job ha fallado", UiUtil.ErrorText),
+            blocks.Add(new Block(Styled("ERROR", r.Error.Length > 0 ? r.Error : ctx.GetString(Resource.String.g_rp_job_failed), UiUtil.ErrorText),
                 Kind.Error));
 
         for (int i = 0; i < r.Sets.Count; i++)
         {
             var set = r.Sets[i];
             bool fault = IsFaultSet(set);
-            blocks.Add(new Block(BuildSet(i + 1, set), fault ? Kind.Fault : Kind.Set));
+            blocks.Add(new Block(new Java.Lang.String(""), fault ? Kind.Fault : Kind.Set,
+                fault ? UiUtil.Str(ctx, Resource.String.g_rp_fault_n, i + 1) : $"Set {i + 1}", set.ToList()));
         }
         if (r.Ok && r.Sets.Count == 0)
-            blocks.Add(new Block(new Java.Lang.String("(sin resultados)"), Kind.Info));
+            blocks.Add(new Block(new Java.Lang.String(ctx.GetString(Resource.String.g_rp_no_results)), Kind.Info));
         return blocks;
     }
 
     static bool IsFaultSet(IReadOnlyDictionary<string, string> set) => set.ContainsKey("F_ORT_NR");
-
-    static ICharSequence BuildSet(int index, IReadOnlyDictionary<string, string> set)
-    {
-        var sb = new SpannableStringBuilder();
-        bool fault = IsFaultSet(set);
-        AppendSpan(sb, fault ? $"── Error {index} ──" : $"── Set {index} ──", new StyleSpan(TypefaceStyle.Bold),
-            new ForegroundColorSpan(UiUtil.Blue));
-        int pad = set.Count == 0 ? 0 : Math.Min(MaxNamePad, set.Keys.Max(k => k.Length));
-        foreach (var (name, value) in set)
-        {
-            sb.Append("\n");
-            var text = name.PadRight(pad) + " : " + value.Replace("\n", "\n" + new string(' ', pad + 3));
-            if (name is "F_ORT_NR" or "F_ORT_TEXT")
-                AppendSpan(sb, text, new StyleSpan(TypefaceStyle.Bold), new ForegroundColorSpan(UiUtil.FaultText),
-                    new BackgroundColorSpan(UiUtil.FaultBg));
-            else
-                sb.Append(text);
-        }
-        return sb;
-    }
 
     static ICharSequence Styled(string title, string body, Color? bodyColor)
     {
