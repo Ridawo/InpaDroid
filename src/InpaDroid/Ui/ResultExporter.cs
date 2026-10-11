@@ -5,16 +5,12 @@ using InpaDroid.Diag;
 
 namespace InpaDroid.Ui;
 
-/// <summary>Formatea resultados de jobs como CSV y los comparte con la hoja de compartir de Android (ACTION_SEND, texto).</summary>
+/// <summary>Formatea resultados de jobs como CSV y los comparte como fichero con la hoja de compartir de Android.</summary>
 internal static class ResultExporter
 {
     public sealed record Entry(DateTime Time, string Ecu, string Job, JobResult Result);
 
     const string Header = "timestamp,ecu,job,job_status,ok,set,name,value";
-
-    // Los extras de un Intent viajan por Binder (~1 MB por transacción, texto en UTF-16): por encima de
-    // esto el CSV se recorta para no provocar TransactionTooLargeException.
-    const int MaxShareChars = 100_000;
 
     public static string ToCsv(IEnumerable<Entry> entries)
     {
@@ -52,34 +48,43 @@ internal static class ResultExporter
         return s.IndexOfAny(['"', ',', '\r', '\n']) >= 0 ? "\"" + s.Replace("\"", "\"\"") + "\"" : s;
     }
 
-    public static void Share(Context ctx, IEnumerable<Entry> entries, string title)
-    {
-        string csv = ToCsv(entries);
-        bool truncated = csv.Length > MaxShareChars;
-        if (truncated)
-        {
-            // Corta tras la última fila completa que cabe, para no dejar una celda a medias.
-            int cut = csv.LastIndexOf("\r\n", MaxShareChars - 1, StringComparison.Ordinal);
-            csv = csv[..(cut > 0 ? cut + 2 : MaxShareChars)] + "# CSV recortado: demasiados datos para compartir\r\n";
-        }
+    public static void Share(Context ctx, IEnumerable<Entry> entries, string title) =>
+        ShareCsv(ctx, ToCsv(entries), title);
 
-        var send = new Intent(Intent.ActionSend);
-        send.SetType("text/plain");
-        send.PutExtra(Intent.ExtraSubject, "InpaDroid " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
-        send.PutExtra(Intent.ExtraText, csv);
-        var chooser = Intent.CreateChooser(send, title)!;
-        if (ctx is not Android.App.Activity)
-            chooser.AddFlags(ActivityFlags.NewTask);
+    /// <summary>Escribe el CSV en cache/exports y lo comparte como fichero (content:// de <see cref="ExportProvider"/>).</summary>
+    public static void ShareCsv(Context ctx, string csv, string title)
+    {
         try
         {
+            var dir = ExportProvider.Dir(ctx);
+            // Solo se borran los antiguos: una app receptora puede seguir leyendo el último compartido.
+            long cutoff = Java.Lang.JavaSystem.CurrentTimeMillis() - 24 * 3600 * 1000L;
+            foreach (var old in dir.ListFiles() ?? [])
+            {
+                if (old.LastModified() < cutoff)
+                    old.Delete();
+            }
+            var now = DateTime.Now;
+            string stamp = now.ToString("yyyyMMdd-HHmmssfff", CultureInfo.InvariantCulture);
+            string name = $"inpadroid-{stamp}.csv";
+            File.WriteAllText(System.IO.Path.Combine(dir.AbsolutePath, name), csv, new UTF8Encoding(true));
+
+            var uri = ExportProvider.UriFor(name);
+            var send = new Intent(Intent.ActionSend);
+            send.SetType("text/csv");
+            send.PutExtra(Intent.ExtraSubject, "InpaDroid " + now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+            send.PutExtra(Intent.ExtraStream, uri);
+            send.ClipData = ClipData.NewRawUri(name, uri);
+            send.AddFlags(ActivityFlags.GrantReadUriPermission);
+            var chooser = Intent.CreateChooser(send, title)!;
+            if (ctx is not Android.App.Activity)
+                chooser.AddFlags(ActivityFlags.NewTask);
             ctx.StartActivity(chooser);
-            if (truncated)
-                UiUtil.Toast(ctx, "CSV recortado: había demasiados datos para compartirlo entero");
         }
-        catch (Java.Lang.RuntimeException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Java.Lang.RuntimeException)
         {
-            // ActivityNotFoundException, o fallo de Binder (TransactionTooLargeException envuelta).
-            UiUtil.Toast(ctx, "No se pudo compartir: " + UiUtil.Describe(ex));
+            // Sin app que reciba el fichero (ActivityNotFoundException) o sin poder escribirlo en cache.
+            UiUtil.Toast(ctx, UiUtil.Str(ctx, Resource.String.live_export_failed, UiUtil.Describe(ex)));
         }
     }
 }
