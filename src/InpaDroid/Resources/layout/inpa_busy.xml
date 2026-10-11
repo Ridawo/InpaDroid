@@ -39,7 +39,7 @@
             android:minWidth="96dp"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:text="Abortar"
+            android:text="@string/g_abort"
             android:textAllCaps="false"
             android:textColor="@color/m_error"
             android:textStyle="bold" />
