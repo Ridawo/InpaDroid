@@ -13,7 +13,7 @@ namespace InpaDroid.Ui.Live;
 /// Monitor en vivo: ejecuta repetidamente un job STATUS_* y dibuja los resultados numéricos elegidos.
 /// Todas las llamadas a ediabaslib pasan por la cola de DiagService (RunJobAsync); aquí nunca se toca EdiabasNet.
 /// </summary>
-[Activity(Label = "Monitor en vivo", Theme = "@style/InpaTheme",
+[Activity(Label = "@string/live_title", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden
                            | ConfigChanges.UiMode | ConfigChanges.Density | ConfigChanges.FontScale | ConfigChanges.Locale)]
@@ -27,8 +27,6 @@ public class LiveMonitorActivity : Activity
 
     static readonly int[] IntervalsMs = [250, 500, 1000, 2000];
     static readonly int[] Windows = [60, 120, 300];
-    // Los extras de un Intent viajan por Binder (~1 MB): por encima de esto el CSV se recorta.
-    const int MaxShareChars = 100_000;
 
     string _sgbd = "", _job = "", _args = "", _ecu = "";
     string[] _names = [];
@@ -42,10 +40,6 @@ public class LiveMonitorActivity : Activity
     DiagService? _inFlight;   // servicio con un job de este monitor en curso
     bool _userPaused;         // pausado con el botón: al volver a primer plano no se reanuda solo
     int _intervalIdx = 1, _windowIdx = 1;
-
-    // GetString(int, params Java.Lang.Object[]) avisa (CS8604) con las conversiones implícitas desde string.
-    string Str(int id, params string[] args) =>
-        GetString(id, args.Select(a => (Java.Lang.Object)new Java.Lang.String(a)).ToArray());
 
     static string Num(double v) => double.IsNaN(v) ? "--" : v.ToString("0.##", CultureInfo.CurrentCulture);
 
@@ -180,7 +174,7 @@ public class LiveMonitorActivity : Activity
                 if (_poll.IsCurrent(ct))
                     _inFlight = null;
             }
-        }, ex => _status.Text = Str(Resource.String.live_error, UiUtil.Describe(ex)), IntervalsMs[_intervalIdx], 50);
+        }, ex => _status.Text = UiUtil.Str(this, Resource.String.live_error, UiUtil.Describe(ex)), IntervalsMs[_intervalIdx], 50);
     }
 
     void Stop()
@@ -198,7 +192,7 @@ public class LiveMonitorActivity : Activity
     {
         if (!r.Ok || (r.JobStatus.Length > 0 && !r.JobStatus.Equals("OKAY", StringComparison.OrdinalIgnoreCase)))
         {
-            _status.Text = Str(Resource.String.live_error, r.Ok ? r.JobStatus : r.Error);
+            _status.Text = UiUtil.Str(this, Resource.String.live_error, r.Ok ? r.JobStatus : r.Error);
             return;
         }
         var sample = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
@@ -225,7 +219,7 @@ public class LiveMonitorActivity : Activity
         else
             UpdateChipTexts();
         _chart.Invalidate();
-        _status.Text = Str(Resource.String.live_status, _sgbd, _job, _data.Count.ToString(CultureInfo.CurrentCulture));
+        _status.Text = UiUtil.Str(this, Resource.String.live_status, _sgbd, _job, _data.Count.ToString(CultureInfo.CurrentCulture));
     }
 
     // Botones de al menos 56 dp de alto: se pulsan con el móvil en la mano o en un soporte.
@@ -247,8 +241,8 @@ public class LiveMonitorActivity : Activity
 
     void UpdateSettingLabels()
     {
-        _intervalBtn.Text = Str(Resource.String.live_interval, (IntervalsMs[_intervalIdx] / 1000.0).ToString("0.##", CultureInfo.CurrentCulture));
-        _windowBtn.Text = Str(Resource.String.live_window, Windows[_windowIdx].ToString(CultureInfo.CurrentCulture));
+        _intervalBtn.Text = UiUtil.Str(this, Resource.String.live_interval, (IntervalsMs[_intervalIdx] / 1000.0).ToString("0.##", CultureInfo.CurrentCulture));
+        _windowBtn.Text = UiUtil.Str(this, Resource.String.live_window, Windows[_windowIdx].ToString(CultureInfo.CurrentCulture));
     }
 
     // Leyenda interactiva: un chip por serie con valor actual/mín/máx; tocarlo oculta o muestra la serie.
@@ -282,7 +276,7 @@ public class LiveMonitorActivity : Activity
         var color = LiveChartView.ColorOf(s.ColorIndex);
         var bg = new Android.Graphics.Drawables.GradientDrawable();
         bg.SetCornerRadius(UiUtil.Dp(this, 8));
-        bg.SetColor(s.Visible ? color : Android.Graphics.Color.White);
+        bg.SetColor(s.Visible ? color : UiUtil.Res(this, Resource.Color.m_surface));
         bg.SetStroke(UiUtil.Dp(this, 2), color);
         chip.Background = bg;
         chip.SetTextColor(s.Visible ? Android.Graphics.Color.White : color);
@@ -293,7 +287,7 @@ public class LiveMonitorActivity : Activity
         for (int i = 0; i < _chipViews.Count && i < _data.Series.Count; i++)
         {
             var s = _data.Series[i];
-            _chipViews[i].Text = Str(Resource.String.live_series_stats, s.Name, Num(s.Last), Num(s.Min), Num(s.Max));
+            _chipViews[i].Text = UiUtil.Str(this, Resource.String.live_series_stats, s.Name, Num(s.Last), Num(s.Min), Num(s.Max));
         }
     }
 
@@ -305,21 +299,7 @@ public class LiveMonitorActivity : Activity
             return;
         }
         // Mismo escape RFC 4180 y anti-inyección de fórmulas que el resto de exportaciones.
-        string csv = _data.ToCsv(ResultExporter.Cell, MaxShareChars, out bool truncated);
-        var send = new Intent(Intent.ActionSend);
-        send.SetType("text/plain");
-        send.PutExtra(Intent.ExtraSubject, "InpaDroid " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
-        send.PutExtra(Intent.ExtraText, csv);
-        var chooser = Intent.CreateChooser(send, GetString(Resource.String.live_export_title))!;
-        try
-        {
-            StartActivity(chooser);
-            if (truncated)
-                UiUtil.Toast(this, GetString(Resource.String.live_export_truncated));
-        }
-        catch (Java.Lang.RuntimeException ex)
-        {
-            UiUtil.Toast(this, Str(Resource.String.live_export_failed, UiUtil.Describe(ex)));
-        }
+        ResultExporter.ShareCsv(this, _data.ToCsv(ResultExporter.Cell),
+            GetString(Resource.String.live_export_title)!);
     }
 }
