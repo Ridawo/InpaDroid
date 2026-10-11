@@ -88,37 +88,24 @@ public sealed class LiveSeriesData
     /// <summary>
     /// CSV ancho de la sesión: timestamp + una columna por serie (hueco = celda vacía), separador coma, CRLF.
     /// <paramref name="escape"/> escapa cada celda de texto (nombres de serie); los números y la fecha son seguros.
-    /// Si el texto supera <paramref name="maxChars"/> se conservan las filas más recientes y <paramref name="truncated"/> es true.
     /// </summary>
-    public string ToCsv(Func<string, string> escape, int maxChars, out bool truncated)
+    public string ToCsv(Func<string, string> escape)
     {
-        var header = new StringBuilder("timestamp");
+        var sb = new StringBuilder("timestamp");
         foreach (var s in _series)
-            header.Append(',').Append(escape(s.Name));
-        header.Append("\r\n");
-
-        var rows = new List<string>(_times.Count);
-        var sb = new StringBuilder();
+            sb.Append(',').Append(escape(s.Name));
+        sb.Append("\r\n");
         for (int i = 0; i < _times.Count; i++)
         {
-            sb.Clear().Append(_times[i].ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture));
+            sb.Append(_times[i].ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture));
             foreach (var s in _series)
             {
                 sb.Append(',');
                 if (!double.IsNaN(s.Data[i]))
                     sb.Append(s.Data[i].ToString("R", CultureInfo.InvariantCulture));
             }
-            rows.Add(sb.Append("\r\n").ToString());
+            sb.Append("\r\n");
         }
-
-        int total = header.Length, first = rows.Count;
-        while (first > 0 && total + rows[first - 1].Length <= maxChars)
-            total += rows[--first].Length;
-        truncated = first > 0;
-
-        var result = new StringBuilder(total).Append(header);
-        for (int i = first; i < rows.Count; i++)
-            result.Append(rows[i]);
-        return result.ToString();
+        return sb.ToString();
     }
 }
