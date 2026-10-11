@@ -37,9 +37,9 @@ public class ChassisMenuActivity : InpaActivity
         var heading = FindViewById<TextView>(Resource.Id.chassis_menu_heading)!;
         var list = FindViewById<ListView>(Resource.Id.chassis_menu_list)!;
         var ecus = _chassis.Ecus;
-        heading.Text = ecus.Count == 0 ? $"Catálogo {_chassis.Name} vacío" : $"Elige una centralita ({ecus.Count})";
+        heading.Text = ecus.Count == 0 ? UiUtil.Str(this, Resource.String.ch_menu_empty, _chassis.Name) : UiUtil.Str(this, Resource.String.ch_menu_pick, ecus.Count.ToString());
         if (!_chassis.Verified && ecus.Count > 0)
-            heading.Text += " - sin verificar";
+            heading.Text += " - " + GetString(Resource.String.ch_menu_unverified);
 
         var adapter = new TwoLineAdapter(this, ecus.Select((e, i) => new TwoLineAdapter.Row(
             e.Title, e.Sgbd, (i + 1).ToString("00"), UiUtil.Blue, i)));
@@ -48,8 +48,8 @@ public class ChassisMenuActivity : InpaActivity
         var search = FindViewById<EditText>(Resource.Id.chassis_menu_search)!;
         search.TextChanged += (_, _) => adapter.Filter(search.Text);
 
-        SetKey(1, "Información", ShowInfo);
-        SetKey(10, "Volver", Finish);
+        SetKey(1, GetString(Resource.String.ch_key_info), ShowInfo, Resource.Drawable.ic_info);
+        SetKey(10, GetString(Resource.String.ch_key_back), Finish);
         RefreshKeys();
     }
 
@@ -64,7 +64,8 @@ public class ChassisMenuActivity : InpaActivity
     void ShowInfo()
     {
         var s = DiagHolder.LoadSettings(this);
-        string iface = $"Interfaz actual : {s.Type}" + (s.Type == AdapterType.UsbKDcan ? "" : "  <- cámbiala en Ajustes");
+        string iface = UiUtil.Str(this, Resource.String.ch_menu_iface, s.Type.ToString())
+            + (s.Type == AdapterType.UsbKDcan ? "" : GetString(Resource.String.ch_menu_iface_change));
         string text = _chassis.Info
             .Replace("{iface}", iface)
             .Replace("{ecupath}", $"Ecu path        : {s.EcuPath}");

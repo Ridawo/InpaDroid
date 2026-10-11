@@ -7,7 +7,7 @@ using InpaDroid.Diag;
 
 namespace InpaDroid.Ui;
 
-[Activity(Label = "Centralita", Theme = "@style/InpaTheme",
+[Activity(Label = "@string/g_ecu_label", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
 public class EcuActivity : InpaActivity
@@ -39,19 +39,19 @@ public class EcuActivity : InpaActivity
         _results = new ResultPanel(FindViewById<LinearLayout>(Resource.Id.ecu_results)!);
         UpdateSubtitle();
 
-        SetKey(1, "Información", () => RunOnce("INFO", "Información de la SGBD"));
-        SetKey(2, "Identificación", () => RunOnce("IDENT", "Identificación"));
-        SetKey(4, "Errores", () => RunOnce("FS_LESEN", "Memoria de errores"));
-        SetShiftKey(4, "Borrar errores", ConfirmClearFaults);
-        SetKey(5, "Valores en vivo", StatusMenu);
-        SetKey(6, "Activaciones", SteuernMenu);
-        SetKey(7, "Todos los jobs", JobsMenu);
-        SetKey(9, "Copiar", CopyResults);
-        SetKey(10, "Volver", Back);
+        SetKey(1, GetString(Resource.String.g_key_info)!, () => RunOnce("INFO", GetString(Resource.String.g_head_sgbd_info)!), Resource.Drawable.ic_info);
+        SetKey(2, GetString(Resource.String.g_key_ident)!, () => RunOnce("IDENT", GetString(Resource.String.g_key_ident)!), Resource.Drawable.ic_ident);
+        SetKey(4, GetString(Resource.String.g_key_faults)!, () => RunOnce("FS_LESEN", GetString(Resource.String.g_head_fault_memory)!), Resource.Drawable.ic_fault);
+        SetShiftKey(4, GetString(Resource.String.g_key_clear_faults)!, ConfirmClearFaults, Resource.Drawable.ic_delete);
+        SetKey(5, GetString(Resource.String.g_key_live)!, StatusMenu, Resource.Drawable.ic_live);
+        SetKey(6, GetString(Resource.String.g_key_actuate)!, SteuernMenu, Resource.Drawable.ic_bolt);
+        SetKey(7, GetString(Resource.String.g_key_all_jobs)!, JobsMenu, Resource.Drawable.ic_list);
+        SetKey(9, GetString(Resource.String.g_key_copy)!, CopyResults, Resource.Drawable.ic_copy);
+        SetKey(10, GetString(Resource.String.g_key_back)!, Back);
         RefreshKeys();
 
         _heading.Text = GetString(Resource.String.ecu_choose_function);
-        _results.ShowInfo(_isGroup ? $"Grupo {_ecuName}" : $"SGBD {_ecuName}", GetString(Resource.String.ecu_choose_hint)!);
+        _results.ShowInfo(_isGroup ? UiUtil.Str(this, Resource.String.g_group_title, _ecuName) : $"SGBD {_ecuName}", GetString(Resource.String.ecu_choose_hint)!);
         if (_isGroup)
             Exclusive(async () => { await EnsureSgbdAsync(); });
     }
@@ -109,19 +109,19 @@ public class EcuActivity : InpaActivity
     {
         if (_sgbd != null)
             return _sgbd;
-        ShowBusy($"Identificando variante de {_ecuName}…");
+        ShowBusy(UiUtil.Str(this, Resource.String.g_variant_resolving, _ecuName));
         var variant = await Diag.ResolveVariantAsync(_ecuName);
         HideBusy();
         if (string.IsNullOrWhiteSpace(variant))
         {
-            _results.ShowError($"Grupo {_ecuName}",
-                "No se pudo identificar la variante de la centralita. Comprueba el cable, el encendido y la " +
-                "configuración de la interfaz. " + GetString(Resource.String.ecu_retry_hint) + "");
+            _results.ShowError(UiUtil.Str(this, Resource.String.g_group_title, _ecuName),
+                GetString(Resource.String.g_variant_failed) + " " + GetString(Resource.String.ecu_retry_hint));
             return null;
         }
         _sgbd = variant;
         UpdateSubtitle();
-        _results.ShowInfo($"Grupo {_ecuName}", $"Variante identificada: {_sgbd}", append: true);
+        _results.ShowInfo(UiUtil.Str(this, Resource.String.g_group_title, _ecuName),
+            UiUtil.Str(this, Resource.String.g_variant_found, _sgbd), append: true);
         return _sgbd;
     }
 
@@ -129,12 +129,12 @@ public class EcuActivity : InpaActivity
     {
         if (_jobs is { Count: > 0 })
             return _jobs;
-        ShowBusy($"Leyendo jobs de {sgbd}…");
+        ShowBusy(UiUtil.Str(this, Resource.String.g_jobs_reading, sgbd));
         var jobs = await Diag.GetJobsAsync(sgbd);
         HideBusy();
         if (jobs.Count == 0)
         {
-            _results.ShowError(sgbd, $"No se pudo leer la lista de jobs de {sgbd} (¿existe {sgbd}.prg en la carpeta ECU?).");
+            _results.ShowError(sgbd, UiUtil.Str(this, Resource.String.g_jobs_failed, sgbd));
             return null;
         }
         _jobs = jobs;
@@ -170,17 +170,17 @@ public class EcuActivity : InpaActivity
     void ConfirmClearFaults()
     {
         var name = _sgbd ?? _ecuName;
-        JobDialogs.Confirm(this, "Borrar memoria de errores",
-            $"¿Borrar la memoria de errores de {name} (job FS_LOESCHEN)?\n\n" +
-            "Los errores almacenados se perderán. Hazlo con el encendido conectado y el motor parado.",
-            "Borrar",
-            () => Exclusive(async () =>
+        JobDialogs.Confirm(this, GetString(Resource.String.g_clear_title)!,
+            UiUtil.Str(this, Resource.String.g_clear_msg, name),
+            GetString(Resource.String.g_clear_yes)!,
+            danger: true,
+            onYes: () => Exclusive(async () =>
             {
                 var sgbd = await EnsureSgbdAsync();
                 if (sgbd == null)
                     return;
-                await RunJobCore(sgbd, "FS_LOESCHEN", "Borrar memoria de errores", "", "");
-                _results.ShowInfo("Memoria de errores", GetString(Resource.String.ecu_reread_faults)!, append: true);
+                await RunJobCore(sgbd, "FS_LOESCHEN", GetString(Resource.String.g_clear_title)!, "", "");
+                _results.ShowInfo(GetString(Resource.String.g_head_fault_memory)!, GetString(Resource.String.ecu_reread_faults)!, append: true);
             }));
     }
 
@@ -198,7 +198,7 @@ public class EcuActivity : InpaActivity
                 : jobs.Where(j => j.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
             if (list.Count == 0)
             {
-                _results.ShowInfo(title, $"{sgbd} no tiene jobs {prefix}*.");
+                _results.ShowInfo(title, UiUtil.Str(this, Resource.String.g_no_jobs_prefix, sgbd, prefix ?? ""));
                 return;
             }
             JobDialogs.PickJob(this, $"{title} - {sgbd} ({list.Count})", list, job => onPick(sgbd, job));
@@ -210,26 +210,23 @@ public class EcuActivity : InpaActivity
             if (job.Arguments.Count == 0)
                 StartPolling(sgbd, job.Name, "", "");
             else
-                JobDialogs.AskArguments(this, sgbd, job, "Leer", (args, res) => StartPolling(sgbd, job.Name, args, res));
+                JobDialogs.AskArguments(this, sgbd, job, GetString(Resource.String.g_read)!, (args, res) => StartPolling(sgbd, job.Name, args, res));
         });
 
     void SteuernMenu() =>
         PickJob("STEUERN", "Steuern", (sgbd, job) =>
-            JobDialogs.AskArguments(this, sgbd, job, "Continuar", (args, res) =>
-                JobDialogs.Confirm(this, "⚠ ATENCIÓN: activar componentes",
-                    $"Vas a ejecutar {job.Name} en {sgbd}" + (args.Length > 0 ? $" con argumentos \"{args}\"" : "") + ".\n\n" +
-                    "Los jobs STEUERN activan actuadores reales (relés, motores, válvulas, bombas, inyectores…). " +
-                    "Un uso incorrecto puede dañar la centralita o el vehículo, mover piezas o provocar lesiones.\n\n" +
-                    "• Vehículo parado, freno de mano puesto y en P / punto muerto.\n" +
-                    "• Nadie cerca de piezas móviles.\n" +
-                    "• Batería con carga suficiente.\n\n" +
-                    "Continúa solo si sabes exactamente lo que hace este job.",
-                    "Ejecutar",
-                    () => Exclusive(() => RunJobCore(sgbd, job.Name, "Steuern: " + job.Name, args, res)))));
+            JobDialogs.AskArguments(this, sgbd, job, GetString(Resource.String.g_continue)!, (args, res) =>
+                JobDialogs.Confirm(this, GetString(Resource.String.g_steuern_title)!,
+                    UiUtil.Str(this, Resource.String.g_steuern_intro, job.Name, sgbd,
+                        args.Length > 0 ? " " + UiUtil.Str(this, Resource.String.g_steuern_args, args) : "") +
+                    GetString(Resource.String.g_steuern_warning),
+                    GetString(Resource.String.g_run)!,
+                    danger: true,
+                    onYes: () => Exclusive(() => RunJobCore(sgbd, job.Name, "Steuern: " + job.Name, args, res)))));
 
     void JobsMenu() =>
         PickJob(null, "Jobs", (sgbd, job) =>
-            JobDialogs.AskArguments(this, sgbd, job, "Ejecutar", (args, res) =>
+            JobDialogs.AskArguments(this, sgbd, job, GetString(Resource.String.g_run)!, (args, res) =>
                 Exclusive(() => RunJobCore(sgbd, job.Name, "Job: " + job.Name, args, res))));
 
     void StartPolling(string sgbd, string job, string args, string results)
@@ -239,7 +236,7 @@ public class EcuActivity : InpaActivity
         int count = 0;
         _heading.Text = "Status: " + job;
         _results.Clear();
-        ShowBusy($"{job}: " + GetString(Resource.String.ecu_polling_hint), "Parar", StopPolling);
+        ShowBusy($"{job}: " + GetString(Resource.String.ecu_polling_hint), GetString(Resource.String.g_stop), StopPolling);
         _poll.Start(async ct =>
         {
             var r = await Diag.RunJobAsync(sgbd, job, args, results);
@@ -255,7 +252,7 @@ public class EcuActivity : InpaActivity
         if (!_poll.Stop())
             return;
         HideBusy();
-        _heading.Text += " (detenido)";
+        _heading.Text += " " + GetString(Resource.String.g_stopped);
     }
 
     void CopyResults()
@@ -266,7 +263,7 @@ public class EcuActivity : InpaActivity
         if (GetSystemService(ClipboardService) is ClipboardManager clipboard)
         {
             clipboard.PrimaryClip = ClipData.NewPlainText("InpaDroid", text);
-            UiUtil.Toast(this, "Resultados copiados al portapapeles");
+            UiUtil.Toast(this, GetString(Resource.String.g_results_copied)!);
         }
     }
 }

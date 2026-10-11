@@ -58,19 +58,19 @@ public class MainActivity : InpaActivity
         var menu = FindViewById<LinearLayout>(Resource.Id.main_menu)!;
         menu.RemoveAllViews();
         // Chasis nuevo: su <id>_catalog.json en Ui/Chassis + una tarjeta aquí.
-        var cards = new (int Title, int Desc, bool Primary, Action Act)[]
+        var cards = new (int Title, int Desc, int Icon, bool Primary, Action Act)[]
         {
-            (Resource.String.main_card_identify, Resource.String.main_card_identify_desc, true, IdentifyVehicle),
-            (Resource.String.main_card_ecu, Resource.String.main_card_ecu_desc, false,
+            (Resource.String.main_card_identify, Resource.String.main_card_identify_desc, Resource.Drawable.ic_ident, true, IdentifyVehicle),
+            (Resource.String.main_card_ecu, Resource.String.main_card_ecu_desc, Resource.Drawable.ic_list, false,
                 () => StartActivity(new Intent(this, typeof(EcuSelectActivity)))),
-            (Resource.String.main_card_e39, Resource.String.main_card_e39_desc, false, () => ChassisMenuActivity.Start(this, "e39")),
-            (Resource.String.main_card_e46, Resource.String.main_card_e46_desc, false, () => ChassisMenuActivity.Start(this, "e46")),
-            (Resource.String.main_card_e60, Resource.String.main_card_e60_desc, false, () => ChassisMenuActivity.Start(this, "e60")),
-            (Resource.String.main_card_e90, Resource.String.main_card_e90_desc, false, () => ChassisMenuActivity.Start(this, "e90")),
-            (Resource.String.main_card_settings, Resource.String.main_card_settings_desc, false,
+            (Resource.String.main_card_e39, Resource.String.main_card_e39_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e39")),
+            (Resource.String.main_card_e46, Resource.String.main_card_e46_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e46")),
+            (Resource.String.main_card_e60, Resource.String.main_card_e60_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e60")),
+            (Resource.String.main_card_e90, Resource.String.main_card_e90_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e90")),
+            (Resource.String.main_card_settings, Resource.String.main_card_settings_desc, Resource.Drawable.ic_tune, false,
                 () => StartActivity(new Intent(this, typeof(SettingsActivity)))),
-            (Resource.String.main_card_info, Resource.String.main_card_info_desc, false, ShowInfo),
-            (Resource.String.main_card_exit, Resource.String.main_card_exit_desc, false, Exit),
+            (Resource.String.main_card_info, Resource.String.main_card_info_desc, Resource.Drawable.ic_info, false, ShowInfo),
+            (Resource.String.main_card_exit, Resource.String.main_card_exit_desc, Resource.Drawable.ic_exit, false, Exit),
         };
         int gap = UiUtil.Dp(this, 6);
         LinearLayout? row = null;
@@ -87,6 +87,12 @@ public class MainActivity : InpaActivity
             int pad = UiUtil.Dp(this, 14);
             card.SetPadding(pad, pad, pad, pad);
             card.SetMinimumHeight(UiUtil.Dp(this, 110));
+            var icon = new ImageView(this);
+            icon.SetImageResource(c.Icon);
+            icon.ImageTintList = Android.Content.Res.ColorStateList.ValueOf(new Android.Graphics.Color(
+                Resources!.GetColor(c.Primary ? Resource.Color.m_on_primary : Resource.Color.m_primary, Theme)));
+            card.AddView(icon, new LinearLayout.LayoutParams(UiUtil.Dp(this, 28), UiUtil.Dp(this, 28))
+                { BottomMargin = UiUtil.Dp(this, 6) });
             var title = new TextView(this);
             title.SetTextAppearance(Resource.Style.MText_Title);
             title.SetTextSize(ComplexUnitType.Sp, 16);
@@ -129,19 +135,19 @@ public class MainActivity : InpaActivity
         {
             AdapterType.UsbKDcan => "USB K+DCAN (FTDI)",
             AdapterType.Enet => $"ENET ({s.EnetHost})",
-            AdapterType.Elm327Bluetooth => $"ELM327 Bluetooth ({(s.BluetoothAddress.Length > 0 ? s.BluetoothAddress : "sin elegir")})",
+            AdapterType.Elm327Bluetooth => $"ELM327 Bluetooth ({(s.BluetoothAddress.Length > 0 ? s.BluetoothAddress : GetString(Resource.String.g_not_chosen))})",
             AdapterType.Elm327Wifi => $"ELM327 WiFi ({s.ElmWifiHost})",
             _ => s.Type.ToString(),
         };
         string text =
-            "InpaDroid - programas de diagnóstico\n\n" +
-            $"Versión        : {version}\n" +
-            "Motor EDIABAS  : ediabaslib (GPLv3)\n\n" +
+            GetString(Resource.String.g_info_title) + "\n\n" +
+            UiUtil.Str(this, Resource.String.g_info_version, version) + "\n" +
+            GetString(Resource.String.g_info_engine) + "\n\n" +
             "EDIABAS\n" +
             $"Ecu path       : {s.EcuPath}\n" +
-            $"Interfaz       : {iface}\n\n" +
-            "No incluye archivos de BMW: copia tus .prg/.grp en la carpeta ECU.";
-        JobDialogs.Message(this, "Información", text);
+            UiUtil.Str(this, Resource.String.g_info_interface, iface) + "\n\n" +
+            GetString(Resource.String.g_info_nofiles);
+        JobDialogs.Message(this, GetString(Resource.String.main_card_info)!, text);
     }
 
     async void IdentifyVehicle()
@@ -150,9 +156,9 @@ public class MainActivity : InpaActivity
             return;
         _working = true;
         _aborted = false;
-        _results.ShowInfo("Identificar vehículo", "Buscando SGBD UTILITY / CAS en la carpeta ECU…");
+        _results.ShowInfo(GetString(Resource.String.main_card_identify)!, GetString(Resource.String.g_ident_searching)!);
         ScrollToResults();
-        ShowBusy("Identificando vehículo…", "Abortar", () =>
+        ShowBusy(GetString(Resource.String.g_ident_busy)!, GetString(Resource.String.g_abort), () =>
         {
             _aborted = true;
             AbortJob();
@@ -176,8 +182,7 @@ public class MainActivity : InpaActivity
             }
             if (steps.Count == 0)
             {
-                _results.ShowError("Identificar vehículo",
-                    "No se encontraron UTILITY.prg ni CAS.prg en la carpeta ECU. Cópialos ahí o revisa Ajustes.");
+                _results.ShowError(GetString(Resource.String.main_card_identify)!, GetString(Resource.String.g_ident_no_sgbd)!);
                 return;
             }
 
@@ -186,7 +191,7 @@ public class MainActivity : InpaActivity
             {
                 if (_aborted)
                 {
-                    _results.ShowError("Identificar vehículo", "Abortado por el usuario", append: true);
+                    _results.ShowError(GetString(Resource.String.main_card_identify)!, GetString(Resource.String.g_aborted_by_user)!, append: true);
                     break;
                 }
                 try
@@ -202,7 +207,7 @@ public class MainActivity : InpaActivity
         }
         catch (Exception ex)
         {
-            _results.ShowError("Identificar vehículo", "ERROR: " + UiUtil.Describe(ex));
+            _results.ShowError(GetString(Resource.String.main_card_identify)!, "ERROR: " + UiUtil.Describe(ex));
         }
         finally
         {

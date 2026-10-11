@@ -9,7 +9,7 @@ using InpaDroid.Diag;
 namespace InpaDroid.Ui;
 
 /// <summary>Selección de centralita: .grp (grupos) arriba con distintivo, luego .prg; con buscador.</summary>
-[Activity(Label = "Selección de centralita", Theme = "@style/InpaTheme",
+[Activity(Label = "@string/g_ecu_select_label", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
 public class EcuSelectActivity : InpaActivity
@@ -29,7 +29,7 @@ public class EcuSelectActivity : InpaActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        InitInpa(Resource.Layout.activity_ecu_select, "Selección de centralita");
+        InitInpa(Resource.Layout.activity_ecu_select, GetString(Resource.String.g_ecu_select_label)!);
         _search = FindViewById<EditText>(Resource.Id.ecu_search)!;
         _count = FindViewById<TextView>(Resource.Id.ecu_count)!;
         _list = FindViewById<ListView>(Resource.Id.ecu_list)!;
@@ -41,9 +41,9 @@ public class EcuSelectActivity : InpaActivity
                 OpenEcu(ecu);
         };
 
-        SetKey(5, "Actualizar", Load);
-        SetKey(9, "Ajustes", () => StartActivity(new Intent(this, typeof(SettingsActivity))));
-        SetKey(10, "Volver", Finish);
+        SetKey(5, GetString(Resource.String.g_key_refresh)!, Load, Resource.Drawable.ic_refresh);
+        SetKey(9, GetString(Resource.String.g_key_settings)!, () => StartActivity(new Intent(this, typeof(SettingsActivity))), Resource.Drawable.ic_tune);
+        SetKey(10, GetString(Resource.String.g_key_back)!, Finish);
         RefreshKeys();
     }
 
@@ -64,14 +64,14 @@ public class EcuSelectActivity : InpaActivity
         {
             path = DiagHolder.LoadSettings(this).EcuPath;
             SetSubtitle(path);
-            _count.SetTextColor(Color.Black);
-            _count.Text = "Leyendo carpeta…";
+            _count.SetTextColor(UiUtil.Res(this, Resource.Color.m_text));
+            _count.Text = GetString(Resource.String.g_scanning_folder);
             var svc = Diag;
             var files = await Task.Run(() => svc.ScanEcuFolder());
 
             _adapter = new TwoLineAdapter(this, files.Select(f => new TwoLineAdapter.Row(
                 f.Name,
-                f.IsGroup ? "Grupo: identifica la variante automáticamente" : System.IO.Path.GetFileName(f.FullPath),
+                f.IsGroup ? GetString(Resource.String.g_group_sub)! : System.IO.Path.GetFileName(f.FullPath),
                 f.IsGroup ? "GRP" : "PRG",
                 f.IsGroup ? GroupBadge : PrgBadge,
                 f)));
@@ -82,17 +82,17 @@ public class EcuSelectActivity : InpaActivity
             if (files.Count == 0)
             {
                 _count.SetTextColor(UiUtil.ErrorText);
-                _count.Text = $"No hay archivos .prg/.grp en:\n{path}\nCópialos ahí o cambia la carpeta en Ajustes.";
+                _count.Text = UiUtil.Str(this, Resource.String.g_no_ecu_files, path);
             }
             else
             {
-                _count.Text = $"{groups} grupos (.grp), {files.Count - groups} programas (.prg)";
+                _count.Text = UiUtil.Str(this, Resource.String.g_ecu_counts, groups, files.Count - groups);
             }
         }
         catch (Exception ex)
         {
             _count.SetTextColor(UiUtil.ErrorText);
-            _count.Text = $"Error leyendo {path}: {UiUtil.Describe(ex)}";
+            _count.Text = UiUtil.Str(this, Resource.String.g_read_error, path, UiUtil.Describe(ex));
         }
         finally
         {
