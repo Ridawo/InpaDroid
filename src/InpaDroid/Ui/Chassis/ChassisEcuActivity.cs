@@ -9,7 +9,7 @@ using InpaDroid.Diag;
 
 namespace InpaDroid.Ui.Chassis;
 
-[Activity(Label = "Centralita", Theme = "@style/InpaTheme",
+[Activity(Label = "@string/ch_ecu_label", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
 public class ChassisEcuActivity : InpaActivity
@@ -45,7 +45,7 @@ public class ChassisEcuActivity : InpaActivity
         var ecus = _chassis.Ecus;
         if (index < 0 || index >= ecus.Count)
         {
-            UiUtil.Toast(this, "Centralita no válida");
+            UiUtil.Toast(this, GetString(Resource.String.ch_ecu_invalid));
             Finish();
             return;
         }
@@ -57,15 +57,15 @@ public class ChassisEcuActivity : InpaActivity
         _results = new ResultPanel(FindViewById<LinearLayout>(Resource.Id.chassis_results)!);
         UpdateSubtitle();
 
-        SetKey(1, "Información", ShowInfo);
-        SetKey(2, "Identificación", () => RunOnce(_ecu.IdentJob, "Identificación"));
-        SetKey(4, "Errores", ReadFaults);
-        SetShiftKey(4, "Borrar errores", ConfirmClearFaults);
-        SetKey(5, "Valores en vivo", StatusMenu);
-        SetKey(6, "Activaciones", SteuernMenu);
-        SetKey(7, "Todos los jobs", OpenAllJobs);
-        SetKey(8, "Gráfica", ChartMenu);
-        SetKey(10, "Volver", Back);
+        SetKey(1, GetString(Resource.String.ch_key_info), ShowInfo, Resource.Drawable.ic_info);
+        SetKey(2, GetString(Resource.String.ch_key_ident), () => RunOnce(_ecu.IdentJob, GetString(Resource.String.ch_key_ident)), Resource.Drawable.ic_ident);
+        SetKey(4, GetString(Resource.String.ch_key_faults), ReadFaults, Resource.Drawable.ic_fault);
+        SetShiftKey(4, GetString(Resource.String.ch_key_clear_faults), ConfirmClearFaults, Resource.Drawable.ic_delete);
+        SetKey(5, GetString(Resource.String.ch_key_live), StatusMenu, Resource.Drawable.ic_live);
+        SetKey(6, GetString(Resource.String.ch_key_actions), SteuernMenu, Resource.Drawable.ic_bolt);
+        SetKey(7, GetString(Resource.String.ch_key_all_jobs), OpenAllJobs, Resource.Drawable.ic_list);
+        SetKey(8, GetString(Resource.String.ch_key_chart), ChartMenu, Resource.Drawable.ic_chart);
+        SetKey(10, GetString(Resource.String.ch_key_back), Back);
         RefreshKeys();
 
         _heading.Text = GetString(Resource.String.ecu_choose_function);
@@ -121,25 +121,36 @@ public class ChassisEcuActivity : InpaActivity
         }
     }
 
+    // Botón Reintentar del estado vacío: limpia el aviso y vuelve a identificar; si falla, EnsureSgbdAsync lo muestra de nuevo.
+    void RetryVariant() =>
+        Exclusive(async () =>
+        {
+            ShowResults();
+            _results.ShowInfo($"{_ecu.Title} ({_ecu.Sgbd})", GetString(Resource.String.ecu_choose_hint)!);
+            await EnsureSgbdAsync();
+        });
+
     // null si falla; se reintenta con la siguiente tecla
     async Task<string?> EnsureSgbdAsync()
     {
         if (_sgbd != null)
             return _sgbd;
-        ShowBusy($"Identificando variante de {_ecu.Sgbd}…");
+        ShowBusy(UiUtil.Str(this, Resource.String.ch_identifying_variant, _ecu.Sgbd));
         var variant = await Diag.ResolveVariantAsync(_ecu.Sgbd);
         HideBusy();
         if (string.IsNullOrWhiteSpace(variant))
         {
             ShowResults();
             _results.ShowError($"{_ecu.Title} ({_ecu.Sgbd})",
-                "No se pudo identificar la variante de la centralita. Comprueba el cable K+DCAN (pines 7/8), " +
-                "el encendido y que el archivo está en la carpeta ECU. " + GetString(Resource.String.ecu_retry_hint) + "");
+                GetString(Resource.String.ch_variant_failed)!);
+            _results.AddActions(
+                (GetString(Resource.String.ecu_retry)!, RetryVariant),
+                (GetString(Resource.String.ecu_open_settings)!, () => StartActivity(new Intent(this, typeof(SettingsActivity)))));
             return null;
         }
         _sgbd = variant;
         UpdateSubtitle();
-        _results.ShowInfo(_ecu.Sgbd, $"Variante identificada: {_sgbd}", append: true);
+        _results.ShowInfo(_ecu.Sgbd, UiUtil.Str(this, Resource.String.ch_variant_ok, _sgbd), append: true);
         return _sgbd;
     }
 
@@ -165,8 +176,8 @@ public class ChassisEcuActivity : InpaActivity
             if (gen != _generation)
                 return null;
             _results.ShowResult(sgbd, job, r);
-            if (r.Ok && StatusTable.StatusError(r) is string err)
-                _results.ShowError("La centralita no ha respondido OKAY", err, append: true);
+            if (r.Ok && DiagLogic.StatusError(r) is string err)
+                _results.ShowError(GetString(Resource.String.ch_ecu_no_okay)!, err, append: true);
             return r;
         }
         catch (Exception ex)
@@ -179,16 +190,16 @@ public class ChassisEcuActivity : InpaActivity
 
     void ShowInfo()
     {
-        var text = $"Centralita : {_ecu.Title}\n" +
+        var text = UiUtil.Str(this, Resource.String.ch_info_ecu, _ecu.Title) + "\n" +
                    $"SGBD       : {_ecu.Sgbd}\n" +
-                   $"Variante   : {_sgbd ?? "(sin identificar)"}\n\n" +
+                   UiUtil.Str(this, Resource.String.ch_info_variant, _sgbd ?? GetString(Resource.String.ch_info_unidentified)!) + "\n\n" +
                    $"Ident      : {_ecu.IdentJob}\n" +
-                   $"Errores    : {_ecu.FsReadJob} / {_ecu.FsClearJob}\n\n" +
+                   UiUtil.Str(this, Resource.String.ch_info_faults, _ecu.FsReadJob, _ecu.FsClearJob) + "\n\n" +
                    $"Status ({_ecu.StatusPages.Count}):\n" +
-                   string.Concat(_ecu.StatusPages.Select(p => $"  • {p.Title} ({p.Values.Count} valores)\n")) +
+                   string.Concat(_ecu.StatusPages.Select(p => UiUtil.Str(this, Resource.String.ch_info_page, p.Title, p.Values.Count.ToString()) + "\n")) +
                    $"\nSteuern ({_ecu.Actions.Count}):\n" +
                    string.Concat(_ecu.Actions.Select(a => $"  • {a.Title}  [{a.Job}]\n"));
-        JobDialogs.Message(this, "Información", text);
+        JobDialogs.Message(this, GetString(Resource.String.ch_key_info)!, text);
     }
 
     // F4: memoria de errores (ResultPanel destaca F_ORT_NR / F_ORT_TEXT)
@@ -198,27 +209,27 @@ public class ChassisEcuActivity : InpaActivity
             var sgbd = await EnsureSgbdAsync();
             if (sgbd == null)
                 return;
-            var r = await RunJobCore(sgbd, _ecu.FsReadJob, "Memoria de errores", "");
-            if (r != null && StatusTable.StatusError(r) == null)
+            var r = await RunJobCore(sgbd, _ecu.FsReadJob, GetString(Resource.String.ch_faults_title)!, "");
+            if (r != null && DiagLogic.StatusError(r) == null)
             {
                 int faults = r.Sets.Count(s => s.ContainsKey("F_ORT_NR"));
-                _heading.Text = faults == 0 ? "Memoria de errores: sin errores" : $"Memoria de errores: {faults} error(es)";
+                _heading.Text = faults == 0 ? GetString(Resource.String.ch_faults_none) : UiUtil.Str(this, Resource.String.ch_faults_count, faults.ToString());
             }
         });
 
     void ConfirmClearFaults()
     {
-        JobDialogs.Confirm(this, "Borrar memoria de errores",
-            $"¿Borrar la memoria de errores de {_ecu.Title} ({_sgbd ?? _ecu.Sgbd}, job {_ecu.FsClearJob})?\n\n" +
-            "Los errores almacenados se perderán. Hazlo con el encendido conectado y el motor parado.",
-            "Borrar",
-            () => Exclusive(async () =>
+        JobDialogs.Confirm(this, GetString(Resource.String.ch_clear_title)!,
+            UiUtil.Str(this, Resource.String.ch_clear_confirm, _ecu.Title, _sgbd ?? _ecu.Sgbd, _ecu.FsClearJob),
+            GetString(Resource.String.ch_clear_button)!,
+            danger: true,
+            onYes: () => Exclusive(async () =>
             {
                 var sgbd = await EnsureSgbdAsync();
                 if (sgbd == null)
                     return;
-                await RunJobCore(sgbd, _ecu.FsClearJob, "Borrar memoria de errores", "");
-                _results.ShowInfo("Memoria de errores", GetString(Resource.String.ecu_reread_faults)!, append: true);
+                await RunJobCore(sgbd, _ecu.FsClearJob, GetString(Resource.String.ch_clear_title)!, "");
+                _results.ShowInfo(GetString(Resource.String.ch_faults_title)!, GetString(Resource.String.ecu_reread_faults)!, append: true);
             }));
     }
 
@@ -243,10 +254,10 @@ public class ChassisEcuActivity : InpaActivity
         if (_ecu.StatusPages.Count == 0)
         {
             ShowResults();
-            _results.ShowInfo("Status", $"Esta centralita no tiene páginas de status en el catálogo {_chassis.Name}. Usa «Todos los jobs».");
+            _results.ShowInfo("Status", UiUtil.Str(this, Resource.String.ch_status_none, _chassis.Name));
             return;
         }
-        PickItem("Status - " + _ecu.Title, _ecu.StatusPages.Select(p => p.Title).ToList(), i =>
+        PickItem(UiUtil.Str(this, Resource.String.ch_status_pick, _ecu.Title), _ecu.StatusPages.Select(p => p.Title).ToList(), i =>
             Exclusive(async () =>
             {
                 var sgbd = await EnsureSgbdAsync();
@@ -260,16 +271,16 @@ public class ChassisEcuActivity : InpaActivity
         if (_ecu.StatusPages.Count == 0)
         {
             ShowResults();
-            _results.ShowInfo("Gráfica", $"Esta centralita no tiene páginas de status en el catálogo {_chassis.Name}.");
+            _results.ShowInfo(GetString(Resource.String.ch_key_chart)!, UiUtil.Str(this, Resource.String.ch_chart_none, _chassis.Name));
             return;
         }
-        PickItem("Gráfica - " + _ecu.Title, _ecu.StatusPages.Select(p => p.Title).ToList(), i =>
+        PickItem(UiUtil.Str(this, Resource.String.ch_chart_pick, _ecu.Title), _ecu.StatusPages.Select(p => p.Title).ToList(), i =>
             Exclusive(async () =>
             {
                 if (_ecu.StatusPages[i].Values.Count == 0)
                 {
                     ShowResults();
-                    _results.ShowInfo("Gráfica", "Esta página no tiene valores que graficar.");
+                    _results.ShowInfo(GetString(Resource.String.ch_key_chart)!, GetString(Resource.String.ch_chart_no_values)!);
                     return;
                 }
                 var sgbd = await EnsureSgbdAsync();
@@ -292,21 +303,22 @@ public class ChassisEcuActivity : InpaActivity
         if (_ecu.Actions.Count == 0)
         {
             ShowResults();
-            _results.ShowInfo("Steuern", $"Esta centralita no tiene activaciones en el catálogo {_chassis.Name}. Usa «Todos los jobs».");
+            _results.ShowInfo("Steuern", UiUtil.Str(this, Resource.String.ch_steuern_none, _chassis.Name));
             return;
         }
-        PickItem("Steuern - " + _ecu.Title, _ecu.Actions.Select(a => a.Title).ToList(), i =>
+        PickItem(UiUtil.Str(this, Resource.String.ch_steuern_pick, _ecu.Title), _ecu.Actions.Select(a => a.Title).ToList(), i =>
         {
             var a = _ecu.Actions[i];
             var warning = a.Warning.Length > 0
                 ? a.Warning
-                : "Este job activa componentes reales del vehículo. Vehículo parado y nadie cerca de piezas móviles.";
+                : GetString(Resource.String.ch_steuern_warning)!;
             JobDialogs.Confirm(this, "⚠ " + a.Title,
                 warning + "\n\n" +
-                $"Job: {a.Job}" + (a.Args.Length > 0 ? $"  argumentos \"{a.Args}\"" : "") + "\n\n" +
-                "Continúa solo si sabes exactamente lo que hace.",
-                "Ejecutar",
-                () => Exclusive(async () =>
+                UiUtil.Str(this, Resource.String.ch_steuern_job, a.Job) + (a.Args.Length > 0 ? UiUtil.Str(this, Resource.String.ch_steuern_args, a.Args) : "") + "\n\n" +
+                GetString(Resource.String.ch_steuern_continue),
+                GetString(Resource.String.ch_run)!,
+                danger: true,
+                onYes: () => Exclusive(async () =>
                 {
                     var sgbd = await EnsureSgbdAsync();
                     if (sgbd != null)
@@ -339,10 +351,10 @@ public class ChassisEcuActivity : InpaActivity
     {
         StopPolling();
         int gen = ++_generation;
-        _heading.Text = "Status: " + page.Title;
+        _heading.Text = UiUtil.Str(this, Resource.String.ch_status_heading, page.Title);
         ShowResults(false);
-        _status.Text = "Leyendo…";
-        ShowBusy(GetString(Resource.String.ecu_polling_hint)!, "Parar", StopPolling);
+        _status.Text = GetString(Resource.String.ch_reading);
+        ShowBusy(GetString(Resource.String.ecu_polling_hint)!, GetString(Resource.String.ch_stop)!, StopPolling);
         // Un job por llamada (job + argumentos distintos), pidiendo solo los resultados necesarios.
         var groups = page.Values
             .GroupBy(v => (Job: v.Job.Trim().ToUpperInvariant(), v.Args))
@@ -372,12 +384,12 @@ public class ChassisEcuActivity : InpaActivity
                 }
                 if (ct.IsCancellationRequested || gen != _generation)
                     return false;
-                var error = StatusTable.StatusError(r);
+                var error = DiagLogic.StatusError(r);
                 foreach (var v in g.Values)
                 {
                     cells[v] = error != null ? ("ERROR " + error, true)
-                        : StatusTable.FindResult(r, v.Result) is string text ? (text, false)
-                        : ($"ERROR sin resultado {v.Result}", true);
+                        : DiagLogic.FindResult(r, v.Result) is string text ? (text, false)
+                        : (UiUtil.Str(this, Resource.String.ch_no_result, v.Result), true);
                 }
             }
             _status.TextFormatted = StatusTable.BuildTable(page, cells, ++count);
@@ -390,6 +402,6 @@ public class ChassisEcuActivity : InpaActivity
         if (!_poll.Stop())
             return;
         HideBusy();
-        _heading.Text += " (detenido)";
+        _heading.Text += " " + GetString(Resource.String.ch_stopped);
     }
 }
