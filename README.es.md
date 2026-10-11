@@ -21,9 +21,14 @@ Tiene cuatro pantallas genéricas, más un menú por chasis que se monta a parti
 - **Pantalla de centralita** — Info, Ident, leer y borrar la memoria de errores, Status, Steuern y una lista de todos los jobs al estilo Tool32.
 - **Ajustes** — tipo de adaptador, datos de conexión y carpeta de archivos.
 
-Como en INPA, abajo hay una barra con las teclas F1 a F10 y un botón Shift que cambia las etiquetas a Shift+F1…F10. Arriba, en todas las pantallas, hay dos indicadores: Batería y Encendido.
+Cada pantalla ofrece sus opciones como tarjetas táctiles con icono; las destructivas (borrar errores, activaciones) van en rojo y piden confirmación. Arriba hay dos indicadores, Batería y Encendido, que se actualizan cada dos segundos más o menos. La app sigue el tema claro u oscuro del sistema, funciona en apaisado (las tarjetas se desplazan junto con los resultados) y está en español e inglés.
 
-En la cabecera de cada resultado hay un enlace **Compartir CSV**. Manda los resultados que ves en pantalla como texto CSV con el menú de compartir de Android (correo, mensajería, Drive…). Si el resultado es enorme, se recorta y se avisa, para que el envío no falle.
+En la cabecera de cada resultado hay un enlace **Compartir CSV**. Guarda los resultados que ves en pantalla como un fichero `.csv` y abre el menú de compartir de Android (correo, mensajería, Drive…).
+
+<p>
+  <img src="docs/screenshots/home.png" alt="Pantalla de inicio" width="280">
+  <img src="docs/screenshots/ecu-list.png" alt="Lista de centralitas del E39" width="280">
+</p>
 
 ---
 

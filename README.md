@@ -21,9 +21,14 @@ There are four generic screens plus per-chassis vehicle menus built from JSON ca
 - **ECU screen** — Info, Ident, read and clear fault memory, Status, Steuern, and a full job list (Tool32 style).
 - **Settings** — adapter type, connection details, and ECU folder.
 
-The bottom of every screen shows an F1–F10 function key bar with a Shift button. The top header shows a Battery and Ignition indicator that refresh roughly every two seconds.
+Each screen offers its options as touch cards with an icon; destructive ones (clear faults, actuator tests) are red and ask for confirmation. The header shows a Battery and Ignition indicator that refreshes roughly every two seconds. The app follows the system light/dark theme, works in landscape (the cards scroll together with the results) and is available in Spanish and English.
 
-Every job result has a **Compartir CSV** link in its header. It sends the displayed results as CSV text through Android's share sheet (mail, messaging, Drive…). Very large results are cut short with a notice so the share does not fail.
+Every job result has a **Share CSV** link in its header. It saves the displayed results as a `.csv` file and opens Android's share sheet (mail, messaging, Drive…).
+
+<p>
+  <img src="docs/screenshots/home.png" alt="Home screen" width="280">
+  <img src="docs/screenshots/ecu-list.png" alt="E39 ECU list" width="280">
+</p>
 
 ---
 
