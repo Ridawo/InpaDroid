@@ -24,13 +24,13 @@ internal static class JobDialogs
         var adapter = new TwoLineAdapter(activity,
             jobs.Select(j => new TwoLineAdapter.Row(j.Name, FirstLine(j.Comment), null, UiUtil.Blue, j)));
         list.Adapter = adapter;
-        void UpdateCount() => count.Text = $"{adapter.Count} de {adapter.TotalCount} jobs";
+        void UpdateCount() => count.Text = UiUtil.Str(activity, Resource.String.g_jd_count, adapter.Count, adapter.TotalCount);
         UpdateCount();
 
         var dialog = new AlertDialog.Builder(activity)
             .SetTitle(title)!
             .SetView(view)!
-            .SetNegativeButton("Cancelar", (_, _) => { })!
+            .SetNegativeButton(Resource.String.g_cancel, (_, _) => { })!
             .Create()!;
         search.TextChanged += (_, _) =>
         {
@@ -57,9 +57,10 @@ internal static class JobDialogs
         var results = view.FindViewById<EditText>(Resource.Id.jobrun_results)!;
 
         info.Text = $"SGBD       : {sgbd}\nJOB        : {job.Name}\n"
-                    + (job.Comment.Length > 0 ? $"Comentario : {job.Comment}\n" : "")
-                    + "Argumentos : " + (job.Arguments.Count > 0 ? string.Join(", ", job.Arguments) : "(ninguno)") + "\n"
-                    + "Resultados : " + (job.Results.Count > 0 ? string.Join(", ", job.Results) : "-");
+                    + (job.Comment.Length > 0 ? UiUtil.Str(activity, Resource.String.g_jd_comment, job.Comment) + "\n" : "")
+                    + UiUtil.Str(activity, Resource.String.g_jd_args,
+                        job.Arguments.Count > 0 ? string.Join(", ", job.Arguments) : activity.GetString(Resource.String.g_jd_none)) + "\n"
+                    + UiUtil.Str(activity, Resource.String.g_jd_results, job.Results.Count > 0 ? string.Join(", ", job.Results) : "-");
         if (job.Arguments.Count > 0)
             args.Hint = string.Join(";", job.Arguments);
 
@@ -67,7 +68,7 @@ internal static class JobDialogs
             .SetTitle(job.Name)!
             .SetView(view)!
             .SetPositiveButton(runText, (_, _) => onRun(args.Text?.Trim() ?? "", results.Text?.Trim() ?? ""))!
-            .SetNegativeButton("Cancelar", (_, _) => { })!
+            .SetNegativeButton(Resource.String.g_cancel, (_, _) => { })!
             .Create()!;
         dialog.ShowEvent += (_, _) =>
         {
@@ -79,16 +80,14 @@ internal static class JobDialogs
         dialog.Show();
     }
 
-    /// <param name="danger">null = se detecta por el título (⚠ / Borrar / Steuern): botón de acción en rojo y aviso destacado.</param>
+    /// <param name="danger">true = acción destructiva o que activa componentes: botón de acción en rojo y aviso destacado.</param>
     public static void Confirm(Activity activity, string title, string message, string yesText, Action onYes,
-        bool? danger = null)
+        bool danger)
     {
-        bool isDanger = danger ?? (title.Contains('⚠') || title.Contains("Borrar", StringComparison.OrdinalIgnoreCase)
-                                   || title.Contains("componentes", StringComparison.OrdinalIgnoreCase));
         var builder = new AlertDialog.Builder(activity)
             .SetPositiveButton(yesText, (_, _) => onYes())!
-            .SetNegativeButton("Cancelar", (_, _) => { })!;
-        if (!isDanger)
+            .SetNegativeButton(Resource.String.g_cancel, (_, _) => { })!;
+        if (!danger)
         {
             builder.SetTitle(title)!.SetMessage(message)!.Show();
             return;
@@ -130,7 +129,7 @@ internal static class JobDialogs
         new AlertDialog.Builder(activity)
             .SetTitle(title)!
             .SetView(scroll)!
-            .SetPositiveButton("OK", (_, _) => { })!
+            .SetPositiveButton(Resource.String.g_ok, (_, _) => { })!
             .Show();
     }
 
