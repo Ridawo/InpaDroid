@@ -18,12 +18,16 @@ public abstract class InpaActivity : Activity
     {
         public string Label = "";
         public Action? Action;
+        public int Icon;   // drawable de recurso; 0 = sin icono
     }
 
     // 0..9 = F1..F10, 10..19 = Shift+F1..F10
     readonly KeyDef?[] _keys = new KeyDef?[20];
 
     LinearLayout? _keyBar;
+    ViewGroup? _keyHome;                    // padre original de las tarjetas (parte baja de la pantalla)
+    int _keyHomeIndex;
+    LinearLayout? _scrollContent;           // contenido del ScrollView de resultados, si la pantalla tiene uno
     TextView? _title, _subtitle, _battText, _ignText;
     View? _battLed, _ignLed;
     View? _busy;
@@ -51,6 +55,9 @@ public abstract class InpaActivity : Activity
         _ignLed = FindViewById(Resource.Id.inpa_ign_led);
         _ignText = FindViewById<TextView>(Resource.Id.inpa_ign_text);
         _keyBar = FindViewById<LinearLayout>(Resource.Id.inpa_fkeys);
+        _keyHome = _keyBar?.Parent as ViewGroup;
+        _keyHomeIndex = _keyHome?.IndexOfChild(_keyBar) ?? 0;
+        _scrollContent = FindViewById<LinearLayout>(Resource.Id.inpa_scroll_content);
         _busy = FindViewById(Resource.Id.inpa_busy);
         _busyText = FindViewById<TextView>(Resource.Id.inpa_busy_text);
         _busyButton = FindViewById<Button>(Resource.Id.inpa_busy_abort);
@@ -78,29 +85,11 @@ public abstract class InpaActivity : Activity
         if (_subtitle != null) _subtitle.Text = text;
     }
 
-    protected void SetKey(int f, string label, Action action) =>
-        _keys[f - 1] = new KeyDef { Label = label, Action = action };
+    protected void SetKey(int f, string label, Action action, int icon = 0) =>
+        _keys[f - 1] = new KeyDef { Label = label, Action = action, Icon = icon };
 
-    protected void SetShiftKey(int f, string label, Action action) =>
-        _keys[f + 9] = new KeyDef { Label = label, Action = action };
-
-    /// <summary>Teclas definidas, en orden: primero F1..F10, luego Shift+F1..F10.</summary>
-    protected IEnumerable<(int F, bool Shift, string Label)> DefinedKeys()
-    {
-        for (int i = 0; i < 20; i++)
-        {
-            var k = _keys[i];
-            if (k?.Action != null)
-                yield return (i % 10 + 1, i >= 10, k.Label);
-        }
-    }
-
-    /// <summary>Texto estilo INPA para listados de texto: "&lt; F1 &gt;  Info" o "&lt;Shift&gt; + &lt; F4 &gt;  Borrar".</summary>
-    protected static string KeyCaption(int f, bool shift, string label)
-    {
-        var key = f == 10 ? "< F10>" : $"< F{f} >";
-        return shift ? $"<Shift> + {key}  {label}" : $"{key}  {label}";
-    }
+    protected void SetShiftKey(int f, string label, Action action, int icon = 0) =>
+        _keys[f + 9] = new KeyDef { Label = label, Action = action, Icon = icon };
 
     /// <summary>Se llama antes de ejecutar cualquier tecla F. Devolver false para ignorarla.</summary>
     protected virtual bool BeforeKey(int f, bool shift) => true;
@@ -118,18 +107,42 @@ public abstract class InpaActivity : Activity
         }
         catch (Exception ex)
         {
-            UiUtil.Toast(this, "Error: " + UiUtil.Describe(ex));
+            UiUtil.Toast(this, UiUtil.Str(this, Resource.String.g_error_msg, UiUtil.Describe(ex)));
         }
+    }
+
+    bool IsLandscape()
+    {
+        int w = Resources?.Configuration?.ScreenWidthDp ?? 0;
+        int h = Resources?.Configuration?.ScreenHeightDp ?? 0;
+        return w > h && h > 0;
     }
 
     int KeyColumns()
     {
         int w = Resources?.Configuration?.ScreenWidthDp ?? 0;
-        int h = Resources?.Configuration?.ScreenHeightDp ?? 0;
         // En apaisado el alto es escaso: más columnas para que las tarjetas no se coman los resultados.
-        if (w > h && h > 0)
+        if (IsLandscape())
             return w >= 560 ? 4 : 3;
         return w >= 900 ? 4 : w >= 600 ? 3 : 2;
+    }
+
+    /// <summary>
+    /// En apaisado las tarjetas pasan al principio del ScrollView de resultados (así comparten el poco alto
+    /// disponible); en vertical vuelven a su sitio fijo al pie de la pantalla.
+    /// </summary>
+    void PlaceKeyBar()
+    {
+        if (_keyBar == null || _keyHome == null || _scrollContent == null)
+            return;
+        var target = IsLandscape() ? _scrollContent : _keyHome;
+        if (_keyBar.Parent == target)
+            return;
+        (_keyBar.Parent as ViewGroup)?.RemoveView(_keyBar);
+        if (target == _scrollContent)
+            target.AddView(_keyBar, 0);
+        else
+            target.AddView(_keyBar, Math.Min(_keyHomeIndex, target.ChildCount));
     }
 
     /// <summary>Dibuja las teclas definidas como tarjetas en una cuadrícula; las Shift (destructivas) al final.</summary>
@@ -137,6 +150,7 @@ public abstract class InpaActivity : Activity
     {
         if (_keyBar == null)
             return;
+        PlaceKeyBar();
         _keyBar.RemoveAllViews();
         int cols = KeyColumns();
         LinearLayout? row = null;
@@ -153,7 +167,7 @@ public abstract class InpaActivity : Activity
                 _keyBar.AddView(row, new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MatchParent, LinearLayout.LayoutParams.WrapContent));
             }
-            row!.AddView(MakeKeyView(key.Label, i % 10 + 1, i >= 10), KeyParams());
+            row!.AddView(MakeKeyView(key.Label, key.Icon, i % 10 + 1, i >= 10), KeyParams());
         }
         // Relleno de la última fila para que las tarjetas mantengan el ancho.
         // Alto 0 explícito: una View con wrap_content se estira a todo el espacio disponible y aplastaría el resto.
@@ -170,7 +184,7 @@ public abstract class InpaActivity : Activity
         return lp;
     }
 
-    TextView MakeKeyView(string label, int f, bool danger)
+    TextView MakeKeyView(string label, int icon, int f, bool danger)
     {
         var tv = new TextView(this)
         {
@@ -183,7 +197,14 @@ public abstract class InpaActivity : Activity
         tv.SetMaxLines(3);
         tv.SetTextSize(ComplexUnitType.Sp, 15);
         tv.SetTypeface(null, TypefaceStyle.Bold);
-        tv.SetTextColor(Resources!.GetColor(danger ? Resource.Color.m_error : Resource.Color.m_text, Theme));
+        int textColor = Resources!.GetColor(danger ? Resource.Color.m_error : Resource.Color.m_text, Theme);
+        tv.SetTextColor(new Color(textColor));
+        if (icon != 0)
+        {
+            tv.SetCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0);
+            tv.CompoundDrawablePadding = UiUtil.Dp(this, 8);
+            tv.CompoundDrawableTintList = ColorStateList.ValueOf(new Color(textColor));
+        }
         tv.SetBackgroundResource(danger ? Resource.Drawable.bg_card_danger : Resource.Drawable.bg_card);
         int p = UiUtil.Dp(this, 8);
         tv.SetPadding(p, p, p, p);
@@ -225,11 +246,11 @@ public abstract class InpaActivity : Activity
     }
 
     /// <summary>Muestra la barra de trabajo. Por defecto el botón llama a DiagService.Abort().</summary>
-    protected void ShowBusy(string text, string buttonText = "Abortar", Action? onButton = null)
+    protected void ShowBusy(string text, string? buttonText = null, Action? onButton = null)
     {
         if (_busy == null) return;
         if (_busyText != null) _busyText.Text = text;
-        if (_busyButton != null) _busyButton.Text = buttonText;
+        if (_busyButton != null) _busyButton.Text = buttonText ?? GetString(Resource.String.g_abort);
         _busyAction = onButton ?? AbortJob;
         _busy.Visibility = ViewStates.Visible;
     }
@@ -246,7 +267,7 @@ public abstract class InpaActivity : Activity
         try
         {
             Diag.Abort();
-            if (_busyText != null) _busyText.Text = "Abortando…";
+            if (_busyText != null) _busyText.Text = GetString(Resource.String.g_aborting);
         }
         catch (Exception ex)
         {
