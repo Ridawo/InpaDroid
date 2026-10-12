@@ -4,10 +4,31 @@ using Android.Graphics;
 using Android.Graphics.Drawables;
 using Android.Util;
 using Android.Views;
+using Android.Views.Accessibility;
 using Android.Widget;
 using InpaDroid.Diag;
+using Action = System.Action;
 
 namespace InpaDroid.Ui;
+
+/// <summary>Hace que TalkBack anuncie una vista pulsable como botón (o casilla, si se da <c>isChecked</c>).</summary>
+internal sealed class ButtonDelegate(Func<bool>? isChecked = null) : View.AccessibilityDelegate
+{
+    public override void OnInitializeAccessibilityNodeInfo(View? host, AccessibilityNodeInfo? info)
+    {
+        base.OnInitializeAccessibilityNodeInfo(host, info);
+        if (info == null)
+            return;
+        if (isChecked == null)
+        {
+            info.ClassName = "android.widget.Button";
+            return;
+        }
+        info.ClassName = "android.widget.CheckBox";
+        info.Checkable = true;
+        info.Checked = isChecked();
+    }
+}
 
 public abstract class InpaActivity : Activity
 {
@@ -191,19 +212,20 @@ public abstract class InpaActivity : Activity
             Text = label,
             Gravity = GravityFlags.Center,
             Clickable = true,
-            Focusable = false,
+            Focusable = true,
         };
+        tv.SetAccessibilityDelegate(new ButtonDelegate());
         tv.SetMinHeight(UiUtil.Dp(this, 56));
         tv.SetMaxLines(3);
         tv.SetTextSize(ComplexUnitType.Sp, 15);
         tv.SetTypeface(null, TypefaceStyle.Bold);
-        int textColor = Resources!.GetColor(danger ? Resource.Color.m_error : Resource.Color.m_text, Theme);
-        tv.SetTextColor(new Color(textColor));
+        var textColor = danger ? UiUtil.ErrorText : UiUtil.Res(this, Resource.Color.m_text);
+        tv.SetTextColor(textColor);
         if (icon != 0)
         {
             tv.SetCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0);
             tv.CompoundDrawablePadding = UiUtil.Dp(this, 8);
-            tv.CompoundDrawableTintList = ColorStateList.ValueOf(new Color(textColor));
+            tv.CompoundDrawableTintList = ColorStateList.ValueOf(textColor);
         }
         tv.SetBackgroundResource(danger ? Resource.Drawable.bg_card_danger : Resource.Drawable.bg_card);
         int p = UiUtil.Dp(this, 8);
@@ -334,17 +356,30 @@ public abstract class InpaActivity : Activity
         }
     }
 
+    DateTime _headerAt;
+
+    /// <summary>La tensión de la cabecera es reciente (se pausa durante el polling de Status, y entonces queda vieja).</summary>
+    internal bool HeaderFresh => (DateTime.UtcNow - _headerAt).TotalSeconds < 10;
+
     void SetIndicators(double? ubatt, bool? ignition)
     {
+        if (ubatt != null) _headerAt = DateTime.UtcNow;
         // Como ShowBatteryIgnition de INPA: sin batería, el encendido también se da por apagado.
         bool battOn = ubatt is > 0;
         if (_battLed != null) SetLed(_battLed, battOn);
         if (_battText != null)
+        {
             _battText.Text = ubatt == null ? "--" : battOn ? $"on  {ubatt.Value:0.0} V" : "off";
+            // Los LED no se anuncian: el estado lo da el texto (y "--" se lee como "sin datos").
+            _battText.ContentDescription = ubatt == null ? GetString(Resource.String.ax_unknown) : null;
+        }
         bool ignOn = battOn && ignition == true;
         if (_ignLed != null) SetLed(_ignLed, ignOn);
         if (_ignText != null)
+        {
             _ignText.Text = ignition == null ? "--" : ignOn ? "on" : "off";
+            _ignText.ContentDescription = ignition == null ? GetString(Resource.String.ax_unknown) : null;
+        }
     }
 
     static void SetLed(View led, bool on)
