@@ -29,7 +29,7 @@ public class ChassisMenuActivity : InpaActivity
         base.OnCreate(savedInstanceState);
         // La lista y ChassisEcuActivity deben ver el mismo catálogo (override de la carpeta ECU incluido), también
         // si Android recrea esta pantalla tras matar el proceso, antes de que DiagHolder lo haya cargado.
-        ChassisCatalog.TryLoadFromFolder(DiagHolder.LoadSettings(this).EcuPath);
+        DiagHolder.LoadCatalogs(this, DiagHolder.LoadSettings(this).EcuPath);
         _chassis = ChassisCatalog.Get(Intent?.GetStringExtra(ChassisEcuActivity.ExtraChassisId) ?? "");
         InitInpa(Resource.Layout.chassis_menu, _chassis.Name);
         SetSubtitle(_chassis.Subtitle);
@@ -42,13 +42,15 @@ public class ChassisMenuActivity : InpaActivity
             heading.Text += " - " + GetString(Resource.String.ch_menu_unverified);
 
         var adapter = new TwoLineAdapter(this, ecus.Select((e, i) => new TwoLineAdapter.Row(
-            e.Title, e.Sgbd, (i + 1).ToString("00"), UiUtil.Blue, i)));
+            e.Title, e.Sgbd, (i + 1).ToString("00"), UiUtil.BlueDark, i)));
         list.Adapter = adapter;
         list.ItemClick += (_, e) => OpenEcu((int)adapter.GetRow(e.Position).Tag);
         var search = FindViewById<EditText>(Resource.Id.chassis_menu_search)!;
         search.TextChanged += (_, _) => adapter.Filter(search.Text);
 
         SetKey(1, GetString(Resource.String.ch_key_info), ShowInfo, Resource.Drawable.ic_info);
+        if (ecus.Count > 0)
+            SetKey(2, GetString(Resource.String.sc_key_scan), () => ChassisScanActivity.Start(this, _chassis.Id), Resource.Drawable.ic_fault);
         SetKey(10, GetString(Resource.String.ch_key_back), Finish);
         RefreshKeys();
     }
