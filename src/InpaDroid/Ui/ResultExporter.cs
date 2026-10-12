@@ -72,7 +72,7 @@ internal static class ResultExporter
             var uri = ExportProvider.UriFor(name);
             var send = new Intent(Intent.ActionSend);
             send.SetType("text/csv");
-            send.PutExtra(Intent.ExtraSubject, "InpaDroid " + now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+            send.PutExtra(Intent.ExtraSubject, UiUtil.Str(ctx, Resource.String.ax_export_subject, now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
             send.PutExtra(Intent.ExtraStream, uri);
             send.ClipData = ClipData.NewRawUri(name, uri);
             send.AddFlags(ActivityFlags.GrantReadUriPermission);
