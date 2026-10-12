@@ -17,9 +17,6 @@ public class EcuSelectActivity : InpaActivity
     public const string ExtraEcuName = "ecu_name";
     public const string ExtraIsGroup = "ecu_is_group";
 
-    static readonly Color GroupBadge = Color.ParseColor("#1C69D4");
-    static readonly Color PrgBadge = Color.ParseColor("#808080");
-
     EditText _search = null!;
     TextView _count = null!;
     ListView _list = null!;
@@ -69,11 +66,13 @@ public class EcuSelectActivity : InpaActivity
             var svc = Diag;
             var files = await Task.Run(() => svc.ScanEcuFolder());
 
+            var groupBadge = UiUtil.Res(this, Resource.Color.inpa_badge_grp);
+            var prgBadge = UiUtil.Res(this, Resource.Color.inpa_badge_prg);
             _adapter = new TwoLineAdapter(this, files.Select(f => new TwoLineAdapter.Row(
                 f.Name,
                 f.IsGroup ? GetString(Resource.String.g_group_sub)! : System.IO.Path.GetFileName(f.FullPath),
                 f.IsGroup ? "GRP" : "PRG",
-                f.IsGroup ? GroupBadge : PrgBadge,
+                f.IsGroup ? groupBadge : prgBadge,
                 f)));
             _list.Adapter = _adapter;
             _adapter.Filter(_search.Text);
