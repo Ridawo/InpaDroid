@@ -22,7 +22,7 @@ internal static class JobDialogs
         list.LayoutParameters = lp;
 
         var adapter = new TwoLineAdapter(activity,
-            jobs.Select(j => new TwoLineAdapter.Row(j.Name, FirstLine(j.Comment), null, UiUtil.Blue, j)));
+            jobs.Select(j => new TwoLineAdapter.Row(j.Name, FirstLine(j.Comment), null, UiUtil.BlueDark, j)));
         list.Adapter = adapter;
         void UpdateCount() => count.Text = UiUtil.Str(activity, Resource.String.g_jd_count, adapter.Count, adapter.TotalCount);
         UpdateCount();
@@ -80,29 +80,69 @@ internal static class JobDialogs
         dialog.Show();
     }
 
-    /// <param name="danger">true = acción destructiva o que activa componentes: botón de acción en rojo y aviso destacado.</param>
+    /// <summary>
+    /// Confirmación de un job que no es de solo lectura: SGBD, JOB y argumentos tal cual se enviarán y, si la batería
+    /// está baja o sin leer, un aviso destacado encima (no bloquea: el usuario puede seguir).
+    /// </summary>
+    public static void ConfirmJob(Activity activity, string title, string message, string sgbd, string job, string args,
+        string yesText, Action onYes, (string Text, Action Click)? extra = null)
+    {
+        var details = $"SGBD: {sgbd}\nJOB: {job}\nARGS: {(args.Length > 0 ? args : activity.GetString(Resource.String.g_jd_none))}";
+        Confirm(activity, title, details + "\n\n" + message, yesText, onYes, BatteryBanner(activity), extra);
+    }
+
+    // Última tensión leída por la cabecera (InpaActivity la refresca cada ~2 s); null si es correcta.
+    static string? BatteryBanner(Activity activity)
+    {
+        var volts = activity is InpaActivity { HeaderFresh: true }
+            ? BatteryGuard.ParseHeader(activity.FindViewById<TextView>(Resource.Id.inpa_batt_text)?.Text) : null;
+        var min = BatteryGuard.MinVolts.ToString("0.0");
+        return BatteryGuard.Check(volts) switch
+        {
+            BatteryGuard.State.Low => UiUtil.Str(activity, Resource.String.sf_batt_low, volts!.Value.ToString("0.0"), min),
+            BatteryGuard.State.Unknown => UiUtil.Str(activity, Resource.String.sf_batt_unknown, min),
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// Confirmación de una acción destructiva o que activa componentes: botón de acción en rojo y aviso destacado.
+    /// banner: aviso extra en bloque invertido encima del mensaje; extra: botón neutro (p. ej. guardar antes).
+    /// </summary>
     public static void Confirm(Activity activity, string title, string message, string yesText, Action onYes,
-        bool danger)
+        string? banner = null, (string Text, Action Click)? extra = null)
     {
         var builder = new AlertDialog.Builder(activity)
             .SetPositiveButton(yesText, (_, _) => onYes())!
             .SetNegativeButton(Resource.String.g_cancel, (_, _) => { })!;
-        if (!danger)
-        {
-            builder.SetTitle(title)!.SetMessage(message)!.Show();
-            return;
-        }
+        if (extra is { } e)
+            builder.SetNeutralButton(e.Text, (_, _) => e.Click());
 
+        int p = UiUtil.Dp(activity, 16);
+        var content = new LinearLayout(activity) { Orientation = Android.Widget.Orientation.Vertical };
+        if (banner != null)
+        {
+            // Colores invertidos y letra mayor que el mensaje: no puede pasar desapercibido.
+            var alert = new TextView(activity) { Text = banner };
+            alert.SetTextColor(UiUtil.ErrorBg);
+            alert.SetTextSize(Android.Util.ComplexUnitType.Sp, 18);
+            alert.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
+            alert.SetBackgroundColor(UiUtil.ErrorText);
+            alert.SetPadding(p, p, p, p);
+            var lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            lp.BottomMargin = p / 2;
+            content.AddView(alert, lp);
+        }
         var warn = new TextView(activity) { Text = message };
         warn.SetTextColor(UiUtil.ErrorText);
         warn.SetTextSize(Android.Util.ComplexUnitType.Sp, 16);
         warn.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
         warn.SetBackgroundColor(UiUtil.ErrorBg);
-        int p = UiUtil.Dp(activity, 16);
         warn.SetPadding(p, p, p, p);
+        content.AddView(warn);
         var box = new ScrollView(activity);
         box.SetPadding(p, p / 2, p, 0);
-        box.AddView(warn);
+        box.AddView(content);
         var dialog = builder.SetTitle(title)!.SetView(box)!.Create()!;
         dialog.ShowEvent += (_, _) =>
         {
@@ -114,6 +154,7 @@ internal static class JobDialogs
                 yes.SetMinHeight(UiUtil.Dp(activity, UiUtil.TouchDp));
             }
             dialog.GetButton((int)Android.Content.DialogButtonType.Negative)?.SetMinHeight(UiUtil.Dp(activity, UiUtil.TouchDp));
+            dialog.GetButton((int)Android.Content.DialogButtonType.Neutral)?.SetMinHeight(UiUtil.Dp(activity, UiUtil.TouchDp));
         };
         dialog.Show();
     }
