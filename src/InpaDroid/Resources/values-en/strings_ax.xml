@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Accessibility and internationalization strings. Prefix ax_. -->
+<resources>
+    <string name="ax_hint_all">all</string>
+    <string name="ax_export_subject">InpaDroid %1$s</string>
+    <string name="ax_unknown">no data</string>
+    <string name="ax_chart_empty">Live chart, no data</string>
+    <string name="ax_chart_series">%1$s: last %2$s, minimum %3$s, maximum %4$s</string>
+</resources>
