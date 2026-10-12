@@ -77,6 +77,8 @@ A file in the ECU folder may also be just the `ecus` array (`[ { "title": ..., "
 
 `unit` and `args` can be omitted when empty. `identJob`, `fsReadJob`, and `fsClearJob` default to `IDENT`, `FS_LESEN`, and `FS_LOESCHEN` respectively and can be omitted if those defaults apply.
 
+The format is described by [docs/catalog.schema.json](docs/catalog.schema.json) (JSON Schema draft-07). To get validation and completion in your editor, add `"$schema": "../../../../docs/catalog.schema.json"` as the first key of the file, or map the schema to `*_catalog*.json` in your editor settings (for example `json.schemas` in VS Code). The app ignores unknown keys, so the `$schema` line can stay in files copied to the ECU folder. The schema is stricter than the loader (it rejects unknown keys, to catch typos) and does not allow comments or trailing commas, which the app does accept. CI checks the embedded catalogs structurally in `CatalogSchemaTests`: required keys, unique `sgbd` per chassis, no empty job/result, status jobs read-only and a `warning` on every action that is not read-only.
+
 **Before submitting a PR with catalog changes**, verify each value and job name against the actual `.prg` using F7 (all jobs) or the `PrgProbe` tool in `tools/PrgProbe/`.
 
 ## Code conventions
@@ -182,6 +184,8 @@ El JSON de referencia con el catálogo completo está en `src/InpaDroid/Ui/Chass
 Un archivo en la carpeta ECU también puede ser solo el array de `ecus` (`[ { "title": ..., "sgbd": ... } ]`): entonces solo cambia la lista de centralitas y el resto de datos del chasis incrustado se mantiene. Se aceptan comentarios y comas finales.
 
 `unit` y `args` se pueden omitir cuando están vacíos. `identJob`, `fsReadJob` y `fsClearJob` tienen por defecto `IDENT`, `FS_LESEN` y `FS_LOESCHEN`, y se pueden omitir si esos valores aplican.
+
+El formato lo describe [docs/catalog.schema.json](docs/catalog.schema.json) (JSON Schema draft-07). Para tener validación y autocompletado en el editor, añade `"$schema": "../../../../docs/catalog.schema.json"` como primera clave del archivo, o asocia el esquema a `*_catalog*.json` en la configuración del editor (por ejemplo `json.schemas` en VS Code). La app ignora las claves desconocidas, así que puedes dejar la línea `$schema` también en la carpeta ECU. El esquema es más estricto que el cargador (rechaza claves desconocidas para cazar erratas) y no admite comentarios ni comas finales, que la app sí acepta. La CI comprueba la estructura de los catálogos incrustados en `CatalogSchemaTests`: claves obligatorias, `sgbd` único por chasis, ningún job o result vacío, jobs de status de solo lectura y un `warning` en toda acción que no sea de solo lectura.
 
 **Antes de enviar un PR con cambios en el catálogo**, verifica cada valor y nombre de job contra el `.prg` real usando F7 (todos los jobs) o la herramienta `PrgProbe` en `tools/PrgProbe/`.
 
