@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sf_jobs_title">Jobs</string>
+    <string name="sf_job_heading">Job: %1$s</string>
+    <string name="sf_status_heading">Status: %1$s</string>
+    <string name="sf_write_title">⚠ Write or activation job</string>
+    <string name="sf_write_msg">This job is not read-only: it may write or code the ECU, erase data or activate vehicle components.\n\nCheck the arguments and continue only if you know exactly what it does.</string>
+    <string name="sf_clear_save_hint">Before clearing, save the current faults: tap \"Save faults\" (it reads them and opens Share CSV), then come back to Clear faults.\n\nIf the cause of the fault is still there, the fault will be stored again and the warning light may come back on.</string>
+    <string name="sf_save_faults">Save faults</string>
+    <string name="sf_batt_low">⚠ LOW BATTERY: %1$s V (minimum %2$s V)\nWith low voltage a write can be left half done and damage the ECU, and false faults appear. Connect a charger before continuing.</string>
+    <string name="sf_batt_unknown">⚠ BATTERY VOLTAGE UNKNOWN\nIt could not be read. With low voltage a write can be left half done and damage the ECU, and false faults appear. Make sure there are at least %1$s V (ideally with a charger) before continuing.</string>
+</resources>

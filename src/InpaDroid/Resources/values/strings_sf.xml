@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sf_jobs_title">Jobs</string>
+    <string name="sf_job_heading">Job: %1$s</string>
+    <string name="sf_status_heading">Status: %1$s</string>
+    <string name="sf_write_title">⚠ Job de escritura o activación</string>
+    <string name="sf_write_msg">Este job no es de solo lectura: puede escribir o codificar la centralita, borrar datos o activar componentes del vehículo.\n\nRevisa los argumentos y continúa solo si sabes exactamente lo que hace.</string>
+    <string name="sf_clear_save_hint">Antes de borrar, guarda los errores actuales: toca «Guardar errores» (los lee y abre Compartir CSV) y luego vuelve a Borrar errores.\n\nSi la causa del fallo sigue ahí, el error volverá a registrarse y el testigo puede encenderse otra vez.</string>
+    <string name="sf_save_faults">Guardar errores</string>
+    <string name="sf_batt_low">⚠ BATERÍA BAJA: %1$s V (mínimo %2$s V)\nCon poca tensión una escritura puede quedar a medias y dañar la centralita, y aparecen errores falsos. Conecta un cargador antes de seguir.</string>
+    <string name="sf_batt_unknown">⚠ TENSIÓN DE BATERÍA DESCONOCIDA\nNo se ha podido leer. Con poca tensión una escritura puede quedar a medias y dañar la centralita, y aparecen errores falsos. Comprueba que hay al menos %1$s V (mejor con un cargador) antes de seguir.</string>
+</resources>
