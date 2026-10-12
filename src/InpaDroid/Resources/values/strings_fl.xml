@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="fl_active">Activo</string>
+  <string name="fl_history">Histórico</string>
+  <string name="fl_code">Código %1$s</string>
+  <string name="fl_counter">Contador: %1$s</string>
+  <string name="fl_conditions">Condiciones de funcionamiento</string>
+  <string name="fl_technical">Detalle técnico</string>
+</resources>
