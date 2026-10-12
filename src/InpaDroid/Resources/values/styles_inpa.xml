@@ -4,12 +4,19 @@
     <color name="inpa_blue">@color/m_primary</color>
     <color name="inpa_blue_dark">@color/m_primary_dark</color>
     <color name="inpa_bg">@color/m_bg</color>
-    <color name="inpa_panel">@color/m_surface</color>
     <color name="inpa_status_bg">@color/m_primary_container</color>
-    <color name="inpa_keybar_bg">@color/m_bg</color>
     <color name="inpa_text">@color/m_text</color>
     <color name="inpa_text_dim">@color/m_text_secondary</color>
-    <color name="inpa_busy_bg">#FFF4C2</color>
+
+    <color name="inpa_subtitle_text">#F2F7FF</color>
+    <color name="inpa_badge_grp">#1C69D4</color>
+    <color name="inpa_badge_prg">#5F5F5F</color>
+    <color name="inpa_series_1">#1C69D4</color>
+    <color name="inpa_series_2">#D4401C</color>
+    <color name="inpa_series_3">#18A018</color>
+    <color name="inpa_series_4">#9C27B0</color>
+    <color name="inpa_series_5">#E69500</color>
+    <color name="inpa_series_6">#00897B</color>
 
     <style name="InpaTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/inpa_bg</item>
@@ -24,7 +31,7 @@
         <item name="android:textColor">#FFFFFF</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:singleLine">true</item>
+        <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
     </style>
 
