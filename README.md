@@ -26,8 +26,8 @@ Each screen offers its options as touch cards with an icon; destructive ones (cl
 Every job result has a **Share CSV** link in its header. It saves the displayed results as a `.csv` file and opens Android's share sheet (mail, messaging, Drive…).
 
 <p>
-  <img src="docs/screenshots/home.png" alt="Home screen" width="280">
-  <img src="docs/screenshots/ecu-list.png" alt="E39 ECU list" width="280">
+  <img src="docs/screenshots/home-en.png" alt="Home screen" width="280">
+  <img src="docs/screenshots/ecu-list-en.png" alt="E39 ECU list" width="280">
 </p>
 
 ---
