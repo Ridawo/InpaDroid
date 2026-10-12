@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sc_key_scan">Quick scan</string>
+  <string name="sc_key_export">Export CSV</string>
+  <string name="sc_heading_start">Press Quick scan to read the fault memory of %1$s ECUs</string>
+  <string name="sc_heading_progress">Reading %1$s of %2$s</string>
+  <string name="sc_busy">%1$s (%2$s of %3$s)…</string>
+  <string name="sc_heading_partial">Scan complete: %1$s of %2$s ECUs with faults, %3$s not read</string>
+  <string name="sc_heading_done">Scan complete: %1$s of %2$s ECUs with faults</string>
+  <string name="sc_heading_cancelled">Scan cancelled (%1$s of %2$s read)</string>
+  <string name="sc_state_pending">Not read</string>
+  <string name="sc_state_ok">No faults</string>
+  <string name="sc_state_faults">%1$s faults</string>
+  <string name="sc_state_no_response">No response</string>
+  <string name="sc_state_not_found">Not found (.prg/.grp missing)</string>
+  <string name="sc_export_none">No results to export yet</string>
+  <string name="sc_export_title">Scan summary</string>
+</resources>

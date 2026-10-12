@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sc_key_scan">Escaneo rápido</string>
+  <string name="sc_key_export">Exportar CSV</string>
+  <string name="sc_heading_start">Pulsa Escaneo rápido para leer la memoria de errores de %1$s centralitas</string>
+  <string name="sc_heading_progress">Leyendo %1$s de %2$s</string>
+  <string name="sc_busy">%1$s (%2$s de %3$s)…</string>
+  <string name="sc_heading_partial">Escaneo completo: %1$s de %2$s centralitas con errores, %3$s sin leer</string>
+  <string name="sc_heading_done">Escaneo completo: %1$s de %2$s centralitas con errores</string>
+  <string name="sc_heading_cancelled">Escaneo cancelado (%1$s de %2$s leídas)</string>
+  <string name="sc_state_pending">Sin leer</string>
+  <string name="sc_state_ok">Sin errores</string>
+  <string name="sc_state_faults">%1$s errores</string>
+  <string name="sc_state_no_response">Sin respuesta</string>
+  <string name="sc_state_not_found">No encontrada (falta el .prg/.grp)</string>
+  <string name="sc_export_none">Aún no hay resultados que exportar</string>
+  <string name="sc_export_title">Resumen del escaneo</string>
+</resources>
