@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using InpaDroid.Diag;
 using System.Text.Json;
 
@@ -8,13 +9,14 @@ namespace InpaDroid.Ui.Chassis;
 // (se incrusta en el ensamblado, ver InpaDroid.csproj) + su entrada en el menú principal.
 //
 // Formato: objeto { id, name, subtitle, infoTitle, info, verified, ecus: [...] }. En "info" se pueden usar
-// los marcadores {iface} y {ecupath}. Un archivo <id>_catalog.json en la carpeta ECU del usuario sustituye
+// los marcadores {iface} y {ecupath}. <id>_catalog.en.json es la misma estructura con los textos en inglés. Un archivo <id>_catalog.json en la carpeta ECU del usuario sustituye
 // al incrustado; ahí también vale un array simple de centralitas (solo cambia las centralitas).
 public static class ChassisCatalog
 {
     const string ResourcePrefix = "chassis.";
     const string DefaultInfoTitle = "Información";
     const string ResourceSuffix = "_catalog.json";
+    const string EnglishSuffix = "_catalog.en.json";
 
     static readonly JsonSerializerOptions Options = new()
     {
@@ -27,7 +29,10 @@ public static class ChassisCatalog
     static readonly Lazy<string[]> EmbeddedIds = new(() => typeof(ChassisCatalog).Assembly.GetManifestResourceNames()
         .Where(n => n.StartsWith(ResourcePrefix, StringComparison.Ordinal) && n.EndsWith(ResourceSuffix, StringComparison.Ordinal))
         .Select(n => n[ResourcePrefix.Length..^ResourceSuffix.Length]).ToArray());
-    static readonly ConcurrentDictionary<string, ChassisInfo?> Embedded = new();
+    static readonly ConcurrentDictionary<(string Id, string Language), ChassisInfo?> Embedded = new();
+
+    /// <summary>Idioma del catálogo ("en" usa los *_catalog.en.json). La UI lo fija desde sus recursos para coincidir con Android; vacío = idioma del proceso.</summary>
+    public static string Language { get; set; } = "";
     static IReadOnlyDictionary<string, ChassisInfo>? _chassis;
 
     /// <summary>Chasis por id; si no existe devuelve uno vacío (la UI lo muestra como catálogo vacío).</summary>
@@ -65,14 +70,23 @@ public static class ChassisCatalog
         _chassis = merged;
     }
 
-    static ChassisInfo? GetEmbedded(string id) =>
-        Array.IndexOf(EmbeddedIds.Value, id) < 0 ? null : Embedded.GetOrAdd(id, LoadEmbedded);
+    static ChassisInfo? GetEmbedded(string id)
+    {
+        if (Array.IndexOf(EmbeddedIds.Value, id) < 0)
+            return null;
+        string lang = Language.Length > 0 ? Language : CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        return Embedded.GetOrAdd((id, lang), key => LoadEmbedded(key.Id, key.Language));
+    }
 
-    static ChassisInfo? LoadEmbedded(string id)
+    // Con el idioma del sistema en inglés se usa <id>_catalog.en.json (mismas centralitas y jobs, textos traducidos),
+    // si existe; en cualquier otro caso, el catálogo base en español.
+    internal static ChassisInfo? LoadEmbedded(string id, string language)
     {
         try
         {
-            using var stream = typeof(ChassisCatalog).Assembly.GetManifestResourceStream(ResourcePrefix + id + ResourceSuffix)!;
+            var asm = typeof(ChassisCatalog).Assembly;
+            using var stream = (language == "en" ? asm.GetManifestResourceStream(ResourcePrefix + id + EnglishSuffix) : null)
+                ?? asm.GetManifestResourceStream(ResourcePrefix + id + ResourceSuffix)!;
             return Parse(stream, id, null);
         }
         catch (Exception)

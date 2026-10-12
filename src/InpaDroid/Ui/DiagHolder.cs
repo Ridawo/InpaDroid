@@ -23,6 +23,13 @@ public static class DiagHolder
     }
 
     /// <summary>Ajustes guardados, con la carpeta ECU por defecto si no hay ninguna.</summary>
+    /// <summary>Carga los catálogos de chasis en el idioma de los recursos de la app, con los override de la carpeta ECU.</summary>
+    public static void LoadCatalogs(Context ctx, string ecuPath)
+    {
+        ChassisCatalog.Language = ctx.GetString(Resource.String.catalog_lang)!;
+        ChassisCatalog.TryLoadFromFolder(ecuPath);
+    }
+
     public static AdapterSettings LoadSettings(Context ctx)
     {
         var app = ctx.ApplicationContext ?? ctx;
@@ -43,7 +50,7 @@ public static class DiagHolder
                 var app = ctx.ApplicationContext ?? ctx;
                 var settings = LoadSettings(app);
                 TryCreateDirectory(settings.EcuPath);
-                ChassisCatalog.TryLoadFromFolder(settings.EcuPath);
+                LoadCatalogs(app, settings.EcuPath);
                 _service = new DiagService(app, settings);
             }
             return _service;

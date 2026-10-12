@@ -25,6 +25,7 @@
   <ItemGroup>
     <!-- Catálogos de chasis: un <id>_catalog.json por chasis, leídos por ChassisCatalog. -->
     <EmbeddedResource Include="Ui\Chassis\*_catalog.json" LogicalName="chassis.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Ui\Chassis\*_catalog.en.json" WithCulture="false" LogicalName="chassis.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

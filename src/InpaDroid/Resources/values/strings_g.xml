@@ -61,6 +61,7 @@
     <string name="g_aborted_by_user">Abortado por el usuario</string>
     <string name="g_rp_no_faults">Memoria de errores: sin errores almacenados</string>
     <string name="g_rp_faults_count">Errores almacenados: %1$s</string>
+    <string name="catalog_lang" translatable="false">es</string>
     <string name="g_rp_job_failed">El job ha fallado</string>
     <string name="g_rp_fault_n">Error %1$s</string>
     <string name="g_rp_no_results">(sin resultados)</string>
