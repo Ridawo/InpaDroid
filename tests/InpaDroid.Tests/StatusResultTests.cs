@@ -4,6 +4,8 @@ namespace InpaDroid.Tests;
 
 public sealed class StatusResultTests
 {
+    const string Failed = "The job failed";
+
     static JobResult Result(string status, params (string Key, string Value)[][] sets) => new()
     {
         Ok = true,
@@ -14,22 +16,22 @@ public sealed class StatusResultTests
     [Fact]
     public void StatusError_NullWhenOkay_AnyCase()
     {
-        Assert.Null(DiagLogic.StatusError(Result("OKAY")));
-        Assert.Null(DiagLogic.StatusError(Result("okay")));
-        Assert.Null(DiagLogic.StatusError(Result("")));
+        Assert.Null(DiagLogic.StatusError(Result("OKAY"), Failed));
+        Assert.Null(DiagLogic.StatusError(Result("okay"), Failed));
+        Assert.Null(DiagLogic.StatusError(Result(""), Failed));
     }
 
     [Fact]
     public void StatusError_ReportsOtherJobStatus()
     {
-        Assert.Equal("JOB_STATUS: ERROR_ECU_REJECTED", DiagLogic.StatusError(Result("ERROR_ECU_REJECTED")));
+        Assert.Equal("JOB_STATUS: ERROR_ECU_REJECTED", DiagLogic.StatusError(Result("ERROR_ECU_REJECTED"), Failed));
     }
 
     [Fact]
     public void StatusError_FailedJob_UsesErrorOrFallback()
     {
-        Assert.Equal("boom", DiagLogic.StatusError(new JobResult { Ok = false, Error = "boom" }));
-        Assert.Equal("El job ha fallado", DiagLogic.StatusError(new JobResult { Ok = false }));
+        Assert.Equal("boom", DiagLogic.StatusError(new JobResult { Ok = false, Error = "boom" }, Failed));
+        Assert.Equal(Failed, DiagLogic.StatusError(new JobResult { Ok = false }, Failed));
     }
 
     [Fact]
