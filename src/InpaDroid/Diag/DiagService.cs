@@ -193,12 +193,12 @@ public sealed class DiagService : IDisposable
         {
             if (_disposed)
             {
-                tcs.SetResult(onError("Servicio de diagnóstico cerrado"));
+                tcs.SetResult(onError(DiagLogic.ServiceClosedText));
                 return;
             }
             if (generation != Volatile.Read(ref _abortGeneration))
             {
-                tcs.SetResult(onError("Cancelado"));
+                tcs.SetResult(onError(DiagLogic.CancelledText));
                 return;
             }
             _jobGeneration = generation;
@@ -214,7 +214,7 @@ public sealed class DiagService : IDisposable
                 bool timedOut = watchdog.Finish();
                 tcs.SetResult(onError(
                     timedOut ? TimeoutMessage(limit) :
-                    IsAborted ? "Cancelado" :
+                    IsAborted ? DiagLogic.CancelledText :
                     DescribeError(ex)));
             }
             finally
@@ -230,7 +230,7 @@ public sealed class DiagService : IDisposable
         }
         catch (InvalidOperationException)
         {
-            tcs.SetResult(onError("Servicio de diagnóstico cerrado"));
+            tcs.SetResult(onError(DiagLogic.ServiceClosedText));
         }
         return tcs.Task;
     }
@@ -269,15 +269,10 @@ public sealed class DiagService : IDisposable
         DiagLogic.IsAdapterConnectionError(ex, e => (e as EdiabasNet.EdiabasNetException)?.ErrorCode.ToString());
 
     private static string TimeoutMessage(TimeSpan limit) =>
-        $"El adaptador no responde (sin respuesta tras {(int)limit.TotalSeconds} s). " +
-        "Comprueba que está conectado y que el contacto del coche está puesto.";
+        DiagLogic.TimeoutText((int)limit.TotalSeconds);
 
-    // Texto de EDIABAS más una pista para el usuario cuando el fallo es del adaptador.
-    private static string DescribeError(Exception ex)
-    {
-        string text = EdiabasNet.GetExceptionText(ex, false, false);
-        return IsAdapterConnectionError(ex) ? "Se ha perdido la conexión con el adaptador. " + text : text;
-    }
+    // Texto técnico de EDIABAS; la UI lo traduce con DiagLogic.Classify.
+    private static string DescribeError(Exception ex) => EdiabasNet.GetExceptionText(ex, false, false);
 
     // Cancelado por el watchdog o por un Abort posterior a encolar el job en curso. Se lee en el hilo de trabajo.
     private bool IsAborted => _abort || _jobGeneration != Volatile.Read(ref _abortGeneration);
