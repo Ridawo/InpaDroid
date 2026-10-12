@@ -1,13 +1,13 @@
 using Android.Content;
 using Android.Graphics;
 using Android.Widget;
+using InpaDroid.Diag;
 
 namespace InpaDroid.Ui;
 
 /// <summary>Colores y utilidades pequeñas compartidas por las pantallas.</summary>
 internal static class UiUtil
 {
-    public static readonly Color Blue = Color.ParseColor("#1C69D4");
     public static Color BlueDark => Res(Android.App.Application.Context, Resource.Color.m_accent_text);
     public static readonly Color LedOn = Color.ParseColor("#18B818");
     public static readonly Color LedOff = Color.ParseColor("#707070");
@@ -16,14 +16,7 @@ internal static class UiUtil
     public static Color OkText => Res(Android.App.Application.Context, Resource.Color.m_ok);
     public static Color FaultBg => Res(Android.App.Application.Context, Resource.Color.m_fault_bg);
     public static Color FaultText => Res(Android.App.Application.Context, Resource.Color.m_fault_text);
-    public static readonly Color FaultBlockBg = Color.ParseColor("#FFF6E0");
-    public static readonly Color BlockBg = Color.ParseColor("#FFFFFF");
-    public static readonly Color HeaderBg = Color.ParseColor("#DCE6F6");
     public static Color InfoBg => Res(Android.App.Application.Context, Resource.Color.m_info_bg);
-    public static readonly Color KeyBg = Color.ParseColor("#E4E1DA");
-    public static readonly Color KeyPressed = Color.ParseColor("#A9C4EE");
-    public static readonly Color KeyBorder = Color.ParseColor("#404040");
-    public static readonly Color ShiftOn = Color.ParseColor("#F2C200");
 
     public static Color WarnText => Res(Android.App.Application.Context, Resource.Color.m_warn);
 
@@ -35,10 +28,6 @@ internal static class UiUtil
 
     /// <summary>Altura mínima táctil recomendada (48dp).</summary>
     public const int TouchDp = 48;
-
-    /// <summary>Fondo de tarjeta (drawable bg_card / bg_card_primary / bg_card_danger).</summary>
-    public static void SetCard(Android.Views.View v, int drawableRes) =>
-        v.SetBackgroundResource(drawableRes);
 
     /// <summary>Botón grande (≥48dp) sin mayúsculas forzadas.</summary>
     public static Button BigButton(Context ctx, string text)
@@ -57,11 +46,38 @@ internal static class UiUtil
     public static void Toast(Context ctx, string text) =>
         Android.Widget.Toast.MakeText(ctx, text, ToastLength.Short)?.Show();
 
-    /// <summary>Texto corto de una excepción, sin trazas.</summary>
+    /// <summary>Mensaje comprensible de una excepción; si se reconoce la causa, va seguido del texto técnico original.</summary>
     public static string Describe(Exception ex)
     {
+        var ctx = Android.App.Application.Context;
+        if (ex is OperationCanceledException)
+            return ctx.GetString(Resource.String.g_cancelled)!;
         var inner = ex.GetBaseException();
-        var msg = string.IsNullOrWhiteSpace(inner.Message) ? inner.GetType().Name : inner.Message;
-        return ex is OperationCanceledException ? Android.App.Application.Context.GetString(Resource.String.g_cancelled) : msg;
+        return Friendly(ctx, string.IsNullOrWhiteSpace(inner.Message) ? inner.GetType().Name : inner.Message);
+    }
+
+    /// <summary>Traduce el texto técnico de un error (p. ej. JobResult.Error) a un mensaje accionable; desconocido = tal cual.</summary>
+    public static string Friendly(Context ctx, string raw)
+    {
+        int resId = DiagLogic.Classify(raw) switch
+        {
+            ErrorKind.NoEcuResponse => Resource.String.er_no_ecu_response,
+            ErrorKind.EcuConnection => Resource.String.er_ecu_connection,
+            ErrorKind.AdapterLost => Resource.String.er_adapter_lost,
+            ErrorKind.InterfaceNotFound => Resource.String.er_interface_not_found,
+            ErrorKind.UsbPermission => Resource.String.er_usb_permission,
+            ErrorKind.PortOpen => Resource.String.er_port_open,
+            ErrorKind.Timeout => Resource.String.er_timeout,
+            ErrorKind.SgbdNotFound => Resource.String.er_sgbd_not_found,
+            ErrorKind.SgbdInvalid => Resource.String.er_sgbd_invalid,
+            ErrorKind.JobNotFound => Resource.String.er_job_not_found,
+            ErrorKind.Cancelled => Resource.String.g_cancelled,
+            ErrorKind.ServiceClosed => Resource.String.er_service_closed,
+            _ => 0,
+        };
+        if (resId == 0)
+            return raw;
+        string text = ctx.GetString(resId)!;
+        return resId == Resource.String.g_cancelled ? text : text + "\n" + Str(ctx, Resource.String.er_technical, raw);
     }
 }

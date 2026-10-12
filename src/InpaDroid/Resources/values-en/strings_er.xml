@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="er_technical">Technical detail: %1$s</string>
+    <string name="er_no_ecu_response">The ECU is not responding. Check that the ignition is on and the adapter is firmly plugged into the OBD socket. Older cars (K-line) need a K+DCAN cable or similar; a generic ELM327 will not work.</string>
+    <string name="er_ecu_connection">Could not connect to the ECU. If the car is an older K-line model, the adapter type is wrong: use a K+DCAN cable or similar.</string>
+    <string name="er_adapter_lost">The connection to the adapter was lost. Check that it is still connected and try again.</string>
+    <string name="er_interface_not_found">The adapter was not found or could not be initialised. Check the USB cable or Bluetooth pairing and the adapter type selected in Settings.</string>
+    <string name="er_usb_permission">Permission to use the device is missing. Reconnect the cable and accept the USB permission when Android asks.</string>
+    <string name="er_port_open">The adapter port could not be opened. Check that no other app is using it and that the adapter is properly connected.</string>
+    <string name="er_timeout">The adapter is not responding. Check that it is connected and the car ignition is on.</string>
+    <string name="er_sgbd_not_found">The SGBD file (.prg/.grp) for this ECU was not found. Check the ECU folder in Settings.</string>
+    <string name="er_sgbd_invalid">The SGBD file is damaged or incompatible. Check the files in the ECU folder in Settings.</string>
+    <string name="er_job_not_found">This SGBD does not have that job. The ECU files may not match the control unit version.</string>
+    <string name="er_service_closed">The diagnostic service is closed. Reopen the screen.</string>
+</resources>

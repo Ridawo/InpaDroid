@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="er_technical">Detalle técnico: %1$s</string>
+    <string name="er_no_ecu_response">La centralita no responde. Comprueba que el contacto está puesto y que el adaptador está bien conectado al enchufe OBD. En coches antiguos (línea K) hace falta un cable K+DCAN o equivalente; un ELM327 genérico no sirve.</string>
+    <string name="er_ecu_connection">No se ha podido conectar con la centralita. Si el coche es antiguo (línea K), el adaptador no es del tipo adecuado: usa un cable K+DCAN o equivalente.</string>
+    <string name="er_adapter_lost">Se ha perdido la conexión con el adaptador. Revisa que sigue conectado y vuelve a intentarlo.</string>
+    <string name="er_interface_not_found">No se encuentra el adaptador o no se ha podido inicializar. Comprueba el cable USB o el emparejamiento Bluetooth y el tipo de adaptador elegido en Ajustes.</string>
+    <string name="er_usb_permission">Falta el permiso para usar el dispositivo. Vuelve a conectar el cable y acepta el permiso USB cuando Android lo pida.</string>
+    <string name="er_port_open">No se ha podido abrir el puerto del adaptador. Comprueba que ninguna otra aplicación lo usa y que el adaptador está bien conectado.</string>
+    <string name="er_timeout">El adaptador no responde. Comprueba que está conectado y que el contacto del coche está puesto.</string>
+    <string name="er_sgbd_not_found">No se encuentra el fichero SGBD (.prg/.grp) de esta centralita. Revisa la carpeta ECU en Ajustes.</string>
+    <string name="er_sgbd_invalid">El fichero SGBD está dañado o no es compatible. Revisa los ficheros de la carpeta ECU en Ajustes.</string>
+    <string name="er_job_not_found">Este SGBD no tiene ese job. Puede que la versión de los ficheros ECU no coincida con la centralita.</string>
+    <string name="er_service_closed">El servicio de diagnóstico está cerrado. Vuelve a abrir la pantalla.</string>
+</resources>
