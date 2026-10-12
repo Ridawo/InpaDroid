@@ -19,6 +19,13 @@ namespace InpaDroid.Ui.Live;
                            | ConfigChanges.UiMode | ConfigChanges.Density | ConfigChanges.FontScale | ConfigChanges.Locale)]
 public class LiveMonitorActivity : Activity
 {
+    // Declara UiMode: no se recrea al cambiar de tema, así que el gráfico recoge los colores nuevos aquí.
+    public override void OnConfigurationChanged(Android.Content.Res.Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+        _chart?.ApplyTheme();
+    }
+
     public const string ExtraEcu = "live_ecu";
     public const string ExtraSgbd = "live_sgbd";
     public const string ExtraJob = "live_job";
@@ -190,9 +197,9 @@ public class LiveMonitorActivity : Activity
 
     void Show(JobResult r)
     {
-        if (!r.Ok || (r.JobStatus.Length > 0 && !r.JobStatus.Equals("OKAY", StringComparison.OrdinalIgnoreCase)))
+        if (DiagLogic.StatusError(r, GetString(Resource.String.g_rp_job_failed)!) is string error)
         {
-            _status.Text = UiUtil.Str(this, Resource.String.live_error, r.Ok ? r.JobStatus : r.Error);
+            _status.Text = UiUtil.Str(this, Resource.String.live_error, UiUtil.Friendly(this, error));
             return;
         }
         var sample = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
@@ -257,7 +264,7 @@ public class LiveMonitorActivity : Activity
             chip.SetMinimumHeight(UiUtil.Dp(this, 56));
             chip.SetMinimumWidth(UiUtil.Dp(this, 120));
             chip.SetPadding(m * 3, m, m * 3, m);
-            chip.SetTextColor(Android.Graphics.Color.White);
+            chip.SetAccessibilityDelegate(new ButtonDelegate(() => s.Visible));
             chip.Click += (_, _) =>
             {
                 s.Visible = !s.Visible;
@@ -273,13 +280,14 @@ public class LiveMonitorActivity : Activity
 
     void StyleChip(TextView chip, LiveSeries s)
     {
-        var color = LiveChartView.ColorOf(s.ColorIndex);
+        var color = LiveChartView.ColorOf(this, s.ColorIndex);
         var bg = new Android.Graphics.Drawables.GradientDrawable();
         bg.SetCornerRadius(UiUtil.Dp(this, 8));
         bg.SetColor(s.Visible ? color : UiUtil.Res(this, Resource.Color.m_surface));
         bg.SetStroke(UiUtil.Dp(this, 2), color);
         chip.Background = bg;
-        chip.SetTextColor(s.Visible ? Android.Graphics.Color.White : color);
+        // Texto por contraste sobre el relleno; oculta: texto normal sobre la superficie (el color queda en el borde).
+        chip.SetTextColor(s.Visible ? LiveChartView.TextOn(color) : UiUtil.Res(this, Resource.Color.m_text));
     }
 
     void UpdateChipTexts()

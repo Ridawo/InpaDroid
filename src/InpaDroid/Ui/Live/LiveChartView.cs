@@ -1,7 +1,9 @@
+using System.Globalization;
 using Android.Content;
 using Android.Graphics;
 using Android.Util;
 using Android.Views;
+using Android.Views.Accessibility;
 
 namespace InpaDroid.Ui.Live;
 
@@ -12,13 +14,26 @@ namespace InpaDroid.Ui.Live;
 /// </summary>
 public sealed class LiveChartView : View
 {
-    static readonly Color[] Palette =
+    static readonly int[] PaletteIds =
     [
-        Color.ParseColor("#1C69D4"), Color.ParseColor("#D4401C"), Color.ParseColor("#18A018"),
-        Color.ParseColor("#9C27B0"), Color.ParseColor("#E69500"), Color.ParseColor("#00897B"),
+        Resource.Color.inpa_series_1, Resource.Color.inpa_series_2, Resource.Color.inpa_series_3,
+        Resource.Color.inpa_series_4, Resource.Color.inpa_series_5, Resource.Color.inpa_series_6,
     ];
 
-    public static Color ColorOf(int index) => Palette[index % Palette.Length];
+    public static Color ColorOf(Context ctx, int index) => UiUtil.Res(ctx, PaletteIds[index % PaletteIds.Length]);
+
+    /// <summary>Negro o blanco, el que dé más contraste (WCAG) sobre <paramref name="bg"/>, para texto sobre un chip.</summary>
+    public static Color TextOn(Color bg)
+    {
+        static double Lin(int c8)
+        {
+            double c = c8 / 255.0;
+            return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+        }
+        double l = 0.2126 * Lin(bg.R) + 0.7152 * Lin(bg.G) + 0.0722 * Lin(bg.B);
+        // Contraste con blanco = 1.05/(l+0.05); con negro = (l+0.05)/0.05.
+        return 1.05 / (l + 0.05) >= (l + 0.05) / 0.05 ? Color.White : Color.Black;
+    }
 
     readonly LiveSeriesData _data;
     readonly Paint _line = new(PaintFlags.AntiAlias);
@@ -33,10 +48,32 @@ public sealed class LiveChartView : View
         _line.StrokeJoin = Paint.Join.Round;
         _line.StrokeCap = Paint.Cap.Round;
         _line.SetStyle(Paint.Style.Stroke);
-        _grid.Color = UiUtil.Res(context, Resource.Color.m_divider);
         _grid.StrokeWidth = Math.Max(1f, density * 0.75f);
-        SetBackgroundColor(UiUtil.Res(context, Resource.Color.m_surface));
+        ApplyTheme();
     }
+
+    /// <summary>Recalcula los colores del tema (claro/oscuro); la actividad lo llama si el modo cambia con ella abierta.</summary>
+    public void ApplyTheme()
+    {
+        _grid.Color = UiUtil.Res(Context!, Resource.Color.m_divider);
+        SetBackgroundColor(UiUtil.Res(Context!, Resource.Color.m_surface));
+        Invalidate();
+    }
+
+    // Descripción dinámica para TalkBack: último/mín/máx de cada serie visible.
+    public override void OnInitializeAccessibilityNodeInfo(AccessibilityNodeInfo? info)
+    {
+        base.OnInitializeAccessibilityNodeInfo(info);
+        if (info == null)
+            return;
+        var parts = _data.Series.Where(s => s.Visible && !double.IsNaN(s.Last)).Select(s =>
+            UiUtil.Str(Context!, Resource.String.ax_chart_series, s.Name, Fmt(s.Last), Fmt(s.Min), Fmt(s.Max))).ToList();
+        info.ContentDescription = parts.Count == 0
+            ? Context!.GetString(Resource.String.ax_chart_empty)
+            : string.Join("; ", parts);
+    }
+
+    static string Fmt(double v) => v.ToString("0.##", CultureInfo.CurrentCulture);
 
     protected override void OnDraw(Canvas canvas)
     {
@@ -75,7 +112,7 @@ public sealed class LiveChartView : View
                 min -= 0.5;
                 range = 1;
             }
-            _line.Color = ColorOf(s.ColorIndex);
+            _line.Color = ColorOf(Context!, s.ColorIndex);
             _path.Reset();
             bool pen = false;
             for (int i = 0; i < n; i++)
