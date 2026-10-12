@@ -29,7 +29,7 @@
         android:hint="@string/ecu_search_chassis_hint"
         android:imeOptions="actionSearch"
         android:inputType="textNoSuggestions"
-        android:singleLine="true" />
+        android:maxLines="1" />
 
     <ListView
         android:id="@+id/chassis_menu_list"

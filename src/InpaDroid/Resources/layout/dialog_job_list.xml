@@ -17,7 +17,7 @@
         android:hint="@string/set_job_search_hint"
         android:imeOptions="actionSearch"
         android:inputType="textCapCharacters|textNoSuggestions"
-        android:singleLine="true" />
+        android:maxLines="1" />
 
     <TextView
         android:id="@+id/job_count"
@@ -33,7 +33,9 @@
     <ListView
         android:id="@+id/job_list"
         android:layout_width="match_parent"
-        android:layout_height="360dp"
-        android:divider="#B0B0B0"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:minHeight="200dp"
+        android:divider="@color/m_divider"
         android:dividerHeight="1dp" />
 </LinearLayout>

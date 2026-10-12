@@ -19,7 +19,7 @@
         android:hint="@string/ecu_search_hint"
         android:imeOptions="actionSearch"
         android:inputType="textCapCharacters|textNoSuggestions"
-        android:singleLine="true" />
+        android:maxLines="1" />
 
     <TextView
         android:id="@+id/ecu_count"

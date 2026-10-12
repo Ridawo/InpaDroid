@@ -151,7 +151,7 @@
                     android:imeOptions="actionDone"
                     android:inputType="textUri|textNoSuggestions"
                     android:minHeight="48dp"
-                    android:singleLine="true" />
+                    android:maxLines="1" />
 
                 <TextView
                     android:id="@+id/set_enet_error"
@@ -186,7 +186,7 @@
                     android:imeOptions="actionDone"
                     android:inputType="textUri|textNoSuggestions"
                     android:minHeight="48dp"
-                    android:singleLine="true" />
+                    android:maxLines="1" />
 
                 <TextView
                     android:id="@+id/set_wifi_error"

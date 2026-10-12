@@ -33,7 +33,7 @@
             android:minHeight="48dp"
             android:fontFamily="monospace"
             android:inputType="text|textNoSuggestions"
-            android:singleLine="true" />
+            android:maxLines="1" />
 
         <TextView
             style="@style/InpaLabel"
@@ -47,8 +47,8 @@
             android:layout_height="wrap_content"
             android:minHeight="48dp"
             android:fontFamily="monospace"
-            android:hint="todos"
+            android:hint="@string/ax_hint_all"
             android:inputType="textCapCharacters|textNoSuggestions"
-            android:singleLine="true" />
+            android:maxLines="1" />
     </LinearLayout>
 </ScrollView>

@@ -27,13 +27,15 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:accessibilityLiveRegion="polite"
             android:layout_weight="1"
             android:maxLines="3" />
 
         <Button
             android:id="@+id/inpa_busy_abort"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:layout_marginStart="8dp"
             android:background="@drawable/bg_card_danger"
             android:minWidth="96dp"

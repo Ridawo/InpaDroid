@@ -26,7 +26,7 @@
         <TextView
             android:id="@+id/inpa_title"
             style="@style/InpaTitle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
@@ -37,10 +37,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:layout_weight="1"
             android:ellipsize="start"
-            android:maxWidth="180dp"
-            android:singleLine="true"
-            android:textColor="#D6E4FA"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textColor="@color/inpa_subtitle_text"
             android:textSize="13sp" />
     </LinearLayout>
 
@@ -63,6 +64,7 @@
 
         <View
             android:id="@+id/inpa_batt_led"
+            android:importantForAccessibility="no"
             style="@style/InpaLed" />
 
         <TextView
@@ -81,6 +83,7 @@
 
         <View
             android:id="@+id/inpa_ign_led"
+            android:importantForAccessibility="no"
             style="@style/InpaLed" />
 
         <TextView
