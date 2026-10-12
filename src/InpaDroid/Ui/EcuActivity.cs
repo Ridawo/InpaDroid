@@ -149,7 +149,7 @@ public class EcuActivity : InpaActivity
                 await RunJobCore(sgbd, job, heading, args, results);
         });
 
-    async Task RunJobCore(string sgbd, string job, string heading, string args, string results)
+    async Task<JobResult?> RunJobCore(string sgbd, string job, string heading, string args, string results)
     {
         int gen = ++_generation;
         _heading.Text = heading;
@@ -157,23 +157,26 @@ public class EcuActivity : InpaActivity
         try
         {
             var r = await Diag.RunJobAsync(sgbd, job, args, results);
-            if (gen == _generation)
-                _results.ShowResult(sgbd, job, r);
+            if (gen != _generation)
+                return null;
+            _results.ShowResult(sgbd, job, r);
+            return r;
         }
         catch (Exception ex)
         {
             if (gen == _generation)
                 _results.ShowException(sgbd, job, ex);
+            return null;
         }
     }
 
     void ConfirmClearFaults()
     {
         var name = _sgbd ?? _ecuName;
-        JobDialogs.Confirm(this, GetString(Resource.String.g_clear_title)!,
-            UiUtil.Str(this, Resource.String.g_clear_msg, name),
+        JobDialogs.ConfirmJob(this, GetString(Resource.String.g_clear_title)!,
+            UiUtil.Str(this, Resource.String.g_clear_msg, name) + "\n\n" + GetString(Resource.String.sf_clear_save_hint),
+            name, "FS_LOESCHEN", "",
             GetString(Resource.String.g_clear_yes)!,
-            danger: true,
             onYes: () => Exclusive(async () =>
             {
                 var sgbd = await EnsureSgbdAsync();
@@ -181,8 +184,21 @@ public class EcuActivity : InpaActivity
                     return;
                 await RunJobCore(sgbd, "FS_LOESCHEN", GetString(Resource.String.g_clear_title)!, "", "");
                 _results.ShowInfo(GetString(Resource.String.g_head_fault_memory)!, GetString(Resource.String.ecu_reread_faults)!, append: true);
-            }));
+            }),
+            extra: (GetString(Resource.String.sf_save_faults)!, SaveFaults));
     }
+
+    // "Guardar errores" del aviso de borrado: lee la memoria de errores y la comparte en CSV.
+    void SaveFaults() =>
+        Exclusive(async () =>
+        {
+            var sgbd = await EnsureSgbdAsync();
+            if (sgbd == null)
+                return;
+            var r = await RunJobCore(sgbd, "FS_LESEN", GetString(Resource.String.g_head_fault_memory)!, "", "");
+            if (r != null && DiagLogic.StatusError(r, "") == null)
+                _results.Share();
+        });
 
     void PickJob(string? prefix, string title, Action<string, JobInfo> onPick) =>
         Exclusive(async () =>
@@ -207,34 +223,50 @@ public class EcuActivity : InpaActivity
     void StatusMenu() =>
         PickJob("STATUS_", "Status", (sgbd, job) =>
         {
+            // Un STATUS_ que escribe o activa (p. ej. STATUS_VORGEBEN) no se repite en bucle: una vez y tras confirmar.
+            bool readOnly = JobPolicy.IsReadOnly(job.Name);
+            void Start(string args, string res)
+            {
+                if (readOnly)
+                    StartPolling(sgbd, job.Name, args, res);
+                else
+                    RunChecked(sgbd, job.Name, args, res);
+            }
             if (job.Arguments.Count == 0)
-                StartPolling(sgbd, job.Name, "", "");
+                Start("", "");
             else
-                JobDialogs.AskArguments(this, sgbd, job, GetString(Resource.String.g_read)!, (args, res) => StartPolling(sgbd, job.Name, args, res));
+                JobDialogs.AskArguments(this, sgbd, job, GetString(readOnly ? Resource.String.g_read : Resource.String.g_continue)!, Start);
         });
 
     void SteuernMenu() =>
         PickJob("STEUERN", "Steuern", (sgbd, job) =>
             JobDialogs.AskArguments(this, sgbd, job, GetString(Resource.String.g_continue)!, (args, res) =>
-                JobDialogs.Confirm(this, GetString(Resource.String.g_steuern_title)!,
-                    UiUtil.Str(this, Resource.String.g_steuern_intro, job.Name, sgbd,
-                        args.Length > 0 ? " " + UiUtil.Str(this, Resource.String.g_steuern_args, args) : "") +
-                    GetString(Resource.String.g_steuern_warning),
+                JobDialogs.ConfirmJob(this, GetString(Resource.String.g_steuern_title)!,
+                    GetString(Resource.String.g_steuern_warning)!, sgbd, job.Name, args,
                     GetString(Resource.String.g_run)!,
-                    danger: true,
                     onYes: () => Exclusive(() => RunJobCore(sgbd, job.Name, "Steuern: " + job.Name, args, res)))));
 
     void JobsMenu() =>
-        PickJob(null, "Jobs", (sgbd, job) =>
-            JobDialogs.AskArguments(this, sgbd, job, GetString(Resource.String.g_run)!, (args, res) =>
-                Exclusive(() => RunJobCore(sgbd, job.Name, "Job: " + job.Name, args, res))));
+        PickJob(null, GetString(Resource.String.sf_jobs_title)!, (sgbd, job) =>
+            JobDialogs.AskArguments(this, sgbd, job, GetString(Resource.String.g_run)!, (args, res) => RunChecked(sgbd, job.Name, args, res)));
+
+    // Los jobs de solo lectura se ejecutan directamente; el resto pide confirmación con SGBD, JOB y argumentos.
+    void RunChecked(string sgbd, string job, string args, string results)
+    {
+        void Run() => Exclusive(() => RunJobCore(sgbd, job, UiUtil.Str(this, Resource.String.sf_job_heading, job), args, results));
+        if (JobPolicy.IsReadOnly(job))
+            Run();
+        else
+            JobDialogs.ConfirmJob(this, GetString(Resource.String.sf_write_title)!, GetString(Resource.String.sf_write_msg)!,
+                sgbd, job, args, GetString(Resource.String.g_run)!, Run);
+    }
 
     void StartPolling(string sgbd, string job, string args, string results)
     {
         StopPolling();
         int gen = ++_generation;
         int count = 0;
-        _heading.Text = "Status: " + job;
+        _heading.Text = UiUtil.Str(this, Resource.String.sf_status_heading, job);
         _results.Clear();
         ShowBusy($"{job}: " + GetString(Resource.String.ecu_polling_hint), GetString(Resource.String.g_stop), StopPolling);
         _poll.Start(async ct =>

@@ -40,7 +40,7 @@ public class ChassisEcuActivity : InpaActivity
         int index = Intent?.GetIntExtra(ExtraEcuIndex, -1) ?? -1;
         // Recreada tras matar el proceso: el índice se refiere al catálogo con el override de la carpeta ECU.
         if (savedInstanceState != null)
-            ChassisCatalog.TryLoadFromFolder(DiagHolder.LoadSettings(this).EcuPath);
+            DiagHolder.LoadCatalogs(this, DiagHolder.LoadSettings(this).EcuPath);
         _chassis = ChassisCatalog.Get(Intent?.GetStringExtra(ExtraChassisId) ?? "");
         var ecus = _chassis.Ecus;
         if (index < 0 || index >= ecus.Count)
@@ -121,6 +121,8 @@ public class ChassisEcuActivity : InpaActivity
         }
     }
 
+    string? StatusError(JobResult r) => DiagLogic.StatusError(r, GetString(Resource.String.g_rp_job_failed)!);
+
     // Botón Reintentar del estado vacío: limpia el aviso y vuelve a identificar; si falla, EnsureSgbdAsync lo muestra de nuevo.
     void RetryVariant() =>
         Exclusive(async () =>
@@ -176,7 +178,7 @@ public class ChassisEcuActivity : InpaActivity
             if (gen != _generation)
                 return null;
             _results.ShowResult(sgbd, job, r);
-            if (r.Ok && DiagLogic.StatusError(r) is string err)
+            if (r.Ok && StatusError(r) is string err)
                 _results.ShowError(GetString(Resource.String.ch_ecu_no_okay)!, err, append: true);
             return r;
         }
@@ -210,7 +212,7 @@ public class ChassisEcuActivity : InpaActivity
             if (sgbd == null)
                 return;
             var r = await RunJobCore(sgbd, _ecu.FsReadJob, GetString(Resource.String.ch_faults_title)!, "");
-            if (r != null && DiagLogic.StatusError(r) == null)
+            if (r != null && StatusError(r) == null)
             {
                 int faults = r.Sets.Count(s => s.ContainsKey("F_ORT_NR"));
                 _heading.Text = faults == 0 ? GetString(Resource.String.ch_faults_none) : UiUtil.Str(this, Resource.String.ch_faults_count, faults.ToString());
@@ -219,10 +221,11 @@ public class ChassisEcuActivity : InpaActivity
 
     void ConfirmClearFaults()
     {
-        JobDialogs.Confirm(this, GetString(Resource.String.ch_clear_title)!,
-            UiUtil.Str(this, Resource.String.ch_clear_confirm, _ecu.Title, _sgbd ?? _ecu.Sgbd, _ecu.FsClearJob),
+        var name = _sgbd ?? _ecu.Sgbd;
+        JobDialogs.ConfirmJob(this, GetString(Resource.String.ch_clear_title)!,
+            UiUtil.Str(this, Resource.String.ch_clear_confirm, _ecu.Title, name, _ecu.FsClearJob) + "\n\n" + GetString(Resource.String.sf_clear_save_hint),
+            name, _ecu.FsClearJob, "",
             GetString(Resource.String.ch_clear_button)!,
-            danger: true,
             onYes: () => Exclusive(async () =>
             {
                 var sgbd = await EnsureSgbdAsync();
@@ -230,8 +233,21 @@ public class ChassisEcuActivity : InpaActivity
                     return;
                 await RunJobCore(sgbd, _ecu.FsClearJob, GetString(Resource.String.ch_clear_title)!, "");
                 _results.ShowInfo(GetString(Resource.String.ch_faults_title)!, GetString(Resource.String.ecu_reread_faults)!, append: true);
-            }));
+            }),
+            extra: (GetString(Resource.String.sf_save_faults)!, SaveFaults));
     }
+
+    // "Guardar errores" del aviso de borrado: lee la memoria de errores y la comparte en CSV.
+    void SaveFaults() =>
+        Exclusive(async () =>
+        {
+            var sgbd = await EnsureSgbdAsync();
+            if (sgbd == null)
+                return;
+            var r = await RunJobCore(sgbd, _ecu.FsReadJob, GetString(Resource.String.ch_faults_title)!, "");
+            if (r != null && StatusError(r) == null)
+                _results.Share();
+        });
 
     void PickItem(string title, IReadOnlyList<string> items, Action<int> onPick)
     {
@@ -312,12 +328,10 @@ public class ChassisEcuActivity : InpaActivity
             var warning = a.Warning.Length > 0
                 ? a.Warning
                 : GetString(Resource.String.ch_steuern_warning)!;
-            JobDialogs.Confirm(this, "⚠ " + a.Title,
-                warning + "\n\n" +
-                UiUtil.Str(this, Resource.String.ch_steuern_job, a.Job) + (a.Args.Length > 0 ? UiUtil.Str(this, Resource.String.ch_steuern_args, a.Args) : "") + "\n\n" +
-                GetString(Resource.String.ch_steuern_continue),
+            JobDialogs.ConfirmJob(this, "⚠ " + a.Title,
+                warning + "\n\n" + GetString(Resource.String.ch_steuern_continue),
+                _sgbd ?? _ecu.Sgbd, a.Job, a.Args,
                 GetString(Resource.String.ch_run)!,
-                danger: true,
                 onYes: () => Exclusive(async () =>
                 {
                     var sgbd = await EnsureSgbdAsync();
@@ -384,7 +398,7 @@ public class ChassisEcuActivity : InpaActivity
                 }
                 if (ct.IsCancellationRequested || gen != _generation)
                     return false;
-                var error = DiagLogic.StatusError(r);
+                var error = StatusError(r);
                 foreach (var v in g.Values)
                 {
                     cells[v] = error != null ? ("ERROR " + error, true)
