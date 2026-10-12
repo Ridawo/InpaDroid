@@ -28,14 +28,13 @@ public class MainActivity : InpaActivity
         FindViewById(Resource.Id.inpa_title)!.SetPadding(UiUtil.Dp(this, 16), 0, 0, 0);
         SetSubtitle("EDIABAS: ediabaslib");
         _results = new ResultPanel(FindViewById<LinearLayout>(Resource.Id.main_results)!);
-
-        BuildMenu();
     }
 
     protected override void OnResume()
     {
         base.OnResume();
         UpdateStatus();
+        BuildMenu();   // la tarjeta "Empezar" depende de ajustes y archivos, que pueden cambiar en otra pantalla
     }
 
     void UpdateStatus()
@@ -46,17 +45,90 @@ public class MainActivity : InpaActivity
             AdapterType.UsbKDcan => "Cable USB K+DCAN",
             AdapterType.Enet => $"WiFi ENET ({s.EnetHost})",
             AdapterType.Elm327Bluetooth => s.BluetoothAddress.Length > 0
-                ? $"ELM327 Bluetooth ({s.BluetoothAddress})" : GetString(Resource.String.main_adapter_none),
+                ? $"ELM327 Bluetooth ({s.BluetoothAddress})" : "",   // sin dispositivo: lo cubre la tarjeta "Empezar"
             AdapterType.Elm327Wifi => $"ELM327 WiFi ({s.ElmWifiHost})",
-            _ => GetString(Resource.String.main_adapter_none),
+            _ => "",
         };
         FindViewById<TextView>(Resource.Id.main_status)!.Text = iface;
+    }
+
+    // Tarjeta de "Empezar" mientras falte adaptador o archivos ECU; el resto de tarjetas va debajo.
+    View? BuildSetupCard()
+    {
+        var s = DiagHolder.LoadSettings(this);
+        bool adapterOk = ConnectionCheckActivity.AdapterConfigured(s);
+        if (SetupCheck.IsComplete(adapterOk, SetupCheck.ListEcuNames(s.EcuPath).Count))
+            return null;
+        return MakeCard(GetString(Resource.String.ws_card_title)!,
+            GetString(adapterOk ? Resource.String.ws_card_desc_files : Resource.String.ws_card_desc_adapter)!,
+            Resource.Drawable.ic_bolt, true, () => StartActivity(new Intent(this, typeof(ConnectionCheckActivity))));
+    }
+
+    // 1 columna con letra muy grande, 3 en pantallas anchas, 2 en el resto.
+    int MenuColumns()
+    {
+        var cfg = Resources?.Configuration;
+        if ((cfg?.FontScale ?? 1f) >= 1.5f)
+            return 1;
+        return (cfg?.ScreenWidthDp ?? 0) >= 600 ? 3 : 2;
+    }
+
+    // Foco y TalkBack ven la tarjeta como un único botón con título y descripción; el icono es decorativo.
+    sealed class ButtonDelegate : View.AccessibilityDelegate
+    {
+        public override void OnInitializeAccessibilityNodeInfo(View? host, Android.Views.Accessibility.AccessibilityNodeInfo? info)
+        {
+            base.OnInitializeAccessibilityNodeInfo(host, info);
+            if (info != null)
+                info.ClassName = "android.widget.Button";
+        }
+    }
+
+    LinearLayout MakeCard(string titleText, string descText, int iconRes, bool primary, Action act)
+    {
+        var card = new LinearLayout(this) { Orientation = Orientation.Vertical, Clickable = true, Focusable = true };
+        card.SetBackgroundResource(primary ? Resource.Drawable.bg_card_primary : Resource.Drawable.bg_card);
+        card.ImportantForAccessibility = ImportantForAccessibility.Yes;
+        card.ContentDescription = UiUtil.Str(this, Resource.String.ws_card_cd, titleText, descText);
+        card.SetAccessibilityDelegate(new ButtonDelegate());
+        int pad = UiUtil.Dp(this, 14);
+        card.SetPadding(pad, pad, pad, pad);
+        card.SetMinimumHeight(UiUtil.Dp(this, 110));
+        var icon = new ImageView(this) { ImportantForAccessibility = ImportantForAccessibility.No };
+        icon.SetImageResource(iconRes);
+        icon.ImageTintList = Android.Content.Res.ColorStateList.ValueOf(new Android.Graphics.Color(
+            Resources!.GetColor(primary ? Resource.Color.m_on_primary : Resource.Color.m_primary, Theme)));
+        card.AddView(icon, new LinearLayout.LayoutParams(UiUtil.Dp(this, 28), UiUtil.Dp(this, 28))
+            { BottomMargin = UiUtil.Dp(this, 6) });
+        var title = new TextView(this) { Text = titleText, ImportantForAccessibility = ImportantForAccessibility.No };
+        title.SetTextAppearance(Resource.Style.MText_Title);
+        title.SetTextSize(ComplexUnitType.Sp, 16);
+        var desc = new TextView(this) { Text = descText, ImportantForAccessibility = ImportantForAccessibility.No };
+        desc.SetTextAppearance(Resource.Style.MText_Caption);
+        if (primary)
+        {
+            var on = Resources!.GetColor(Resource.Color.m_on_primary, Theme);
+            title.SetTextColor(on);
+            desc.SetTextColor(on);
+        }
+        card.AddView(title);
+        card.AddView(desc);
+        card.Click += (_, _) => act();
+        return card;
     }
 
     void BuildMenu()
     {
         var menu = FindViewById<LinearLayout>(Resource.Id.main_menu)!;
         menu.RemoveAllViews();
+        int gap = UiUtil.Dp(this, 6);
+        var setup = BuildSetupCard();
+        if (setup != null)
+        {
+            var setupLp = new LinearLayout.LayoutParams(-1, -2);
+            setupLp.SetMargins(gap, gap, gap, gap);
+            menu.AddView(setup, setupLp);
+        }
         // Chasis nuevo: su <id>_catalog.json en Ui/Chassis + una tarjeta aquí.
         var cards = new (int Title, int Desc, int Icon, bool Primary, Action Act)[]
         {
@@ -72,50 +144,29 @@ public class MainActivity : InpaActivity
             (Resource.String.main_card_info, Resource.String.main_card_info_desc, Resource.Drawable.ic_info, false, ShowInfo),
             (Resource.String.main_card_exit, Resource.String.main_card_exit_desc, Resource.Drawable.ic_exit, false, Exit),
         };
-        int gap = UiUtil.Dp(this, 6);
+        int cols = MenuColumns();
         LinearLayout? row = null;
         for (int i = 0; i < cards.Length; i++)
         {
-            if (i % 2 == 0)
+            if (i % cols == 0)
             {
                 row = new LinearLayout(this) { Orientation = Orientation.Horizontal };
                 menu.AddView(row, new LinearLayout.LayoutParams(-1, -2));
             }
             var c = cards[i];
-            var card = new LinearLayout(this) { Orientation = Orientation.Vertical, Clickable = true, Focusable = true };
-            card.SetBackgroundResource(c.Primary ? Resource.Drawable.bg_card_primary : Resource.Drawable.bg_card);
-            int pad = UiUtil.Dp(this, 14);
-            card.SetPadding(pad, pad, pad, pad);
-            card.SetMinimumHeight(UiUtil.Dp(this, 110));
-            var icon = new ImageView(this);
-            icon.SetImageResource(c.Icon);
-            icon.ImageTintList = Android.Content.Res.ColorStateList.ValueOf(new Android.Graphics.Color(
-                Resources!.GetColor(c.Primary ? Resource.Color.m_on_primary : Resource.Color.m_primary, Theme)));
-            card.AddView(icon, new LinearLayout.LayoutParams(UiUtil.Dp(this, 28), UiUtil.Dp(this, 28))
-                { BottomMargin = UiUtil.Dp(this, 6) });
-            var title = new TextView(this);
-            title.SetTextAppearance(Resource.Style.MText_Title);
-            title.SetTextSize(ComplexUnitType.Sp, 16);
-            title.SetText(c.Title);
-            var desc = new TextView(this);
-            desc.SetTextAppearance(Resource.Style.MText_Caption);
-            desc.SetText(c.Desc);
-            if (c.Primary)
-            {
-                var on = Resources!.GetColor(Resource.Color.m_on_primary, Theme);
-                title.SetTextColor(on);
-                desc.SetTextColor(on);
-            }
-            card.AddView(title);
-            card.AddView(desc);
-            var act = c.Act;
-            card.Click += (_, _) => act();
+            var card = MakeCard(GetString(c.Title)!, GetString(c.Desc)!, c.Icon, c.Primary, c.Act);
             var lp = new LinearLayout.LayoutParams(0, -2, 1f);
             lp.SetMargins(gap, gap, gap, gap);
             row!.AddView(card, lp);
         }
-        if (cards.Length % 2 == 1)
+        for (int pad = cards.Length % cols; pad != 0 && pad < cols; pad++)
             row!.AddView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
+    }
+
+    public override void OnConfigurationChanged(Android.Content.Res.Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+        BuildMenu();
     }
 
     void ShowInfo()
