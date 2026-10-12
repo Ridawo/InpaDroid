@@ -1,0 +1,1578 @@
+{
+  "id": "e39",
+  "name": "BMW E39",
+  "subtitle": "K-line (DS2/KWP2000)",
+  "infoTitle": "E39 information",
+  "info": "BMW E39 (5 Series, 1995-2004)\n\nThe E39 control units use the K-line (DS2 / KWP2000).\nInterface: USB K+DCAN cable (FTDI) with pins 7 and 8 bridged (K-line mode).\nENET and ELM327 do not work with this car.\n\n{iface}\n{ecupath}\n\nCopy the .prg/.grp files from your INPA installation (ecu folder) there.\nWhen you open a control unit, its variant is identified (.grp -> .prg) and you can use: Identification, Faults, Clear faults, Live values, Activations, All jobs and Graph.",
+  "verified": true,
+  "ecus": [
+    {
+      "title": "Diesel engine (DDE)",
+      "sgbd": "D_0012",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Basic values (M47 and M57)",
+          "values": [
+            {
+              "job": "STATUS_MOTORDREHZAHL",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Engine speed",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_MOTORTEMPERATUR",
+              "result": "STAT_MOTORTEMPERATUR_WERT",
+              "label": "Coolant temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_UBATT",
+              "result": "STAT_UBATT_WERT",
+              "label": "Battery voltage (DDE)",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_LMM_MASSE",
+              "result": "STAT_LMM_MASSE_WERT",
+              "label": "Air mass meter (HFM)",
+              "unit": "%"
+            },
+            {
+              "job": "STATUS_PWG_POTI_SPANNUNG",
+              "result": "STAT_PWG_POTI_SPANNUNG_WERT",
+              "label": "Accelerator pedal, potentiometer 1 voltage",
+              "unit": "V"
+            }
+          ]
+        },
+        {
+          "title": "Turbo and pedal (DDE 3.0 and DDE 4.0)",
+          "values": [
+            {
+              "job": "STATUS_LADEDRUCK",
+              "result": "STAT_LADEDRUCK_WERT",
+              "label": "Turbo pressure (absolute)",
+              "unit": "mbar"
+            },
+            {
+              "job": "STATUS_PWG_FAHRERWUNSCH",
+              "result": "STAT_PWG_FAHRERWUNSCH_WERT",
+              "label": "Accelerator pedal",
+              "unit": "%"
+            },
+            {
+              "job": "STATUS_LMM_MASSE",
+              "result": "STAT_LMM_MASSE_WERT",
+              "label": "Air mass meter (HFM)",
+              "unit": "%"
+            },
+            {
+              "job": "STATUS_MOTORDREHZAHL",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Engine speed",
+              "unit": "1/min"
+            }
+          ]
+        },
+        {
+          "title": "Digital inputs (M47 and M57)",
+          "values": [
+            {
+              "job": "STATUS_DIGITAL",
+              "result": "STAT_BLS_EIN",
+              "label": "Brake light switch",
+              "unit": "1=pisado"
+            },
+            {
+              "job": "STATUS_DIGITAL",
+              "result": "STAT_KUP_EIN",
+              "label": "Clutch switch",
+              "unit": "1=pisado"
+            },
+            {
+              "job": "STATUS_DIGITAL",
+              "result": "STAT_AC_EIN",
+              "label": "A/C request",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_DIGITAL",
+              "result": "STAT_KO_EIN",
+              "label": "A/C compressor request",
+              "unit": "1=sí"
+            }
+          ]
+        },
+        {
+          "title": "M57 525d/530d (DDE 4.0): rail and injection",
+          "values": [
+            {
+              "job": "STATUS_RAILDRUCK",
+              "result": "STAT_RAILDRUCK_WERT",
+              "label": "Rail pressure actual",
+              "unit": "bar"
+            },
+            {
+              "job": "STATUS_ZUMPQSOLL",
+              "result": "STAT_ZUMPQSOLL_WERT",
+              "label": "Rail pressure target",
+              "unit": "bar"
+            },
+            {
+              "job": "STATUS_VORFOERDERDRUCK",
+              "result": "STAT_VORFOERDERDRUCK_WERT",
+              "label": "Fuel supply pressure",
+              "unit": "bar"
+            },
+            {
+              "job": "STATUS_MRMM_EAKT",
+              "result": "STAT_MRMM_EAKT_WERT",
+              "label": "Injected quantity",
+              "unit": "mm³/carrera"
+            },
+            {
+              "job": "STATUS_MOTORDREHZAHL",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Engine speed",
+              "unit": "1/min"
+            }
+          ]
+        },
+        {
+          "title": "M57 525d/530d (DDE 4.0): turbo, air and EGR",
+          "values": [
+            {
+              "job": "STATUS_LADEDRUCK",
+              "result": "STAT_LADEDRUCK_WERT",
+              "label": "Turbo pressure actual",
+              "unit": "mbar"
+            },
+            {
+              "job": "STATUS_LDMP_LSOLL",
+              "result": "STAT_LDMP_LSOLL_WERT",
+              "label": "Turbo pressure target",
+              "unit": "mbar"
+            },
+            {
+              "job": "STATUS_ANMADF",
+              "result": "STAT_ANMADF_WERT",
+              "label": "Atmospheric pressure",
+              "unit": "mbar"
+            },
+            {
+              "job": "STATUS_ARMM_LIST",
+              "result": "STAT_ARMM_LIST_WERT",
+              "label": "Air mass actual",
+              "unit": "mg/carrera"
+            },
+            {
+              "job": "STATUS_ARMM_LSOLL",
+              "result": "STAT_ARMM_LSOLL_WERT",
+              "label": "Air mass target (EGR)",
+              "unit": "mg/carrera"
+            },
+            {
+              "job": "STATUS_AN_LUFTTEMPERATUR",
+              "result": "STAT_AN_LUFTTEMPERATUR_WERT",
+              "label": "Intake air temperature",
+              "unit": "°C"
+            }
+          ]
+        },
+        {
+          "title": "M57 525d/530d (DDE 4.0): fuel quantity correction per cylinder",
+          "values": [
+            {
+              "job": "STATUS_LAUFUNRUHE_LLR_MENGE",
+              "result": "STAT_LAUFUNRUHE_LLR_MENGE_ZYL1_WERT",
+              "label": "Cylinder 1",
+              "unit": "mm³"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_LLR_MENGE",
+              "result": "STAT_LAUFUNRUHE_LLR_MENGE_ZYL2_WERT",
+              "label": "Cylinder 2",
+              "unit": "mm³"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_LLR_MENGE",
+              "result": "STAT_LAUFUNRUHE_LLR_MENGE_ZYL3_WERT",
+              "label": "Cylinder 3",
+              "unit": "mm³"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_LLR_MENGE",
+              "result": "STAT_LAUFUNRUHE_LLR_MENGE_ZYL4_WERT",
+              "label": "Cylinder 4",
+              "unit": "mm³"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_LLR_MENGE",
+              "result": "STAT_LAUFUNRUHE_LLR_MENGE_ZYL5_WERT",
+              "label": "Cylinder 5",
+              "unit": "mm³"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_LLR_MENGE",
+              "result": "STAT_LAUFUNRUHE_LLR_MENGE_ZYL6_WERT",
+              "label": "Cylinder 6",
+              "unit": "mm³"
+            }
+          ]
+        },
+        {
+          "title": "M57 525d/530d (DDE 4.0): speed per cylinder",
+          "values": [
+            {
+              "job": "STATUS_LAUFUNRUHE_DREHZAHL",
+              "result": "STAT_LAUFUNRUHE_DREHZAHL_ZYL1_WERT",
+              "label": "Cylinder 1",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_DREHZAHL",
+              "result": "STAT_LAUFUNRUHE_DREHZAHL_ZYL2_WERT",
+              "label": "Cylinder 2",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_DREHZAHL",
+              "result": "STAT_LAUFUNRUHE_DREHZAHL_ZYL3_WERT",
+              "label": "Cylinder 3",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_DREHZAHL",
+              "result": "STAT_LAUFUNRUHE_DREHZAHL_ZYL4_WERT",
+              "label": "Cylinder 4",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_DREHZAHL",
+              "result": "STAT_LAUFUNRUHE_DREHZAHL_ZYL5_WERT",
+              "label": "Cylinder 5",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_LAUFUNRUHE_DREHZAHL",
+              "result": "STAT_LAUFUNRUHE_DREHZAHL_ZYL6_WERT",
+              "label": "Cylinder 6",
+              "unit": "1/min"
+            }
+          ]
+        },
+        {
+          "title": "M47 520d (DDE 3.0): VP44 pump and injection",
+          "values": [
+            {
+              "job": "STATUS_EINSPRITZMENGE",
+              "result": "STAT_EINSPRITZMENGE_WERT",
+              "label": "Injected quantity",
+              "unit": "mg/carrera"
+            },
+            {
+              "job": "STATUS_SB_SOLLWERT",
+              "result": "STAT_SB_SOLLWERT_WERT",
+              "label": "Start of injection target",
+              "unit": "°KW"
+            },
+            {
+              "job": "STATUS_SB_ISTWERT",
+              "result": "STAT_SB_ISTWERT_WERT",
+              "label": "Start of injection actual",
+              "unit": "°KW"
+            },
+            {
+              "job": "STATUS_TEMPERATUR_PUMPE",
+              "result": "STAT_TEMPERATUR_PUMPE_WERT",
+              "label": "Pump temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_MOTORDREHZAHL_SOLL",
+              "result": "STAT_MOTORDREHZAHL_SOLL_WERT",
+              "label": "Idle speed target",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_MOTORDREHZAHL",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Engine speed",
+              "unit": "1/min"
+            }
+          ]
+        },
+        {
+          "title": "M47 520d (DDE 3.0): turbo, air and EGR",
+          "values": [
+            {
+              "job": "STATUS_LADEDRUCK",
+              "result": "STAT_LADEDRUCK_WERT",
+              "label": "Turbo pressure actual",
+              "unit": "hPa"
+            },
+            {
+              "job": "STATUS_LADEDRUCK_SOLLWERT",
+              "result": "STAT_LADEDRUCK_SOLLWERT_WERT",
+              "label": "Turbo pressure target",
+              "unit": "hPa"
+            },
+            {
+              "job": "STATUS_ATMOSPHAERENDRUCK",
+              "result": "STAT_ATMOSPHAERENDRUCK_WERT",
+              "label": "Atmospheric pressure",
+              "unit": "hPa"
+            },
+            {
+              "job": "STATUS_LAST",
+              "result": "STAT_LAST_WERT",
+              "label": "Air mass actual",
+              "unit": "mg/carrera"
+            },
+            {
+              "job": "STATUS_ARF_SOLLWERT",
+              "result": "STAT_ARF_SOLLWERT_WERT",
+              "label": "Air mass target (EGR)",
+              "unit": "mg/carrera"
+            },
+            {
+              "job": "STATUS_GESCHWINDIGKEIT",
+              "result": "STAT_GESCHWINDIGKEIT_WERT",
+              "label": "Speed",
+              "unit": "km/h"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "title": "Electric fan at 50 %",
+          "job": "STEUERN_E_LUEFTER",
+          "args": "50",
+          "warning": "The electric radiator fan will run at half power. Keep hands, clothing and cables away. Actuator test. Vehicle stationary, handbrake on, gearbox in P/neutral and ignition on (engine off unless stated otherwise). Keep clear of belts and the fan. When finished, press \"End activations\" or switch the ignition off to hand control back to the control unit."
+        },
+        {
+          "title": "Glow plug relay (heaters)",
+          "job": "STEUERN_GLUEHRELAIS",
+          "args": "100",
+          "warning": "Activates the glow plugs. Use it for a few seconds only and do not repeat it back to back: they get very hot. Actuator test. Vehicle stationary, handbrake on, gearbox in P/neutral and ignition on (engine off unless stated otherwise). Keep clear of belts and the fan. When finished, press \"End activations\" or switch the ignition off to hand control back to the control unit."
+        },
+        {
+          "title": "EGR valve (AGR) at 95 %",
+          "job": "STEUERN_AGR_STELLER",
+          "args": "95",
+          "warning": "Moves the exhaust gas recirculation valve; it needs vacuum (engine idling so you can hear it). Actuator test. Vehicle stationary, handbrake on, gearbox in P/neutral and ignition on (engine off unless stated otherwise). Keep clear of belts and the fan. When finished, press \"End activations\" or switch the ignition off to hand control back to the control unit."
+        },
+        {
+          "title": "Turbo pressure actuator at 95 %",
+          "job": "STEUERN_LADEDRUCKSTELLER",
+          "args": "95",
+          "warning": "Moves the turbo pressure solenoid valve; it needs vacuum (engine idling). Do not rev the engine during the test. Actuator test. Vehicle stationary, handbrake on, gearbox in P/neutral and ignition on (engine off unless stated otherwise). Keep clear of belts and the fan. When finished, press \"End activations\" or switch the ignition off to hand control back to the control unit."
+        },
+        {
+          "title": "End activations",
+          "job": "DIAGNOSE_ENDE",
+          "args": "",
+          "warning": "Closes the DDE diagnostic session and hands control of all actuators back to the control unit."
+        }
+      ]
+    },
+    {
+      "title": "Automatic transmission (EGS)",
+      "sgbd": "D_0032",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Transmission values",
+          "values": [
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_WAEHLHEBEL_POSITION",
+              "label": "Lever position"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_GANG",
+              "label": "Gear engaged"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_PROG_TASTER",
+              "label": "Program (A / S-M)"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_GETRIEBETEMPERATUR_WERT",
+              "label": "Transmission oil temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Engine speed",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_ABTRIEBSDREHZAHL_WERT",
+              "label": "Output speed",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_MOTORTEMPERATUR_WERT",
+              "label": "Engine temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_DKG_WERT",
+              "label": "Pedal / load (DKG)",
+              "unit": "%"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_UBAT_WERT",
+              "label": "Battery voltage",
+              "unit": "V"
+            }
+          ]
+        },
+        {
+          "title": "Solenoid valves and inputs",
+          "values": [
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_MV1_EIN",
+              "label": "Solenoid valve 1",
+              "unit": "1=activa"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_MV2_EIN",
+              "label": "Solenoid valve 2",
+              "unit": "1=activa"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_MV3_EIN",
+              "label": "Solenoid valve 3",
+              "unit": "1=activa"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_MVSL_EIN",
+              "label": "Lever lock (shift-lock)",
+              "unit": "1=activo"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_EDS1_WERT",
+              "label": "EDS1 pressure regulator",
+              "unit": "mA"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_BREMSSIGNAL_EIN",
+              "label": "Brake signal",
+              "unit": "1=pisado"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_KICK_DOWN_EIN",
+              "label": "Kick-down",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_NOTPROGRAMM_EIN",
+              "label": "Emergency program",
+              "unit": "1=activo"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_SCHALTUNGSART_AKTUELL",
+              "label": "Current gear shift"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "ABS / ASC / DSC",
+      "sgbd": "D_0056",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Wheels (ABS / ASC 5 and 5.7)",
+          "values": [
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_RAD_GESCHW_VL_WERT",
+              "label": "Front left wheel",
+              "unit": "km/h",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_RAD_GESCHW_VR_WERT",
+              "label": "Front right wheel",
+              "unit": "km/h",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_RAD_GESCHW_HL_WERT",
+              "label": "Rear left wheel",
+              "unit": "km/h",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_RAD_GESCHW_HR_WERT",
+              "label": "Rear right wheel",
+              "unit": "km/h",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_BREMSLICHT_SCHALTER_EIN",
+              "label": "Brake light switch",
+              "unit": "1=pisado",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_PUMPENMOTOR_EIN",
+              "label": "Hydraulic pump motor",
+              "unit": "1=activo",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_VENTILRELAIS_EIN",
+              "label": "Solenoid valve relay",
+              "unit": "1=activo",
+              "args": "E"
+            }
+          ]
+        },
+        {
+          "title": "Wheels (DSC III 5.7)",
+          "values": [
+            {
+              "job": "STATUS_IO_LESEN_GESCHW",
+              "result": "STAT_RAD_GESCHW_VL_WERT",
+              "label": "Front left wheel",
+              "unit": "km/h",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_GESCHW",
+              "result": "STAT_RAD_GESCHW_VR_WERT",
+              "label": "Front right wheel",
+              "unit": "km/h",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_GESCHW",
+              "result": "STAT_RAD_GESCHW_HL_WERT",
+              "label": "Rear left wheel",
+              "unit": "km/h",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_GESCHW",
+              "result": "STAT_RAD_GESCHW_HR_WERT",
+              "label": "Rear right wheel",
+              "unit": "km/h",
+              "args": "E"
+            }
+          ]
+        },
+        {
+          "title": "Sensors (DSC III 5.7)",
+          "values": [
+            {
+              "job": "STATUS_IO_LESEN_ANALOG",
+              "result": "STAT_LENKWINKEL_WERT",
+              "label": "Steering angle",
+              "unit": "°",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_ANALOG",
+              "result": "STAT_DREHRATE_WERT",
+              "label": "Yaw rate",
+              "unit": "°/s",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_ANALOG",
+              "result": "STAT_QUERBESCHLEUNIGUNG_WERT",
+              "label": "Lateral acceleration",
+              "unit": "m/s²",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_ANALOG",
+              "result": "STAT_DRUCK_WERT",
+              "label": "Brake pressure",
+              "unit": "bar",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_ANALOG",
+              "result": "STAT_ZUENDUNG_WERT",
+              "label": "Ignition voltage (terminal 15)",
+              "unit": "V",
+              "args": "E"
+            }
+          ]
+        },
+        {
+          "title": "Inputs and outputs (DSC III 5.7)",
+          "values": [
+            {
+              "job": "STATUS_IO_LESEN_DIGITAL",
+              "result": "STAT_BREMSLICHT_SCHALTER_EIN",
+              "label": "Brake light switch",
+              "unit": "1=pisado",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_DIGITAL",
+              "result": "STAT_HANDBREMSSCHALTER_EIN",
+              "label": "Handbrake switch",
+              "unit": "1=puesto",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_DIGITAL",
+              "result": "STAT_PUMPENMOTOR_EIN",
+              "label": "Hydraulic pump motor",
+              "unit": "1=activo",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_DIGITAL",
+              "result": "STAT_VORLADEPUMPE_EIN",
+              "label": "Pre-charge pump",
+              "unit": "1=activa",
+              "args": "E"
+            },
+            {
+              "job": "STATUS_IO_LESEN_DIGITAL",
+              "result": "STAT_VENTILRELAIS_EIN",
+              "label": "Solenoid valve relay",
+              "unit": "1=activo",
+              "args": "E"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Airbag (MRS)",
+      "sgbd": "D_00A4",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Firing circuits (MRS3 / MRS4)",
+          "values": [
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK0",
+              "label": "ZK0 driver airbag",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK1",
+              "label": "ZK1 driver belt pretensioner",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK2",
+              "label": "ZK2 passenger belt pretensioner",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK3",
+              "label": "ZK3 passenger airbag",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK4",
+              "label": "ZK4 front left side",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK5",
+              "label": "ZK5 front right side",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK6",
+              "label": "ZK6 rear left side",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK7",
+              "label": "ZK7 rear right side",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK8",
+              "label": "ZK8 head (ITS) left",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK9",
+              "label": "ZK9 head (ITS) right",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK10",
+              "label": "ZK10 battery disconnect",
+              "unit": "1=OK"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_ZK11",
+              "label": "ZK11 passenger airbag 2nd stage",
+              "unit": "1=OK"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Instrument cluster (IKE / KOMBI)",
+      "sgbd": "D_0080",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Cluster values",
+          "values": [
+            {
+              "job": "STATUS_ANALOG_LESEN",
+              "result": "STAT_GESCHWINDIGKEIT_WERT",
+              "label": "Speed",
+              "unit": "km/h"
+            },
+            {
+              "job": "STATUS_ANALOG_LESEN",
+              "result": "STAT_DREHZAHL_WERT",
+              "label": "Engine speed",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_TANKINHALT_LESEN",
+              "result": "STAT_TANKINHALT_WERT",
+              "label": "Fuel in tank",
+              "unit": "l"
+            },
+            {
+              "job": "STATUS_ANALOG_LESEN",
+              "result": "STAT_KUEHLMITTELTEMP_WERT",
+              "label": "Coolant temperature (raw A/D)"
+            },
+            {
+              "job": "STATUS_ANALOG_LESEN",
+              "result": "STAT_AUSSENTEMP_WERT",
+              "label": "Outside temperature (raw A/D)"
+            },
+            {
+              "job": "STATUS_ANALOG_LESEN",
+              "result": "STAT_TKVA1_WERT",
+              "label": "Fuel consumption signal",
+              "unit": "ms"
+            }
+          ]
+        },
+        {
+          "title": "Cluster inputs",
+          "values": [
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_KLR_EIN",
+              "label": "Terminal R (accessories)",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_KL15_EIN",
+              "label": "Terminal 15 (ignition)",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_KL50_EIN",
+              "label": "Terminal 50 (starter)",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_KOMBITASTE_EIN",
+              "label": "Cluster button",
+              "unit": "1=pulsado"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_SIA_RESET_EIN",
+              "label": "Service indicator reset",
+              "unit": "1=activo"
+            },
+            {
+              "job": "STATUS_IO_LESEN",
+              "result": "STAT_AGS_EIN",
+              "label": "Automatic transmission signal",
+              "unit": "1=sí"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "title": "Cluster self-test",
+          "job": "STEUERN_SELBSTTEST",
+          "args": "",
+          "warning": "The cluster needles and warning lights perform a test sweep. It is normal to see warning lights on for a few seconds. Do this with the car stationary and the ignition on."
+        },
+        {
+          "title": "Warning chime",
+          "job": "STEUERN_GONG3",
+          "args": "",
+          "warning": "The cluster warning chime sounds once. Car stationary and ignition on."
+        }
+      ]
+    },
+    {
+      "title": "Light module (LCM)",
+      "sgbd": "D_00D0",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Light controls",
+          "values": [
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER1_SL_EIN",
+              "label": "Parking light switch",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER1_AL_EIN",
+              "label": "Low beam switch",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER_FL_EIN",
+              "label": "High beam stalk",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER_LICHTHUPE_EIN",
+              "label": "Headlight flash",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER_NSW_EIN",
+              "label": "Front fog light switch",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER_NSL_EIN",
+              "label": "Rear fog light switch",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER1_BLK_LINKS_EIN",
+              "label": "Left turn signal",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER1_BLK_RECHTS_EIN",
+              "label": "Right turn signal",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHALTER_WBL_EIN",
+              "label": "Hazard button",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_EINGANG1_BLS_EIN",
+              "label": "Brake light switch",
+              "unit": "1=pisado"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_U_BATT_WERT",
+              "label": "Battery voltage",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_EINGANGSSPANNUNG_DIMMER_WERT",
+              "label": "Cluster illumination dimmer",
+              "unit": "V"
+            }
+          ]
+        },
+        {
+          "title": "Blown bulbs",
+          "values": [
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_AL_LINKS_DEFEKT",
+              "label": "Low beam left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_AL_RECHTS_DEFEKT",
+              "label": "Low beam right",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_FL_LINKS_DEFEKT",
+              "label": "High beam left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_FL_RECHTS_DEFEKT",
+              "label": "High beam right",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SL_LINKS_VORN_DEFEKT",
+              "label": "Front parking light left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SL_RECHTS_VORN_DEFEKT",
+              "label": "Front parking light right",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SL_LINKS_HINTEN_DEFEKT",
+              "label": "Rear parking light left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SL_RECHTS_HINTEN_DEFEKT",
+              "label": "Rear parking light right",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_BL_LINKS_DEFEKT",
+              "label": "Brake light left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_BL_RECHTS_DEFEKT",
+              "label": "Brake light right",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_BREMSLICHT_MITTE_DEFEKT",
+              "label": "Third brake light",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_BLK_LINKS_VORN_DEFEKT",
+              "label": "Front left turn signal",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_BLK_RECHTS_VORN_DEFEKT",
+              "label": "Front right turn signal",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_BLK_LINKS_HINTEN_DEFEKT",
+              "label": "Rear left turn signal",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_BLK_RECHTS_HINTEN_DEFEKT",
+              "label": "Rear right turn signal",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_NSW_LINKS_DEFEKT",
+              "label": "Front fog light left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_NSW_RECHTS_DEFEKT",
+              "label": "Front fog light right",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_NSL_LINKS_DEFEKT",
+              "label": "Rear fog light left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_NSL_RECHTS_DEFEKT",
+              "label": "Rear fog light right",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_RFS_LINKS_DEFEKT",
+              "label": "Reverse light left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_RFS_RECHTS_DEFEKT",
+              "label": "Reverse light right",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_KZL_LINKS_DEFEKT",
+              "label": "License plate light left",
+              "unit": "1=fundida"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_KZL_RECHTS_DEFEKT",
+              "label": "License plate light right",
+              "unit": "1=fundida"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "title": "Turn on low beam left",
+          "job": "STATUS_VORGEBEN",
+          "args": "AL_L",
+          "warning": "The light is switched on from the light module even if the switch is off. Car stationary and ignition on. If the light stays on when you finish, switch the ignition off."
+        },
+        {
+          "title": "Turn on low beam right",
+          "job": "STATUS_VORGEBEN",
+          "args": "AL_R",
+          "warning": "The light is switched on from the light module even if the switch is off. Car stationary and ignition on. If the light stays on when you finish, switch the ignition off."
+        },
+        {
+          "title": "Turn on high beam left",
+          "job": "STATUS_VORGEBEN",
+          "args": "FL_L",
+          "warning": "The light is switched on from the light module even if the switch is off. Car stationary and ignition on. If the light stays on when you finish, switch the ignition off."
+        },
+        {
+          "title": "Turn on high beam right",
+          "job": "STATUS_VORGEBEN",
+          "args": "FL_R",
+          "warning": "The light is switched on from the light module even if the switch is off. Car stationary and ignition on. If the light stays on when you finish, switch the ignition off."
+        },
+        {
+          "title": "Turn on brake lights",
+          "job": "STATUS_VORGEBEN",
+          "args": "BL_L;BL_R;BL_M",
+          "warning": "The light is switched on from the light module even if the switch is off. Car stationary and ignition on. If the light stays on when you finish, switch the ignition off."
+        },
+        {
+          "title": "Turn on front fog lights",
+          "job": "STATUS_VORGEBEN",
+          "args": "NSW_L;NSW_R",
+          "warning": "The light is switched on from the light module even if the switch is off. Car stationary and ignition on. If the light stays on when you finish, switch the ignition off."
+        },
+        {
+          "title": "Turn on reverse lights",
+          "job": "STATUS_VORGEBEN",
+          "args": "RFS_L;RFS_R",
+          "warning": "The light is switched on from the light module even if the switch is off. Car stationary and ignition on. If the light stays on when you finish, switch the ignition off."
+        }
+      ]
+    },
+    {
+      "title": "General module (GM / locking)",
+      "sgbd": "D_ZKE_GM",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Doors, hoods and terminals",
+          "values": [
+            {
+              "job": "STATUS_DIGITAL_GM3_INT",
+              "result": "STAT_IFN_FTOFFEN_AKTIV",
+              "label": "Driver door open",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_INT",
+              "result": "STAT_IFN_BTOFFEN_AKTIV",
+              "label": "Passenger door open",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_TKFH_AKTIV",
+              "label": "Rear left door",
+              "unit": "1=abierta"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_TKBH_AKTIV",
+              "label": "Rear right door",
+              "unit": "1=abierta"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_HKK_AKTIV",
+              "label": "Trunk contact",
+              "unit": "1=activo"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_MHK_AKTIV",
+              "label": "Engine hood contact",
+              "unit": "1=activo"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_HFK_AKTIV",
+              "label": "Glove box contact",
+              "unit": "1=activo"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_KP",
+              "result": "STAT_K_KLR_AKTIV",
+              "label": "Terminal R (K-Bus)",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_KP",
+              "result": "STAT_K_KL15_AKTIV",
+              "label": "Terminal 15 (K-Bus)",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_KP",
+              "result": "STAT_K_KL50_AKTIV",
+              "label": "Terminal 50 (K-Bus)",
+              "unit": "1=sí"
+            }
+          ]
+        },
+        {
+          "title": "Central locking and controls",
+          "values": [
+            {
+              "job": "STATUS_DIGITAL_GM3_INT",
+              "result": "STAT_IFN_ZV_VERRIEGELT",
+              "label": "Central locking locked",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_INT",
+              "result": "STAT_IFN_ZV_GESICHERT",
+              "label": "Central locking deadlocked",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_TZV_AKTIV",
+              "label": "Central locking button",
+              "unit": "1=pulsado"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_SIB_AKTIV",
+              "label": "Interior light button",
+              "unit": "1=pulsado"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_SW1_AKTIV",
+              "label": "Wiper switch 1",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_SW2_AKTIV",
+              "label": "Wiper switch 2",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_SWP_AKTIV",
+              "label": "Washer switch",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_DIGITAL_GM3_EA",
+              "result": "STAT_E_RSK_AKTIV",
+              "label": "Wiper park contact",
+              "unit": "1=activo"
+            }
+          ]
+        },
+        {
+          "title": "Analog values",
+          "values": [
+            {
+              "job": "STATUS_ANALOG_GM3",
+              "result": "STAT_KMH_WERT",
+              "label": "Speed (K-Bus)",
+              "unit": "km/h"
+            },
+            {
+              "job": "STATUS_ANALOG_GM3",
+              "result": "STAT_TEMP_WERT",
+              "label": "Outside temperature (K-Bus)",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_ANALOG_GM3",
+              "result": "STAT_U30L1_WERT",
+              "label": "Charging circuit voltage 1",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_ANALOG_GM3",
+              "result": "STAT_U30L2_WERT",
+              "label": "Charging circuit voltage 2",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_ANALOG_GM3",
+              "result": "STAT_AIB_WERT",
+              "label": "Interior light (PWM)",
+              "unit": "%"
+            },
+            {
+              "job": "STATUS_ANALOG_GM3",
+              "result": "STAT_UWIINT_WERT",
+              "label": "Wiper interval potentiometer",
+              "unit": "V"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "title": "Central locking: unlock",
+          "job": "STEUERN_DIGITAL_GM3",
+          "args": "MER;1",
+          "warning": "The general module activates the output for the duration of the test. Car stationary, key out of the lock cylinder and doors in sight. Use the corresponding \"release\" action to deactivate it."
+        },
+        {
+          "title": "Central locking: release unlock",
+          "job": "STEUERN_DIGITAL_GM3",
+          "args": "MER;0",
+          "warning": "Deactivates the unlock relay."
+        },
+        {
+          "title": "Central locking: lock",
+          "job": "STEUERN_DIGITAL_GM3",
+          "args": "MVR;1",
+          "warning": "Caution: with the keys inside, the car may end up locked. The general module activates the output for the duration of the test. Car stationary, key out of the lock cylinder and doors in sight. Use the corresponding \"release\" action to deactivate it."
+        },
+        {
+          "title": "Central locking: release lock",
+          "job": "STEUERN_DIGITAL_GM3",
+          "args": "MVR;0",
+          "warning": "Deactivates the lock relay."
+        },
+        {
+          "title": "Alarm LED: on",
+          "job": "STEUERN_DIGITAL_GM3",
+          "args": "DWAL;1",
+          "warning": "The general module activates the output for the duration of the test. Car stationary, key out of the lock cylinder and doors in sight. Use the corresponding \"release\" action to deactivate it."
+        },
+        {
+          "title": "Alarm LED: off",
+          "job": "STEUERN_DIGITAL_GM3",
+          "args": "DWAL;0",
+          "warning": "Turns off the alarm LED."
+        }
+      ]
+    },
+    {
+      "title": "Immobilizer (EWS)",
+      "sgbd": "D_0044",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Immobilizer status",
+          "values": [
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_AKTUELLE_SCHLUESSELNUMMER",
+              "label": "Key detected (number)"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_AKTUELLE_SCHLUESSEL_ID_TEXT",
+              "label": "Key status"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_SCHLUESSEL_GESPERRT",
+              "label": "Key locked",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_AKTUELLER_WC_TEXT",
+              "label": "Variable code (DME/DDE)"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_VORGABE_DME",
+              "label": "Start release to the DDE",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_VORGABE_ANLASSERRELAIS",
+              "label": "Starter relay release",
+              "unit": "1=sí"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_P_N_EINGANG",
+              "label": "P/N input (transmission)",
+              "unit": "1=activa"
+            },
+            {
+              "job": "STATUS_LESEN",
+              "result": "STAT_EWS_JUNGFRAEULICH",
+              "label": "Blank EWS (not paired)",
+              "unit": "1=sí"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Climate control (IHKA)",
+      "sgbd": "D_005B",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "statusPages": [
+        {
+          "title": "Temperatures",
+          "values": [
+            {
+              "job": "STATUS_ANALOGEINGAENGE",
+              "result": "STAT_TINNEN_WERT",
+              "label": "Interior temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_ANALOGEINGAENGE",
+              "result": "STAT_TAUSSEN_WERT",
+              "label": "Outside temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_ANALOGEINGAENGE",
+              "result": "STAT_TVERDAMPFER_WERT",
+              "label": "Evaporator temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_ANALOGEINGAENGE",
+              "result": "STAT_TKUEHLERWASSER_WERT",
+              "label": "Coolant temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_ANALOGEINGAENGE",
+              "result": "STAT_KLEMME30_WERT",
+              "label": "Terminal 30 voltage",
+              "unit": "V"
+            }
+          ]
+        },
+        {
+          "title": "Controls and blower",
+          "values": [
+            {
+              "job": "STATUS_BEDIENTEIL",
+              "result": "STAT_GEBLAESE_WERT",
+              "label": "Cabin blower",
+              "unit": "%"
+            },
+            {
+              "job": "STATUS_BEDIENTEIL",
+              "result": "STAT_FUNKTION_AC_EIN",
+              "label": "A/C button",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_BEDIENTEIL",
+              "result": "STAT_FUNKTION_UMLUFT_EIN",
+              "label": "Recirculation",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_BEDIENTEIL",
+              "result": "STAT_FUNKTION_HHS_EIN",
+              "label": "Rear window defroster",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_REGLERGROESSEN",
+              "result": "STAT_DREHZAHL_WERT",
+              "label": "Engine speed (received)",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_MOTOR_KLAPPENPOSITION",
+              "result": "STAT_FRISCHLUFT_WERT",
+              "label": "Fresh air flap",
+              "unit": "%"
+            }
+          ]
+        },
+        {
+          "title": "Climate control outputs",
+          "values": [
+            {
+              "job": "STATUS_IO",
+              "result": "STAT_ANSTEUERUNG_KOMPRESSOR_EIN",
+              "label": "A/C compressor",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_IO",
+              "result": "STAT_ZUSATZLUEFTER_STUFE_1_EIN",
+              "label": "Auxiliary fan stage 1",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_IO",
+              "result": "STAT_ZUSATZWASSERPUMPE_EIN",
+              "label": "Additional water pump",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_IO",
+              "result": "STAT_RELAIS_HECKSCHEIBE_EIN",
+              "label": "Rear window defroster relay",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_IO",
+              "result": "STAT_SPRITZDUESENHEIZUNG_EIN",
+              "label": "Washer nozzle heating",
+              "unit": "1=on"
+            },
+            {
+              "job": "STATUS_IO",
+              "result": "STAT_KLEMME_15_EIN",
+              "label": "Terminal 15 (ignition)",
+              "unit": "1=sí"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "title": "Rear window defroster: on",
+          "job": "STEUERN_RELAIS_HECKSCHEIBE",
+          "args": "EIN",
+          "warning": "Climate control activation. Car stationary and ignition on (the compressor only works with the engine running). When finished, press \"End activations\" or switch the ignition off."
+        },
+        {
+          "title": "Rear window defroster: off",
+          "job": "STEUERN_RELAIS_HECKSCHEIBE",
+          "args": "AUS",
+          "warning": "Turns off the rear window defroster relay."
+        },
+        {
+          "title": "Cabin blower at 50 %",
+          "job": "STEUERN_GEBLAESE",
+          "args": "50",
+          "warning": "Climate control activation. Car stationary and ignition on (the compressor only works with the engine running). When finished, press \"End activations\" or switch the ignition off."
+        },
+        {
+          "title": "Additional water pump: on",
+          "job": "STEUERN_ZUSATZWASSERPUMPE",
+          "args": "EIN",
+          "warning": "Climate control activation. Car stationary and ignition on (the compressor only works with the engine running). When finished, press \"End activations\" or switch the ignition off."
+        },
+        {
+          "title": "Additional water pump: off",
+          "job": "STEUERN_ZUSATZWASSERPUMPE",
+          "args": "AUS",
+          "warning": "Turns off the additional water pump."
+        },
+        {
+          "title": "End activations",
+          "job": "DIAGNOSE_ENDE",
+          "args": "",
+          "warning": "Closes the climate control diagnostic session and hands control of all outputs back to it."
+        }
+      ]
+    }
+  ]
+}

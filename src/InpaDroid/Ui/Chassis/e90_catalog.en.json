@@ -1,0 +1,24 @@
+{
+  "id": "e90",
+  "name": "BMW E90",
+  "subtitle": "CAN / D-CAN (unverified)",
+  "infoTitle": "E90 information",
+  "info": "BMW E90\n\nMinimal UNVERIFIED catalog: it only lists control units, with no status pages or activations.\nThis chassis uses CAN (D-CAN): it needs the K+DCAN cable with the switch in D-CAN mode (or ENET on F/G).\n\n{iface}\n{ecupath}\n\nCopy the .prg/.grp files from your INPA installation (ecu folder) there.\nUse Identification, Faults and All jobs to explore; add status pages to the JSON once you have checked them.",
+  "verified": false,
+  "ecus": [
+    {
+      "title": "Engine (DME/DDE)",
+      "sgbd": "D_MOTOR",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    },
+    {
+      "title": "Comfort access (CAS)",
+      "sgbd": "CAS",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    }
+  ]
+}

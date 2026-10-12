@@ -1,0 +1,202 @@
+{
+  "id": "e46",
+  "name": "BMW E46",
+  "subtitle": "K-line / D-CAN",
+  "infoTitle": "E46 information",
+  "info": "BMW E46 (3 Series, 1998-2006)\n\nThe E46 control units use the K-line (DS2 / KWP2000).\nInterface: USB K+DCAN cable (FTDI) with pins 7 and 8 bridged (K-line mode).\nNote: 2006 facelift E46s with a factory D-CAN module require D-CAN mode\n(not implemented yet; use the generic ECU screen for those cases).\n\n{iface}\n{ecupath}\n\nCopy the .prg/.grp files from your INPA installation (ecu folder) there.\nWhen you open a control unit you can use: Identification, Faults, Clear faults, Live values, Activations, All jobs and Graph.",
+  "verified": true,
+  "ecus": [
+    {
+      "title": "Diesel engine (DDE)",
+      "sgbd": "D_0012",
+      "statusPages": [
+        {
+          "title": "Basic values",
+          "values": [
+            {
+              "job": "STATUS_MOTORDREHZAHL",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Engine speed",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_MOTORTEMPERATUR",
+              "result": "STAT_MOTORTEMPERATUR_WERT",
+              "label": "Coolant temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_UBATT",
+              "result": "STAT_UBATT_WERT",
+              "label": "Battery voltage (DDE)",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_LMM_MASSE",
+              "result": "STAT_LMM_MASSE_WERT",
+              "label": "Air mass meter (HFM)",
+              "unit": "%"
+            },
+            {
+              "job": "STATUS_LADEDRUCK",
+              "result": "STAT_LADEDRUCK_WERT",
+              "label": "Turbo pressure (absolute)",
+              "unit": "mbar"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Petrol engine (MS43/MSS54)",
+      "sgbd": "D_MOTOR",
+      "statusPages": [
+        {
+          "title": "Basic values",
+          "values": [
+            {
+              "job": "STATUS_MOTORDREHZAHL",
+              "result": "STAT_MOTORDREHZAHL_WERT",
+              "label": "Engine speed",
+              "unit": "1/min"
+            },
+            {
+              "job": "STATUS_MOTORTEMPERATUR",
+              "result": "STAT_MOTORTEMPERATUR_WERT",
+              "label": "Coolant temperature",
+              "unit": "°C"
+            },
+            {
+              "job": "STATUS_UBATT",
+              "result": "STAT_UBATT_WERT",
+              "label": "Battery voltage (DME)",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_LAMBDAREGELUNG",
+              "result": "STAT_LAMBDAREGELUNG_WERT",
+              "label": "Lambda control",
+              "unit": ""
+            },
+            {
+              "job": "STATUS_LADEDRUCK",
+              "result": "STAT_LADEDRUCK_WERT",
+              "label": "Turbo pressure (abs.)",
+              "unit": "mbar"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Automatic transmission (EGS)",
+      "sgbd": "D_EGS",
+      "statusPages": [
+        {
+          "title": "Basic values",
+          "values": [
+            {
+              "job": "STATUS_GETRIEBE",
+              "result": "STAT_GETRIEBE_STUFE_WERT",
+              "label": "Current gear",
+              "unit": ""
+            },
+            {
+              "job": "STATUS_GETRIEBE",
+              "result": "STAT_FAHRSTUFE_WERT",
+              "label": "Gear selector",
+              "unit": ""
+            },
+            {
+              "job": "STATUS_TEMPERATUR",
+              "result": "STAT_GETRIEBETEMPERATUR_WERT",
+              "label": "Gearbox oil temperature",
+              "unit": "°C"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "ABS / DSC III",
+      "sgbd": "D_ABSI",
+      "statusPages": [
+        {
+          "title": "Wheel speeds",
+          "values": [
+            {
+              "job": "STATUS_RADDREHZAHL",
+              "result": "STAT_RADDREHZAHL_VL_WERT",
+              "label": "Front left wheel",
+              "unit": "km/h"
+            },
+            {
+              "job": "STATUS_RADDREHZAHL",
+              "result": "STAT_RADDREHZAHL_VR_WERT",
+              "label": "Front right wheel",
+              "unit": "km/h"
+            },
+            {
+              "job": "STATUS_RADDREHZAHL",
+              "result": "STAT_RADDREHZAHL_HL_WERT",
+              "label": "Rear left wheel",
+              "unit": "km/h"
+            },
+            {
+              "job": "STATUS_RADDREHZAHL",
+              "result": "STAT_RADDREHZAHL_HR_WERT",
+              "label": "Rear right wheel",
+              "unit": "km/h"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Airbag (MRS)",
+      "sgbd": "D_MRS",
+      "statusPages": [],
+      "actions": []
+    },
+    {
+      "title": "Instrument cluster (IKE)",
+      "sgbd": "D_KOMBI",
+      "statusPages": [
+        {
+          "title": "Basic values",
+          "values": [
+            {
+              "job": "STATUS_UBATT",
+              "result": "STAT_UBATT_WERT",
+              "label": "Supply voltage",
+              "unit": "V"
+            },
+            {
+              "job": "STATUS_TANKSTAND",
+              "result": "STAT_TANKSTAND_WERT",
+              "label": "Tank level",
+              "unit": "l"
+            },
+            {
+              "job": "STATUS_KMH",
+              "result": "STAT_KMH_WERT",
+              "label": "Speed (IKE)",
+              "unit": "km/h"
+            }
+          ]
+        }
+      ],
+      "actions": []
+    },
+    {
+      "title": "Body (GM/ZKE)",
+      "sgbd": "D_ZKE5",
+      "statusPages": [],
+      "actions": []
+    }
+  ]
+}
