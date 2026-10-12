@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/inpadroid/catalog.schema.json",
+  "title": "InpaDroid chassis catalog",
+  "description": "Format read by ChassisCatalog.cs. The app also accepts comments and trailing commas, which strict JSON editors may flag.",
+  "oneOf": [
+    { "$ref": "#/definitions/chassis" },
+    {
+      "description": "Override in the ECU folder: only replaces the ECU list of the embedded chassis.",
+      "type": "array",
+      "items": { "$ref": "#/definitions/ecu" }
+    }
+  ],
+  "definitions": {
+    "chassis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "subtitle", "infoTitle", "info", "verified", "ecus"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+$", "description": "Informative only; the file name <id>_catalog.json decides." },
+        "name": { "type": "string", "minLength": 1 },
+        "subtitle": { "type": "string" },
+        "infoTitle": { "type": "string", "minLength": 1 },
+        "info": { "type": "string", "description": "May contain {iface} and {ecupath}." },
+        "verified": { "type": "boolean" },
+        "ecus": { "type": "array", "items": { "$ref": "#/definitions/ecu" } }
+      }
+    },
+    "ecu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "sgbd"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "sgbd": { "type": "string", "minLength": 1, "description": "Name of the .prg/.grp file without extension." },
+        "verified": { "type": "boolean", "description": "Note for reviewers; the app ignores it." },
+        "identJob": { "type": "string", "default": "IDENT" },
+        "fsReadJob": { "type": "string", "default": "FS_LESEN" },
+        "fsClearJob": { "type": "string", "default": "FS_LOESCHEN" },
+        "statusPages": { "type": "array", "items": { "$ref": "#/definitions/page" } },
+        "actions": { "type": "array", "items": { "$ref": "#/definitions/action" } }
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "values"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "values": { "type": "array", "items": { "$ref": "#/definitions/value" } }
+      }
+    },
+    "value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job", "result", "label"],
+      "properties": {
+        "job": { "type": "string", "minLength": 1, "description": "Read-only job (STATUS_*, IDENT*, FS_LESEN*, INFO*, SERIENNUMMER*, HS_LESEN*, IS_LESEN*); the app drops any other." },
+        "result": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "unit": { "type": "string" },
+        "args": { "type": "string" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "job"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "job": { "type": "string", "minLength": 1 },
+        "args": { "type": "string" },
+        "warning": { "type": "string", "description": "Required in practice for any job that is not read-only (checked by CatalogSchemaTests)." }
+      }
+    }
+  }
+}
