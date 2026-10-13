@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Informe de fallos para el cliente. Prefijo rp_. -->
+<resources>
+    <string name="rp_lang">es</string>
+    <string name="rp_title">Informe de fallos</string>
+    <string name="rp_date">Fecha</string>
+    <string name="rp_chassis">Chasis</string>
+    <string name="rp_ecu">Centralita</string>
+    <string name="rp_sgbd">SGBD</string>
+    <string name="rp_vin">VIN</string>
+    <string name="rp_workshop">Taller</string>
+    <string name="rp_code">Código</string>
+    <string name="rp_description">Descripción</string>
+    <string name="rp_state">Estado</string>
+    <string name="rp_counter">Contador</string>
+    <string name="rp_conditions">Condiciones de funcionamiento</string>
+    <string name="rp_active">Activo</string>
+    <string name="rp_history">Histórico</string>
+    <string name="rp_unknown">Desconocido</string>
+    <string name="rp_no_faults">No hay fallos almacenados.</string>
+    <string name="rp_disclaimer">Informe generado por InpaDroid. Información orientativa; debe confirmarla un profesional.</string>
+    <string name="rp_subject">Informe de fallos InpaDroid %1$s</string>
+    <string name="rp_chooser">Compartir informe</string>
+</resources>
