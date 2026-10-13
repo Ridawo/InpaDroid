@@ -6,11 +6,13 @@ using Android.OS;
 using Android.Views;
 using Android.Widget;
 using InpaDroid.Diag;
+using InpaDroid.Ui.Chassis;
 
 namespace InpaDroid.Ui.Live;
 
 /// <summary>
-/// Monitor en vivo: ejecuta repetidamente un job STATUS_* y dibuja los resultados numéricos elegidos.
+/// Monitor en vivo: ejecuta repetidamente uno o varios jobs de lectura y dibuja los resultados numéricos elegidos;
+/// opcionalmente graba cada muestra en un CSV (sin el tope de muestras de la sesión en memoria).
 /// Todas las llamadas a ediabaslib pasan por la cola de DiagService (RunJobAsync); aquí nunca se toca EdiabasNet.
 /// </summary>
 [Activity(Label = "@string/live_title", Theme = "@style/InpaTheme",
@@ -24,6 +26,8 @@ public class LiveMonitorActivity : Activity
     {
         base.OnConfigurationChanged(newConfig);
         _chart?.ApplyTheme();
+        for (int i = 0; i < _chipViews.Count && i < _data.Series.Count; i++)
+            StyleChip(_chipViews[i], _data.Series[i]);
     }
 
     public const string ExtraEcu = "live_ecu";
@@ -31,27 +35,40 @@ public class LiveMonitorActivity : Activity
     public const string ExtraJob = "live_job";
     public const string ExtraArgs = "live_args";
     public const string ExtraResults = "live_results";   // string[] con los nombres de resultado numéricos
+    public const string ExtraEcuIndex = "live_ecu_index";   // índice de la ECU en el catálogo del chasis (-1 = buscar por título)
+    public const string ExtraChassis = "live_chassis";   // id del chasis: habilita elegir valores de sus páginas de status
+
+    // Uno por color de la paleta de LiveChartView: con más, dos series compartirían color.
+    const int MaxChannels = 6;
+    // Por encima, la grabación no se pasa por la hoja de compartir (se copia entera a cache/exports): solo se indica la ruta.
+    const long MaxShareBytes = 1024 * 1024;
 
     static readonly int[] IntervalsMs = [250, 500, 1000, 2000];
     static readonly int[] Windows = [60, 120, 300];
 
     string _sgbd = "", _job = "", _args = "", _ecu = "";
     string[] _names = [];
+    IReadOnlyList<ChassisPage> _pages = [];
+    List<ChassisValue> _picked = [];   // valores elegidos en el selector; vacío = el job con el que se abrió
+    IReadOnlyList<LiveJob> _plan = [];
     readonly LiveSeriesData _data = new();
     LiveChartView _chart = null!;
     TextView _status = null!;
-    Button _pauseBtn = null!, _intervalBtn = null!, _windowBtn = null!;
+    Button _pauseBtn = null!, _intervalBtn = null!, _windowBtn = null!, _recordBtn = null!;
     LinearLayout _chips = null!;
     readonly List<TextView> _chipViews = [];
     readonly PollRunner _poll = new();
     DiagService? _inFlight;   // servicio con un job de este monitor en curso
     bool _userPaused;         // pausado con el botón: al volver a primer plano no se reanuda solo
     int _intervalIdx = 1, _windowIdx = 1;
+    bool _recording;          // grabación activada; el fichero se abre con la primera muestra (ahí se conocen las columnas)
+    LiveLogFile? _log;
 
     static string Num(double v) => double.IsNaN(v) ? "--" : v.ToString("0.##", CultureInfo.CurrentCulture);
 
     /// <summary>Intent listo para lanzar con StartActivity.</summary>
-    public static Intent CreateIntent(Context ctx, string ecu, string sgbd, string job, string args, string[] results)
+    public static Intent CreateIntent(Context ctx, string ecu, string sgbd, string job, string args, string[] results,
+        string chassisId = "", int ecuIndex = -1)
     {
         var i = new Intent(ctx, typeof(LiveMonitorActivity));
         i.PutExtra(ExtraEcu, ecu);
@@ -59,6 +76,8 @@ public class LiveMonitorActivity : Activity
         i.PutExtra(ExtraJob, job);
         i.PutExtra(ExtraArgs, args);
         i.PutExtra(ExtraResults, results);
+        i.PutExtra(ExtraChassis, chassisId);
+        i.PutExtra(ExtraEcuIndex, ecuIndex);
         return i;
     }
 
@@ -70,6 +89,18 @@ public class LiveMonitorActivity : Activity
         _job = Intent?.GetStringExtra(ExtraJob) ?? "";
         _args = Intent?.GetStringExtra(ExtraArgs) ?? "";
         _names = Intent?.GetStringArrayExtra(ExtraResults) ?? [];
+        _plan = [DefaultJob()];
+        string chassis = Intent?.GetStringExtra(ExtraChassis) ?? "";
+        if (chassis.Length > 0)
+        {
+            // Recreada tras matar el proceso: el catálogo debe incluir el override de la carpeta ECU, como en ChassisEcuActivity.
+            if (savedInstanceState != null)
+                DiagHolder.LoadCatalogs(this, DiagHolder.LoadSettings(this).EcuPath);
+            var ecus = ChassisCatalog.Get(chassis).Ecus;
+            int idx = Intent?.GetIntExtra(ExtraEcuIndex, -1) ?? -1;
+            var ecu = idx >= 0 && idx < ecus.Count ? ecus[idx] : ecus.FirstOrDefault(e => e.Title == _ecu);
+            _pages = ecu?.StatusPages ?? [];
+        }
         Title = GetString(Resource.String.live_title) + " - " + _ecu;
 
         int p = UiUtil.Dp(this, 8);
@@ -129,6 +160,22 @@ public class LiveMonitorActivity : Activity
         };
         root.AddView(Row(_pauseBtn, clear), new LinearLayout.LayoutParams(-1, -2));
 
+        var channels = BigButton(GetString(Resource.String.lv_channels));
+        channels.Click += (_, _) => PickChannels();
+        channels.Visibility = _pages.Count > 0 ? ViewStates.Visible : ViewStates.Gone;
+        _recordBtn = BigButton(GetString(Resource.String.lv_record_start));
+        _recordBtn.Click += (_, _) =>
+        {
+            if (_recording)
+                StopRecording();
+            else
+            {
+                _recording = true;
+                _recordBtn.Text = GetString(Resource.String.lv_record_stop);
+            }
+        };
+        root.AddView(Row(channels, _recordBtn), new LinearLayout.LayoutParams(-1, -2));
+
         var export = BigButton(GetString(Resource.String.live_export));
         export.Click += (_, _) => Export();
         root.AddView(export, new LinearLayout.LayoutParams(-1, -2));
@@ -146,33 +193,42 @@ public class LiveMonitorActivity : Activity
     protected override void OnPause()
     {
         Stop();
+        _log?.Flush();
         base.OnPause();
     }
 
     protected override void OnDestroy()
     {
         Stop();
+        CloseLog();
         base.OnDestroy();
     }
 
     void Start()
     {
-        if (_poll.Running || _sgbd.Length == 0 || _job.Length == 0)
+        if (_poll.Running || _sgbd.Length == 0 || _plan[0].Job.Length == 0)
             return;
         _pauseBtn.Text = GetString(Resource.String.live_pause);
-        // Solo se piden al ECU los resultados elegidos; DiagService añade JOB_STATUS por su cuenta.
-        string results = string.Join(";", _names);
-        // Se espera cada respuesta antes de encolar el siguiente job, así la cola nunca se acumula.
+        Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
+        var plan = _plan;
+        // Se espera cada respuesta antes de encolar el siguiente job, así la cola nunca se acumula. Cada job se pide
+        // una vez por ciclo con solo sus resultados elegidos; DiagService añade JOB_STATUS por su cuenta.
         _poll.Start(async ct =>
         {
             try
             {
                 var diag = DiagHolder.Get(this);
                 _inFlight = diag;
-                var r = await diag.RunJobAsync(_sgbd, _job, _args, results);
-                if (ct.IsCancellationRequested)
-                    return false;
-                Show(r);
+                var sample = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+                string? error = null;
+                foreach (var job in plan)
+                {
+                    var r = await diag.RunJobAsync(_sgbd, job.Job, job.Args, string.Join(";", job.Results));
+                    if (ct.IsCancellationRequested)
+                        return false;
+                    error ??= Collect(job, r, sample);
+                }
+                Show(sample, error);
                 return true;
             }
             finally
@@ -189,44 +245,52 @@ public class LiveMonitorActivity : Activity
         if (!_poll.Stop())
             return;
         _pauseBtn.Text = GetString(Resource.String.live_resume);
+        Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
         // Interrumpe el job en curso para liberar el adaptador cuanto antes. Solo si es nuestro: Abort cancela
         // también lo que otras pantallas tengan en cola, y DiagHolder.Get crearía un servicio solo para abortar.
         _inFlight?.Abort();
         _inFlight = null;
     }
 
-    void Show(JobResult r)
+    LiveJob DefaultJob() => new(_job, _args, _names, _names);
+
+    // Añade a la muestra los valores numéricos pedidos de un job; devuelve el error del job si ha fallado.
+    string? Collect(LiveJob job, JobResult r, Dictionary<string, double> sample)
     {
         if (DiagLogic.StatusError(r, GetString(Resource.String.g_rp_job_failed)!) is string error)
-        {
-            _status.Text = UiUtil.Str(this, Resource.String.live_error, UiUtil.Friendly(this, error));
-            return;
-        }
-        var sample = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+            return error;
         foreach (var set in r.Sets)
         {
             foreach (var (key, value) in set)
             {
-                if (key.Equals("JOB_STATUS", StringComparison.OrdinalIgnoreCase))
-                    continue;
-                if (_names.Length > 0 && !_names.Contains(key, StringComparer.OrdinalIgnoreCase))
+                if (key.Equals("JOB_STATUS", StringComparison.OrdinalIgnoreCase) || job.SeriesOf(key) is not string series)
                     continue;
                 if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double d) && double.IsFinite(d))
-                    sample[key] = d;
+                    sample[series] = d;
             }
         }
+        return null;
+    }
+
+    // Con varios jobs, uno que falle no impide graficar los demás: se dibuja lo recibido y se muestra el error.
+    void Show(Dictionary<string, double> sample, string? error)
+    {
+        string? errorText = error == null ? null : UiUtil.Str(this, Resource.String.live_error, UiUtil.Friendly(this, error));
         if (sample.Count == 0)
         {
-            _status.Text = GetString(Resource.String.live_no_numeric);
+            _status.Text = errorText ?? GetString(Resource.String.live_no_numeric);
             return;
         }
-        _data.AddSample(DateTime.Now, sample);
+        var now = DateTime.Now;
+        _data.AddSample(now, sample);
+        Record(now, sample);
         if (_chipViews.Count != _data.Series.Count)
             RefreshChips();
         else
             UpdateChipTexts();
         _chart.Invalidate();
-        _status.Text = UiUtil.Str(this, Resource.String.live_status, _sgbd, _job, _data.Count.ToString(CultureInfo.CurrentCulture));
+        _status.Text = errorText ?? UiUtil.Str(this, Resource.String.live_status, _sgbd,
+            string.Join(", ", _plan.Select(j => j.Job)), _data.Count.ToString(CultureInfo.CurrentCulture));
     }
 
     // Botones de al menos 56 dp de alto: se pulsan con el móvil en la mano o en un soporte.
@@ -309,5 +373,146 @@ public class LiveMonitorActivity : Activity
         // Mismo escape RFC 4180 y anti-inyección de fórmulas que el resto de exportaciones.
         ResultExporter.ShareCsv(this, _data.ToCsv(ResultExporter.Cell),
             GetString(Resource.String.live_export_title)!);
+    }
+
+    // Selector de valores agrupado por página de status: solo jobs de lectura, hasta MaxChannels a la vez.
+    void PickChannels()
+    {
+        var picked = new HashSet<ChassisValue>(_picked);
+        var shown = new HashSet<ChassisValue>();
+        int p = UiUtil.Dp(this, 16);
+        var list = new LinearLayout(this) { Orientation = Orientation.Vertical };
+        list.SetPadding(p, p / 2, p, 0);
+        foreach (var page in _pages)
+        {
+            var values = page.Values.Where(v => JobPolicy.IsReadOnly(v.Job) && shown.Add(v)).ToList();
+            if (values.Count == 0)
+                continue;
+            var header = new TextView(this) { Text = page.Title };
+            header.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
+            header.SetPadding(0, p / 2, 0, 0);
+            list.AddView(header);
+            foreach (var v in values)
+            {
+                var box = new CheckBox(this) { Text = v.Unit.Length > 0 ? $"{v.Label} ({v.Unit})" : v.Label, Checked = picked.Contains(v) };
+                box.SetMinimumHeight(UiUtil.Dp(this, UiUtil.TouchDp));
+                box.CheckedChange += (_, e) =>
+                {
+                    if (!e.IsChecked)
+                        picked.Remove(v);
+                    else if (picked.Count < MaxChannels)
+                        picked.Add(v);
+                    else
+                    {
+                        box.Checked = false;
+                        UiUtil.Toast(this, UiUtil.Str(this, Resource.String.lv_channels_max, MaxChannels));
+                    }
+                };
+                list.AddView(box);
+            }
+        }
+        var scroll = new ScrollView(this);
+        scroll.AddView(list);
+        new AlertDialog.Builder(this)
+            .SetTitle(UiUtil.Str(this, Resource.String.lv_channels_title, MaxChannels))!
+            .SetView(scroll)!
+            // En el orden del catálogo, no en el de los toques.
+            .SetPositiveButton(Resource.String.lv_channels_apply, (_, _) => ApplyChannels(_pages.SelectMany(pg => pg.Values).Where(picked.Contains).Distinct().ToList()))!
+            .SetNeutralButton(Resource.String.lv_channels_default, (_, _) => ApplyChannels([]))!
+            .SetNegativeButton(Resource.String.lv_cancel, (_, _) => { })!
+            .Show();
+    }
+
+    void ApplyChannels(List<ChassisValue> picked)
+    {
+        _picked = picked;
+        _plan = picked.Count > 0 ? LiveJob.Group(picked) : [DefaultJob()];
+        bool running = _poll.Running;
+        Stop();
+        _data.Clear();
+        RefreshChips();
+        _chart.Invalidate();
+        // Las columnas cambian: si se está grabando, la siguiente muestra abre otro fichero.
+        CloseLog();
+        if (running)
+            Start();
+    }
+
+    void Record(DateTime time, Dictionary<string, double> sample)
+    {
+        if (!_recording)
+            return;
+        if (_log?.Error != null)
+        {
+            StopRecording();   // avisa del error al cerrar el fichero
+            return;
+        }
+        // Una serie nueva no cabe en la cabecera ya escrita (monitor sin resultados fijos): se sigue en otro fichero.
+        if (_log != null && LiveLog.NeedsNewFile(_log.Columns, sample.Keys))
+            CloseLog();
+        if (_log == null)
+        {
+            try
+            {
+                _log = LiveLogFile.Create(this, LiveLog.Columns(_plan.SelectMany(j => j.Series).ToList(), sample.Keys));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                UiUtil.Toast(this, UiUtil.Str(this, Resource.String.lv_record_failed, UiUtil.Describe(ex)));
+                StopRecording();
+                return;
+            }
+            UiUtil.Toast(this, UiUtil.Str(this, Resource.String.lv_record_started, _log.Name));
+        }
+        _log.Append(time, sample);
+    }
+
+    void CloseLog()
+    {
+        _log?.CloseAsync();
+        _log = null;
+    }
+
+    async void StopRecording()
+    {
+        _recording = false;
+        _recordBtn.Text = GetString(Resource.String.lv_record_start);
+        var log = _log;
+        _log = null;
+        if (log == null)
+            return;
+        await log.CloseAsync();
+        if (IsFinishing || IsDestroyed)
+            return;
+        if (log.Error is Exception error)
+        {
+            UiUtil.Toast(this, UiUtil.Str(this, Resource.String.lv_record_failed, UiUtil.Describe(error)));
+            return;
+        }
+        bool small = new Java.IO.File(log.FilePath).Length() <= MaxShareBytes;
+        var dialog = new AlertDialog.Builder(this)
+            .SetTitle(Resource.String.lv_record_saved)!
+            .SetMessage(UiUtil.Str(this, small ? Resource.String.lv_record_saved_at : Resource.String.lv_record_saved_big, log.FilePath))!
+            .SetNegativeButton(Resource.String.lv_record_close, (_, _) => { })!;
+        if (small)
+            dialog.SetPositiveButton(Resource.String.lv_record_share, (_, _) => ShareLog(log.FilePath));
+        dialog.Show();
+    }
+
+    // ExportProvider solo sirve cache/exports: ShareCsv copia allí el contenido (por eso el tope de tamaño).
+    async void ShareLog(string path)
+    {
+        string csv;
+        try
+        {
+            csv = await Task.Run(() => File.ReadAllText(path));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            UiUtil.Toast(this, UiUtil.Str(this, Resource.String.live_export_failed, UiUtil.Describe(ex)));
+            return;
+        }
+        if (!IsFinishing && !IsDestroyed)
+            ResultExporter.ShareCsv(this, csv, GetString(Resource.String.lv_record_share_title)!);
     }
 }

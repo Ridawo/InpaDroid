@@ -1,5 +1,6 @@
-using System.Globalization;
 using System.Text;
+using InpaDroid.Diag;
+using InpaDroid.Ui.Chassis;
 
 namespace InpaDroid.Ui.Live;
 
@@ -18,6 +19,44 @@ public sealed class LiveSeries(string name, int colorIndex)
     public double Min { get; internal set; } = double.NaN;
     public double Max { get; internal set; } = double.NaN;
     public IReadOnlyList<double> Values => Data;
+}
+
+/// <summary>
+/// Un job que el monitor pide una vez por ciclo, con los resultados solicitados y el nombre de serie de cada uno.
+/// Sin resultados se grafican todos los numéricos que devuelva, cada uno con su nombre.
+/// </summary>
+public sealed record LiveJob(string Job, string Args, IReadOnlyList<string> Results, IReadOnlyList<string> Series)
+{
+    /// <summary>Serie en la que va un resultado devuelto por el ECU; null si no se pidió.</summary>
+    public string? SeriesOf(string result)
+    {
+        if (Results.Count == 0)
+            return result;
+        for (int i = 0; i < Results.Count; i++)
+        {
+            if (Results[i].Equals(result, StringComparison.OrdinalIgnoreCase))
+                return Series[i];
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Agrupa los valores elegidos por job y argumentos (mismo criterio que el sondeo de ChassisEcuActivity): cada job se
+    /// pide una sola vez por ciclo aunque aporte varios resultados. La serie se llama como el resultado; si varios jobs
+    /// devuelven el mismo nombre se antepone el job (y sus argumentos) para que no se mezclen en una columna.
+    /// </summary>
+    public static List<LiveJob> Group(IEnumerable<ChassisValue> values)
+    {
+        var picked = values.Select(v => (Job: v.Job.Trim(), v.Args, Result: v.Result.Trim()))
+            .DistinctBy(v => (v.Job.ToUpperInvariant(), v.Args, v.Result.ToUpperInvariant())).ToList();
+        var shared = picked.GroupBy(v => v.Result, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return picked.GroupBy(v => (Job: v.Job.ToUpperInvariant(), v.Args))
+            .Select(g => new LiveJob(g.First().Job, g.Key.Args, g.Select(v => v.Result).ToList(),
+                g.Select(v => !shared.Contains(v.Result) ? v.Result
+                    : v.Args.Length > 0 ? $"{v.Job}({v.Args})/{v.Result}" : $"{v.Job}/{v.Result}").ToList()))
+            .ToList();
+    }
 }
 
 /// <summary>
@@ -91,21 +130,10 @@ public sealed class LiveSeriesData
     /// </summary>
     public string ToCsv(Func<string, string> escape)
     {
-        var sb = new StringBuilder("timestamp");
-        foreach (var s in _series)
-            sb.Append(',').Append(escape(s.Name));
-        sb.Append("\r\n");
+        var sb = new StringBuilder();
+        LiveLog.AppendHeader(sb, _series.Select(s => s.Name), escape);
         for (int i = 0; i < _times.Count; i++)
-        {
-            sb.Append(_times[i].ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture));
-            foreach (var s in _series)
-            {
-                sb.Append(',');
-                if (!double.IsNaN(s.Data[i]))
-                    sb.Append(s.Data[i].ToString("R", CultureInfo.InvariantCulture));
-            }
-            sb.Append("\r\n");
-        }
+            LiveLog.AppendRow(sb, _times[i], _series.Select(s => s.Data[i]));
         return sb.ToString();
     }
 }
