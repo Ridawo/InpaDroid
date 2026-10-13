@@ -48,9 +48,11 @@ public class ChassisMenuActivity : InpaActivity
         var search = FindViewById<EditText>(Resource.Id.chassis_menu_search)!;
         search.TextChanged += (_, _) => adapter.Filter(search.Text);
 
-        SetKey(1, GetString(Resource.String.ch_key_info), ShowInfo, Resource.Drawable.ic_info);
+        // Con letra muy grande las tarjetas de abajo son estrechas: etiquetas cortas para que no se partan a media palabra.
+        bool big = (Resources?.Configuration?.FontScale ?? 1f) >= 1.5f;
+        SetKey(1, GetString(big ? Resource.String.hm_key_info : Resource.String.ch_key_info), ShowInfo, Resource.Drawable.ic_info);
         if (ecus.Count > 0)
-            SetKey(2, GetString(Resource.String.sc_key_scan), () => ChassisScanActivity.Start(this, _chassis.Id), Resource.Drawable.ic_fault);
+            SetKey(2, GetString(big ? Resource.String.hm_key_scan : Resource.String.sc_key_scan), () => ChassisScanActivity.Start(this, _chassis.Id), Resource.Drawable.ic_fault);
         SetKey(10, GetString(Resource.String.ch_key_back), Finish);
         RefreshKeys();
     }
