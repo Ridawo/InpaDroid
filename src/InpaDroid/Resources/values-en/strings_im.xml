@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="im_button">Import ECU files</string>
+  <string name="im_legal">Pick loose .prg/.grp files or a ZIP. They must come from your own INPA/EDIABAS installation: the app ships none and gives no download links. Everything else is ignored.</string>
+  <string name="im_busy">Importing %1$s</string>
+  <string name="im_result">Imported: %1$s, skipped: %2$s, failed: %3$s</string>
+  <string name="im_cancelled">Import cancelled.</string>
+  <string name="im_first_error">First error: %1$s</string>
+  <string name="im_picker_error">Could not open the file picker: %1$s</string>
+</resources>
