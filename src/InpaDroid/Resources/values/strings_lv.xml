@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="lv_channels">Elegir valores</string>
+  <string name="lv_channels_title">Valores a graficar (máx. %1$s)</string>
+  <string name="lv_channels_max">Como mucho %1$s valores a la vez</string>
+  <string name="lv_channels_apply">Aplicar</string>
+  <string name="lv_channels_default">Por defecto</string>
+  <string name="lv_cancel">Cancelar</string>
+  <string name="lv_record_start">Grabar a fichero</string>
+  <string name="lv_record_stop">Detener grabación</string>
+  <string name="lv_record_started">Grabando en %1$s</string>
+  <string name="lv_record_failed">No se pudo grabar: %1$s</string>
+  <string name="lv_record_saved">Grabación guardada</string>
+  <string name="lv_record_saved_at">Guardada en:\n%1$s</string>
+  <string name="lv_record_saved_big">Ocupa más de 1 MB y no se comparte desde aquí. Cópiala desde:\n%1$s</string>
+  <string name="lv_record_share">Compartir</string>
+  <string name="lv_record_close">Cerrar</string>
+  <string name="lv_record_share_title">Compartir grabación</string>
+</resources>

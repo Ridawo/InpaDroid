@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="lv_channels">Choose values</string>
+  <string name="lv_channels_title">Values to plot (max %1$s)</string>
+  <string name="lv_channels_max">At most %1$s values at a time</string>
+  <string name="lv_channels_apply">Apply</string>
+  <string name="lv_channels_default">Default</string>
+  <string name="lv_cancel">Cancel</string>
+  <string name="lv_record_start">Record to file</string>
+  <string name="lv_record_stop">Stop recording</string>
+  <string name="lv_record_started">Recording to %1$s</string>
+  <string name="lv_record_failed">Recording failed: %1$s</string>
+  <string name="lv_record_saved">Recording saved</string>
+  <string name="lv_record_saved_at">Saved to:\n%1$s</string>
+  <string name="lv_record_saved_big">Larger than 1 MB, so it is not shared from here. Copy it from:\n%1$s</string>
+  <string name="lv_record_share">Share</string>
+  <string name="lv_record_close">Close</string>
+  <string name="lv_record_share_title">Share recording</string>
+</resources>
