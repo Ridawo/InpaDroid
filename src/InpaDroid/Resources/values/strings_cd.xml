@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copia de la codificación (solo lectura). Prefijo cd_. -->
+<resources>
+    <string name="cd_title">Codificación</string>
+    <string name="cd_key_coding">Codificación</string>
+    <string name="cd_key_read">Leer codificación</string>
+    <string name="cd_key_share">Compartir CSV</string>
+    <string name="cd_key_compare">Comparar</string>
+    <string name="cd_key_snapshots">Copias guardadas</string>
+    <string name="cd_safety_title">Solo lectura</string>
+    <string name="cd_safety_msg">Esta pantalla lee la codificación y el orden de vehículo (FA, FG, AIF, ZIF) de la centralita y guarda una copia que puedes exportar y comparar con lecturas anteriores. No escribe ni restaura nada: la codificación real necesita los datos de NCS Expert, que la app no incluye, y una codificación equivocada puede dejar inservible la centralita.\n\nSi de verdad necesitas escribir codificación, hazlo a propósito desde la lista de todos los jobs. Allí cada escritura pide confirmación en rojo y avisa si la batería está baja, y antes de borrar errores la app guarda una copia automática de la memoria de errores.</string>
+    <string name="cd_no_jobs">%1$s no tiene jobs de lectura de codificación ni de orden de vehículo.</string>
+    <string name="cd_saved">Copia guardada (%1$s valores).</string>
+    <string name="cd_save_failed">No se ha podido guardar la copia en el teléfono. Puedes compartirla en CSV.</string>
+    <string name="cd_not_saved">El job no ha terminado bien, así que no se guarda copia.</string>
+    <string name="cd_none">Primero lee la codificación o abre una copia guardada.</string>
+    <string name="cd_no_previous">No hay una copia anterior de %1$s / %2$s con la que comparar.</string>
+    <string name="cd_compare_head">Comparación con la copia del %1$s</string>
+    <string name="cd_cmp_changed">Cambiados (%1$s)</string>
+    <string name="cd_cmp_added">Nuevos (%1$s)</string>
+    <string name="cd_cmp_removed">Desaparecidos (%1$s)</string>
+    <string name="cd_cmp_none">ninguno</string>
+    <string name="cd_snapshots_empty">Aún no hay copias de codificación guardadas.</string>
+    <string name="cd_snapshot_sub">%1$s · %2$s · %3$s valores</string>
+    <string name="cd_share_title">Compartir codificación</string>
+</resources>

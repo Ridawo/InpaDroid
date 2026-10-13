@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Coding backup (read only). Prefix cd_. -->
+<resources>
+    <string name="cd_title">Coding</string>
+    <string name="cd_key_coding">Coding</string>
+    <string name="cd_key_read">Read coding</string>
+    <string name="cd_key_share">Share CSV</string>
+    <string name="cd_key_compare">Compare</string>
+    <string name="cd_key_snapshots">Saved copies</string>
+    <string name="cd_safety_title">Read only</string>
+    <string name="cd_safety_msg">This screen reads the ECU coding and vehicle order data (FA, FG, AIF, ZIF) and saves a copy you can export and compare with earlier reads. It never writes or restores anything: real coding needs the NCS Expert data files, which the app does not ship, and wrong coding can leave the ECU unusable.\n\nIf you really need to write coding, do it on purpose from the list of all jobs. There every write asks for a red confirmation and warns when the battery is low, and before clearing faults the app saves an automatic copy of the fault memory.</string>
+    <string name="cd_no_jobs">%1$s has no jobs that read coding or vehicle order data.</string>
+    <string name="cd_saved">Copy saved (%1$s values).</string>
+    <string name="cd_save_failed">The copy could not be saved on the phone. You can still share it as CSV.</string>
+    <string name="cd_not_saved">The job did not finish correctly, so no copy is saved.</string>
+    <string name="cd_none">Read the coding first or open a saved copy.</string>
+    <string name="cd_no_previous">There is no earlier copy of %1$s / %2$s to compare with.</string>
+    <string name="cd_compare_head">Compared with the copy from %1$s</string>
+    <string name="cd_cmp_changed">Changed (%1$s)</string>
+    <string name="cd_cmp_added">New (%1$s)</string>
+    <string name="cd_cmp_removed">Gone (%1$s)</string>
+    <string name="cd_cmp_none">none</string>
+    <string name="cd_snapshots_empty">No coding copies saved yet.</string>
+    <string name="cd_snapshot_sub">%1$s · %2$s · %3$s values</string>
+    <string name="cd_share_title">Share coding</string>
+</resources>
