@@ -146,7 +146,7 @@
                     android:id="@+id/set_enet_host"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-"
+                    android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:"
                     android:hint="auto"
                     android:imeOptions="actionDone"
                     android:inputType="textUri|textNoSuggestions"
@@ -160,6 +160,13 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/m_error"
                     android:visibility="gone" />
+
+                <TextView
+                    style="@style/MText_Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/en_help" />
             </LinearLayout>
 
             <LinearLayout
@@ -245,6 +252,21 @@
                         android:textAllCaps="false" />
                 </LinearLayout>
 
+                <Button
+                    android:id="@+id/set_ecu_import"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:text="@string/im_button"
+                    android:textAllCaps="false" />
+
+                <TextView
+                    style="@style/MText_Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/im_legal" />
+
                 <TextView
                     android:id="@+id/set_ecu_info"
                     style="@style/MText_Caption"
@@ -260,6 +282,8 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
     </ScrollView>
+
+    <include layout="@layout/inpa_busy" />
 
     <!-- Boton fijo abajo. -->
     <Button

@@ -99,6 +99,14 @@
                     android:text="@string/ws_files_legal" />
 
                 <Button
+                    android:id="@+id/ws_import_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:text="@string/im_button"
+                    android:textAllCaps="false" />
+
+                <Button
                     android:id="@+id/ws_files_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

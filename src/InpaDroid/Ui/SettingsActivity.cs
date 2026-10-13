@@ -17,16 +17,18 @@ namespace InpaDroid.Ui;
 public class SettingsActivity : InpaActivity
 {
     const int RequestFolder = 2;
+    const int RequestImport = 3;
 
     RadioGroup _adapterGroup = null!;
     View _btSection = null!, _enetSection = null!, _wifiSection = null!;
-    TextView _btSelected = null!, _ecuInfo = null!, _status = null!, _adapterWarn = null!, _enetError = null!, _wifiError = null!;
+    TextView _btSelected = null!, _ecuInfo = null!, _status = null!, _adapterWarn = null!, _klineNote = null!, _enetError = null!, _wifiError = null!;
     LinearLayout _btList = null!;
     EditText _enetHost = null!, _wifiHost = null!, _ecuPath = null!;
     BluetoothPanel _bt = null!;
     UsbPanel _usb = null!;
     string _defaultPath = "";
     bool _saving;
+    Button _importBtn = null!;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -78,6 +80,12 @@ public class SettingsActivity : InpaActivity
         FindViewById<Button>(Resource.Id.set_bt_refresh)!.Click += (_, _) => _bt.Refresh();
         FindViewById<Button>(Resource.Id.set_ecu_default)!.Click += (_, _) => _ecuPath.Text = _defaultPath;
         FindViewById<Button>(Resource.Id.set_ecu_pick)!.Click += (_, _) => PickFolder();
+        _importBtn = FindViewById<Button>(Resource.Id.set_ecu_import)!;
+        _importBtn.Click += (_, _) =>
+        {
+            if (!EcuImporter.Running)
+                EcuImporter.Start(this, RequestImport);
+        };
         FindViewById<Button>(Resource.Id.set_save)!.Click += (_, _) => Save();
 
         // "Guardar" es el botón fijo del layout (set_save): no se duplica como tecla.
@@ -101,14 +109,12 @@ public class SettingsActivity : InpaActivity
         }
     }
 
-    static readonly System.Text.RegularExpressions.Regex EnetRx = new(@"^[A-Za-z0-9.\-]+$");
     static readonly System.Text.RegularExpressions.Regex WifiRx = new(@"^([A-Za-z0-9.\-]+)(?::(\d+))?$");
 
     bool ValidateEnet()
     {
-        string raw = _enetHost.Text?.Trim() ?? "";
-        bool ok = raw.Length == 0 || raw.Equals("auto", StringComparison.OrdinalIgnoreCase) || EnetRx.IsMatch(raw);
-        ShowFieldError(_enetError, ok ? null : GetString(Resource.String.set_err_enet));
+        bool ok = EnetHostRule.IsValid(_enetHost.Text);
+        ShowFieldError(_enetError, ok ? null : GetString(Resource.String.en_err_host));
         return ok;
     }
 
@@ -156,6 +162,7 @@ public class SettingsActivity : InpaActivity
             _ => "",
         };
         _adapterWarn.Visibility = _adapterWarn.Text.Length > 0 ? ViewStates.Visible : ViewStates.Gone;
+        _klineNote.Visibility = type == AdapterType.Enet ? ViewStates.Gone : ViewStates.Visible;   // la nota de línea K no aplica a ENET
         if (type == AdapterType.UsbKDcan)
             _usb.Update();
     }
@@ -176,7 +183,8 @@ public class SettingsActivity : InpaActivity
         int p = UiUtil.Dp(this, 4);
 
         p = UiUtil.Dp(this, 12);
-        var note = new TextView(this) { Text = GetString(Resource.String.st_kline_note) };
+        _klineNote = new TextView(this) { Text = GetString(Resource.String.st_kline_note) };
+        var note = _klineNote;
         note.SetPadding(p, p, p, p);
         note.SetTextSize(Android.Util.ComplexUnitType.Sp, 13);
         note.SetTextColor(UiUtil.Res(this, Resource.Color.m_text_secondary));
@@ -216,6 +224,20 @@ public class SettingsActivity : InpaActivity
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
     {
         base.OnActivityResult(requestCode, resultCode, data);
+        if (requestCode == RequestImport)
+        {
+            string folder = DiagHolder.LoadSettings(this).EcuPath;   // la carpeta guardada, la que usa EDIABAS
+            _ = EcuImporter.HandleResult(this, resultCode, data, folder,
+                (text, cancel) => ShowBusy(text, GetString(Resource.String.g_abort), cancel), HideBusy,
+                (text, error) =>
+                {
+                    _importBtn.Enabled = true;
+                    ShowStatus(text, error);
+                    ShowEcuCount(folder);
+                });
+            _importBtn.Enabled = !EcuImporter.Running;
+            return;
+        }
         if (requestCode != RequestFolder || resultCode != Result.Ok || data?.Data == null)
             return;
         try
@@ -291,10 +313,9 @@ public class SettingsActivity : InpaActivity
                 ShowStatus(GetString(Resource.String.st_check_red_field), true);
                 return;
             }
-            string enetRaw = _enetHost.Text?.Trim() ?? "";
             string wifiRaw = _wifiHost.Text?.Trim() ?? "";
 
-            s.EnetHost = enetRaw.Length == 0 ? "auto" : enetRaw;
+            s.EnetHost = EnetHostRule.Normalize(_enetHost.Text);
             s.ElmWifiHost = wifiRaw.Length == 0 ? "192.168.0.10:35000" : wifiRaw;
             s.EcuPath = string.IsNullOrWhiteSpace(_ecuPath.Text) ? _defaultPath : _ecuPath.Text.Trim();
             _ecuPath.Text = s.EcuPath;
@@ -307,7 +328,10 @@ public class SettingsActivity : InpaActivity
             if (s.Type == AdapterType.Elm327Bluetooth && s.BluetoothAddress.Length == 0)
                 ShowStatus(GetString(Resource.String.st_saved_no_bt), true);
             else
+            {
                 ShowStatus(GetString(Resource.String.st_saved), false);
+                UiUtil.Toast(this, GetString(Resource.String.st_saved)!);   // el estado queda bajo el botón Guardar, fuera de pantalla
+            }
             ShowEcuCount(s.EcuPath);
         }
         catch (Exception ex)
