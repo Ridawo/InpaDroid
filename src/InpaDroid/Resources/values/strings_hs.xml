@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Historial de lecturas de errores. Prefijo hs_. -->
+<resources>
+    <string name="hs_title">Historial</string>
+    <string name="hs_empty">Aún no hay lecturas guardadas. Cada lectura de la memoria de errores se guarda aquí.</string>
+    <string name="hs_kind_read">LECTURA</string>
+    <string name="hs_kind_backup">COPIA</string>
+    <string name="hs_row_sub">%1$s · %2$s errores</string>
+    <string name="hs_key_compare">Comparar</string>
+    <string name="hs_key_delete">Borrar todo</string>
+    <string name="hs_delete_title">Borrar historial</string>
+    <string name="hs_delete_message">Se borrarán todas las lecturas guardadas. No se puede deshacer.</string>
+    <string name="hs_delete_yes">Borrar</string>
+    <string name="hs_detail_head">%1$s\n%2$s · %3$s</string>
+    <string name="hs_no_faults">Sin errores en esta lectura.</string>
+    <string name="hs_fault_line">%1$s  %2$s</string>
+    <string name="hs_fault_state">[%1$s]</string>
+    <string name="hs_state_active">activo</string>
+    <string name="hs_state_history">histórico</string>
+    <string name="hs_state_unknown">sin estado</string>
+    <string name="hs_no_previous">No hay una lectura anterior de esta centralita con la que comparar.</string>
+    <string name="hs_compare_head">Comparación con la lectura del %1$s</string>
+    <string name="hs_cmp_new">Nuevos (%1$s)</string>
+    <string name="hs_cmp_fixed">Desaparecidos (%1$s)</string>
+    <string name="hs_cmp_persistent">Persistentes (%1$s)</string>
+    <string name="hs_cmp_none">ninguno</string>
+</resources>

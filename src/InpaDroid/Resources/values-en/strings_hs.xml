@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fault read history. Prefix hs_. -->
+<resources>
+    <string name="hs_title">History</string>
+    <string name="hs_empty">No saved reads yet. Every fault memory read is saved here.</string>
+    <string name="hs_kind_read">READ</string>
+    <string name="hs_kind_backup">BACKUP</string>
+    <string name="hs_row_sub">%1$s · %2$s faults</string>
+    <string name="hs_key_compare">Compare</string>
+    <string name="hs_key_delete">Delete all</string>
+    <string name="hs_delete_title">Delete history</string>
+    <string name="hs_delete_message">All saved reads will be deleted. This cannot be undone.</string>
+    <string name="hs_delete_yes">Delete</string>
+    <string name="hs_detail_head">%1$s\n%2$s · %3$s</string>
+    <string name="hs_no_faults">No faults in this read.</string>
+    <string name="hs_fault_line">%1$s  %2$s</string>
+    <string name="hs_fault_state">[%1$s]</string>
+    <string name="hs_state_active">active</string>
+    <string name="hs_state_history">history</string>
+    <string name="hs_state_unknown">no state</string>
+    <string name="hs_no_previous">There is no earlier read of this ECU to compare with.</string>
+    <string name="hs_compare_head">Comparison with the read from %1$s</string>
+    <string name="hs_cmp_new">New (%1$s)</string>
+    <string name="hs_cmp_fixed">Gone (%1$s)</string>
+    <string name="hs_cmp_persistent">Persistent (%1$s)</string>
+    <string name="hs_cmp_none">none</string>
+</resources>
