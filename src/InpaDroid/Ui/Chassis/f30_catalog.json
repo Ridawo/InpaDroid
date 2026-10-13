@@ -1,0 +1,40 @@
+{
+  "id": "f30",
+  "name": "BMW F30",
+  "subtitle": "ENET (HSFZ)",
+  "infoTitle": "Información F30",
+  "info": "BMW F30 / F31\n\nCatálogo mínimo SIN VERIFICAR: solo lista centralitas, sin páginas de status ni activaciones.\nLos F-series usan HSFZ sobre Ethernet (ENET), no CAN. Necesitas un cable ENET OBD a RJ45 (con la línea de activación en el pin 8 del OBD) y conectar el móvil al coche con un puente ENET a USB/WiFi o un adaptador Ethernet. En Ajustes deja el host en \"auto\" o pon la IP del coche. Contacto puesto. Los adaptadores K+DCAN y ELM NO sirven para este transporte.\n\n{iface}\n{ecupath}\n\nLos nombres SGBD de este catálogo no están comprobados: contrástalos con tus propios archivos de datos (carpeta ecu).\nUsa Identificación, Errores y Todos los jobs para explorar; añade páginas de status al JSON cuando las hayas comprobado.",
+  "verified": false,
+  "ecus": [
+    {
+      "title": "Motor (DME/DDE)",
+      "sgbd": "D_MOTOR",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    },
+    {
+      "title": "Pasarela central (ZGW)",
+      "sgbd": "ZGW_01",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    },
+    {
+      "title": "Módulo de carrocería (FEM)",
+      "sgbd": "FEM_20",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    }
+  ]
+}

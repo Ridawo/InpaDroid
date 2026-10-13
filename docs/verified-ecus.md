@@ -22,3 +22,15 @@ ECUs in `src/InpaDroid/Ui/Chassis/e39_catalog.json` and whether each one has bee
 4. If something did not work, open an issue with the job name and the error, and write `partial` in the table.
 
 Only report what you saw on a real car. Do not attach BMW proprietary files (`.prg`, `.grp`, INPA or EDIABAS data).
+
+## F-series (ENET, unverified)
+
+`f30_catalog.json` (3 Series F30/F31 2012-2018) and `f10_catalog.json` (5 Series F10/F11 2010-2017) are skeleton catalogs: ECU list only, no status pages or actions. The SGBD names have not been checked against any real data files or car.
+
+| Chassis | ECU | SGBD | Useful jobs | Verified in real car | Contributor |
+|---|---|---|---|---|---|
+| F30 | Motor (DME/DDE) | D_MOTOR | IDENT, FS_LESEN, FS_LOESCHEN | pending | |
+| F30 | Pasarela central (ZGW) | ZGW_01 | IDENT, FS_LESEN, FS_LOESCHEN | pending | |
+| F30 | Módulo de carrocería (FEM) | FEM_20 | IDENT, FS_LESEN, FS_LOESCHEN | pending | |
+| F10 | Motor (DME/DDE) | D_MOTOR | IDENT, FS_LESEN, FS_LOESCHEN | pending | |
+| F10 | Pasarela central (ZGW) | ZGW_01 | IDENT, FS_LESEN, FS_LOESCHEN | pending | |

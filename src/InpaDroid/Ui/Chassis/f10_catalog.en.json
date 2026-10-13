@@ -1,0 +1,30 @@
+{
+  "id": "f10",
+  "name": "BMW F10",
+  "subtitle": "ENET (HSFZ)",
+  "infoTitle": "F10 information",
+  "info": "BMW F10 / F11\n\nMinimal UNVERIFIED catalog: it only lists control units, with no status pages or activations.\nF-series cars use HSFZ over Ethernet (ENET), not CAN. You need an OBD-to-RJ45 ENET cable (with the activation line on OBD pin 8) and the phone connected to the car through an ENET-to-USB/WiFi bridge or an Ethernet adapter. In Settings leave the host on \"auto\" or enter the car IP. Ignition on. K+DCAN and ELM adapters are NOT valid for this transport.\n\n{iface}\n{ecupath}\n\nThe SGBD names in this catalog are unchecked: verify them against your own data files (ecu folder).\nUse Identification, Faults and All jobs to explore; add status pages to the JSON once you have checked them.",
+  "verified": false,
+  "ecus": [
+    {
+      "title": "Engine (DME/DDE)",
+      "sgbd": "D_MOTOR",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    },
+    {
+      "title": "Central gateway (ZGW)",
+      "sgbd": "ZGW_01",
+      "identJob": "IDENT",
+      "fsReadJob": "FS_LESEN",
+      "fsClearJob": "FS_LOESCHEN",
+      "verified": false,
+      "statusPages": [],
+      "actions": []
+    }
+  ]
+}
