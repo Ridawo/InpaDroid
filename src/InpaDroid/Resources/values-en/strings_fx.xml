@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="fx_variant_failed_enet">Could not identify the ECU variant. Check the ENET cable, that the phone and the car are on the same network, the ignition, and that the file is in the ECU folder.</string>
+</resources>

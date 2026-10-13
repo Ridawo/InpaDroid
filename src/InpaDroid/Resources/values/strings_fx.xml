@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="fx_variant_failed_enet">No se pudo identificar la variante de la centralita. Comprueba el cable ENET, que el teléfono y el coche estén en la misma red, el encendido y que el archivo está en la carpeta ECU.</string>
+</resources>

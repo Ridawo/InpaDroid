@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fb_key_report">Report</string>
+    <string name="fb_clear_hint">Before clearing, InpaDroid reads the fault memory and saves it to the history as a backup. \"Save faults\" reads it and also shares it as CSV.\n\nIf the cause of the fault is still there, the fault will be stored again and the warning light may come back on.</string>
+    <string name="fb_backup_saved">Fault memory backup saved to the history.</string>
+    <string name="fb_backup_none">Cleared without a backup: the fault memory could not be read.</string>
+    <string name="fb_backup_failed_title">⚠ No backup</string>
+    <string name="fb_backup_failed_msg">The fault memory could not be read to back it up before clearing (the error is shown on screen).\n\nIf you clear now, the stored faults will be lost with no copy. Clear anyway?</string>
+    <string name="fb_clear_anyway">Clear without backup</string>
+</resources>

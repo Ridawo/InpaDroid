@@ -9,18 +9,22 @@ namespace InpaDroid.Ui;
 
 [Activity(Label = "@string/g_ecu_label", Theme = "@style/InpaTheme",
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
-                           | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
+                           | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden
+                           | ConfigChanges.UiMode | ConfigChanges.Locale)]
 public class EcuActivity : InpaActivity
 {
+    public const string ExtraChassisName = "chassis_name";
     const int StatusPollMs = 1000;
 
     string _ecuName = "";
+    string _chassis = "";                   // chasis de origen (para el historial y el informe); vacío desde la lista de SGBD
     bool _isGroup;
     string? _sgbd;                          // variante real (.prg) una vez resuelta
     IReadOnlyList<JobInfo>? _jobs;
     ResultPanel _results = null!;
     TextView _heading = null!;
     bool _busyJob;                          // job puntual en curso (bloquea otras teclas salvo F10)
+    bool _abortRequested;                   // el usuario ha abortado la operación en curso (Exclusive lo limpia)
     int _generation;                        // descarta resultados de operaciones ya sustituidas
     readonly PollRunner _poll = new();
 
@@ -31,6 +35,7 @@ public class EcuActivity : InpaActivity
         base.OnCreate(savedInstanceState);
         _ecuName = Intent?.GetStringExtra(EcuSelectActivity.ExtraEcuName) ?? "";
         _isGroup = Intent?.GetBooleanExtra(EcuSelectActivity.ExtraIsGroup, false) ?? false;
+        _chassis = Intent?.GetStringExtra(ExtraChassisName) ?? "";
         if (!_isGroup)
             _sgbd = _ecuName;
 
@@ -41,11 +46,13 @@ public class EcuActivity : InpaActivity
 
         SetKey(1, GetString(Resource.String.g_key_info)!, () => RunOnce("INFO", GetString(Resource.String.g_head_sgbd_info)!), Resource.Drawable.ic_info);
         SetKey(2, GetString(Resource.String.g_key_ident)!, () => RunOnce("IDENT", GetString(Resource.String.g_key_ident)!), Resource.Drawable.ic_ident);
-        SetKey(4, GetString(Resource.String.g_key_faults)!, () => RunOnce("FS_LESEN", GetString(Resource.String.g_head_fault_memory)!), Resource.Drawable.ic_fault);
+        SetKey(3, GetString(Resource.String.fb_key_report)!, ShareReport, Resource.Drawable.ic_copy);
+        SetKey(4, GetString(Resource.String.g_key_faults)!, () => ReadFaults(), Resource.Drawable.ic_fault);
         SetShiftKey(4, GetString(Resource.String.g_key_clear_faults)!, ConfirmClearFaults, Resource.Drawable.ic_delete);
         SetKey(5, GetString(Resource.String.g_key_live)!, StatusMenu, Resource.Drawable.ic_live);
         SetKey(6, GetString(Resource.String.g_key_actuate)!, SteuernMenu, Resource.Drawable.ic_bolt);
         SetKey(7, GetString(Resource.String.g_key_all_jobs)!, JobsMenu, Resource.Drawable.ic_list);
+        SetKey(8, GetString(Resource.String.cd_key_coding)!, () => CodingActivity.Start(this, _chassis, _ecuName, _sgbd ?? _ecuName), Resource.Drawable.ic_tune);
         SetKey(9, GetString(Resource.String.g_key_copy)!, CopyResults, Resource.Drawable.ic_copy);
         SetKey(10, GetString(Resource.String.g_key_back)!, Back);
         RefreshKeys();
@@ -75,8 +82,15 @@ public class EcuActivity : InpaActivity
     void Back()
     {
         if (_busyJob)
-            AbortJob();
+            AbortFlow();
         Finish();
+    }
+
+    // Abortar de la barra de trabajo: además de cancelar el job, corta la operación (p. ej. el borrado tras la copia).
+    void AbortFlow()
+    {
+        _abortRequested = true;
+        AbortJob();
     }
 
     protected override void OnPause()
@@ -85,11 +99,20 @@ public class EcuActivity : InpaActivity
         base.OnPause();
     }
 
+    // Atrás del sistema o cierre sin pasar por Back(): el job en curso no debe seguir ni encadenar otro.
+    protected override void OnDestroy()
+    {
+        if (_busyJob)
+            AbortFlow();
+        base.OnDestroy();
+    }
+
     async void Exclusive(Func<Task> work)
     {
         if (_busyJob)
             return;
         _busyJob = true;
+        _abortRequested = false;
         try
         {
             await work();
@@ -153,7 +176,7 @@ public class EcuActivity : InpaActivity
     {
         int gen = ++_generation;
         _heading.Text = heading;
-        ShowBusy($"{sgbd} : {job}…");
+        ShowBusy($"{sgbd} : {job}…", null, AbortFlow);
         try
         {
             var r = await Diag.RunJobAsync(sgbd, job, args, results);
@@ -174,7 +197,7 @@ public class EcuActivity : InpaActivity
     {
         var name = _sgbd ?? _ecuName;
         JobDialogs.ConfirmJob(this, GetString(Resource.String.g_clear_title)!,
-            UiUtil.Str(this, Resource.String.g_clear_msg, name) + "\n\n" + GetString(Resource.String.sf_clear_save_hint),
+            UiUtil.Str(this, Resource.String.g_clear_msg, name) + "\n\n" + GetString(Resource.String.fb_clear_hint),
             name, "FS_LOESCHEN", "",
             GetString(Resource.String.g_clear_yes)!,
             onYes: () => Exclusive(async () =>
@@ -182,23 +205,51 @@ public class EcuActivity : InpaActivity
                 var sgbd = await EnsureSgbdAsync();
                 if (sgbd == null)
                     return;
-                await RunJobCore(sgbd, "FS_LOESCHEN", GetString(Resource.String.g_clear_title)!, "", "");
-                _results.ShowInfo(GetString(Resource.String.g_head_fault_memory)!, GetString(Resource.String.ecu_reread_faults)!, append: true);
+                // Copia de seguridad automática: la memoria de errores se lee y se guarda en el historial antes de borrarla.
+                var backup = await ReadFaultsCore(sgbd, HistoryStore.KindBackup);
+                // Abortado o pantalla cerrada (atrás del sistema, Abortar justo al acabar la lectura): no se borra nada.
+                if (_abortRequested || IsFinishing || IsDestroyed)
+                    return;
+                if (backup != null)
+                    await ClearFaultsCore(sgbd, GetString(Resource.String.fb_backup_saved)!);
+                else
+                    JobDialogs.Confirm(this, GetString(Resource.String.fb_backup_failed_title)!, GetString(Resource.String.fb_backup_failed_msg)!,
+                        GetString(Resource.String.fb_clear_anyway)!,
+                        () => Exclusive(() => ClearFaultsCore(sgbd, GetString(Resource.String.fb_backup_none)!)));
             }),
             extra: (GetString(Resource.String.sf_save_faults)!, SaveFaults));
     }
 
-    // "Guardar errores" del aviso de borrado: lee la memoria de errores y la comparte en CSV.
-    void SaveFaults() =>
+    async Task ClearFaultsCore(string sgbd, string backupStatus)
+    {
+        await RunJobCore(sgbd, "FS_LOESCHEN", GetString(Resource.String.g_clear_title)!, "", "");
+        _results.ShowInfo(GetString(Resource.String.g_head_fault_memory)!,
+            backupStatus + "\n" + GetString(Resource.String.ecu_reread_faults), append: true);
+    }
+
+    // Lee FS_LESEN por la cola y, si la respuesta es correcta, la guarda en el historial; null si falla.
+    async Task<JobResult?> ReadFaultsCore(string sgbd, string kind)
+    {
+        var r = await RunJobCore(sgbd, "FS_LESEN", GetString(Resource.String.g_head_fault_memory)!, "", "");
+        if (r == null || DiagLogic.StatusError(r, "") != null)
+            return null;
+        HistoryStore.Save(this, _chassis, _ecuName, sgbd, kind, r);
+        return r;
+    }
+
+    // F4, «Guardar errores» e Informe: lee la memoria de errores y, si se ha leído bien, pasa la respuesta a then.
+    void ReadFaults(Action<string, JobResult>? then = null) =>
         Exclusive(async () =>
         {
             var sgbd = await EnsureSgbdAsync();
-            if (sgbd == null)
-                return;
-            var r = await RunJobCore(sgbd, "FS_LESEN", GetString(Resource.String.g_head_fault_memory)!, "", "");
-            if (r != null && DiagLogic.StatusError(r, "") == null)
-                _results.Share();
+            if (sgbd != null && await ReadFaultsCore(sgbd, HistoryStore.KindRead) is { } r)
+                then?.Invoke(sgbd, r);
         });
+
+    // "Guardar errores" del aviso de borrado: lee la memoria de errores y la comparte en CSV.
+    void SaveFaults() => ReadFaults((_, _) => _results.Share());
+
+    void ShareReport() => ReadFaults((sgbd, r) => ReportExporter.Share(this, _chassis, _ecuName, sgbd, r));
 
     void PickJob(string? prefix, string title, Action<string, JobInfo> onPick) =>
         Exclusive(async () =>

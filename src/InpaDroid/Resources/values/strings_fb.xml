@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fb_key_report">Informe</string>
+    <string name="fb_clear_hint">Antes de borrar, InpaDroid lee la memoria de errores y la guarda en el historial como copia de seguridad. «Guardar errores» la lee y además la comparte en CSV.\n\nSi la causa del fallo sigue ahí, el error volverá a registrarse y el testigo puede encenderse otra vez.</string>
+    <string name="fb_backup_saved">Copia de seguridad de la memoria de errores guardada en el historial.</string>
+    <string name="fb_backup_none">Borrado sin copia de seguridad: no se pudo leer la memoria de errores.</string>
+    <string name="fb_backup_failed_title">⚠ Sin copia de seguridad</string>
+    <string name="fb_backup_failed_msg">No se ha podido leer la memoria de errores para guardarla antes de borrar (el error se ve en pantalla).\n\nSi borras ahora, los errores almacenados se perderán sin copia. ¿Borrar de todos modos?</string>
+    <string name="fb_clear_anyway">Borrar sin copia</string>
+</resources>
