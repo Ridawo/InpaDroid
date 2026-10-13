@@ -54,6 +54,17 @@ internal static class ResultExporter
     /// <summary>Escribe el CSV en cache/exports y lo comparte como fichero (content:// de <see cref="ExportProvider"/>).</summary>
     public static void ShareCsv(Context ctx, string csv, string title)
     {
+        var now = DateTime.Now;
+        string stamp = now.ToString("yyyyMMdd-HHmmssfff", CultureInfo.InvariantCulture);
+        ShareFile(ctx, $"inpadroid-{stamp}.csv", csv, "text/csv",
+            UiUtil.Str(ctx, Resource.String.ax_export_subject, now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)),
+            title, new UTF8Encoding(true));
+    }
+
+    /// <summary>Escribe el fichero en cache/exports (borrando los de más de un día) y lo comparte con ACTION_SEND.</summary>
+    internal static void ShareFile(Context ctx, string name, string content, string mime, string subject, string title,
+        Encoding encoding)
+    {
         try
         {
             var dir = ExportProvider.Dir(ctx);
@@ -64,15 +75,12 @@ internal static class ResultExporter
                 if (old.LastModified() < cutoff)
                     old.Delete();
             }
-            var now = DateTime.Now;
-            string stamp = now.ToString("yyyyMMdd-HHmmssfff", CultureInfo.InvariantCulture);
-            string name = $"inpadroid-{stamp}.csv";
-            File.WriteAllText(System.IO.Path.Combine(dir.AbsolutePath, name), csv, new UTF8Encoding(true));
+            File.WriteAllText(System.IO.Path.Combine(dir.AbsolutePath, name), content, encoding);
 
             var uri = ExportProvider.UriFor(name);
             var send = new Intent(Intent.ActionSend);
-            send.SetType("text/csv");
-            send.PutExtra(Intent.ExtraSubject, UiUtil.Str(ctx, Resource.String.ax_export_subject, now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
+            send.SetType(mime);
+            send.PutExtra(Intent.ExtraSubject, subject);
             send.PutExtra(Intent.ExtraStream, uri);
             send.ClipData = ClipData.NewRawUri(name, uri);
             send.AddFlags(ActivityFlags.GrantReadUriPermission);

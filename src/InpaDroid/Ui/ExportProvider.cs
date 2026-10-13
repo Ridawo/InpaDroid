@@ -6,7 +6,7 @@ using Android.Provider;
 namespace InpaDroid.Ui;
 
 /// <summary>
-/// Sirve de solo lectura los CSV de cache/exports a la app que elija el usuario en la hoja de compartir.
+/// Sirve de solo lectura los CSV e informes HTML de cache/exports a la app que elija el usuario en la hoja de compartir.
 /// No exportado: el acceso lo da el permiso temporal del Intent (FLAG_GRANT_READ_URI_PERMISSION).
 /// </summary>
 [ContentProvider([Authority], Exported = false, GrantUriPermissions = true)]
@@ -27,9 +27,11 @@ public class ExportProvider : ContentProvider
 
     public override bool OnCreate() => true;
 
-    // Solo nombres planos "xxx.csv": sin separadores de ruta ni ".." (el URI viene de otra app).
+    // Solo nombres planos "xxx.csv" o "inpadroid-report-*.html": sin separadores de ruta ni ".." (el URI viene de otra app).
     static bool IsValidName(string? name) =>
-        !string.IsNullOrEmpty(name) && name.EndsWith(".csv", StringComparison.Ordinal)
+        !string.IsNullOrEmpty(name)
+        && (name.EndsWith(".csv", StringComparison.Ordinal)
+            || name.StartsWith("inpadroid-report-", StringComparison.Ordinal) && name.EndsWith(".html", StringComparison.Ordinal))
         && name.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-' or '_') && !name.Contains("..");
 
     Java.IO.File? Resolve(Android.Net.Uri uri)
@@ -60,7 +62,8 @@ public class ExportProvider : ContentProvider
         return cursor;
     }
 
-    public override string? GetType(Android.Net.Uri uri) => "text/csv";
+    public override string? GetType(Android.Net.Uri uri) =>
+        uri.LastPathSegment?.EndsWith(".html", StringComparison.Ordinal) == true ? "text/html" : "text/csv";
 
     public override Android.Net.Uri? Insert(Android.Net.Uri uri, ContentValues? values) =>
         throw new Java.Lang.UnsupportedOperationException();
