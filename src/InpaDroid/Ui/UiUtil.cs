@@ -9,8 +9,8 @@ namespace InpaDroid.Ui;
 internal static class UiUtil
 {
     public static Color BlueDark => Res(Android.App.Application.Context, Resource.Color.m_accent_text);
-    public static readonly Color LedOn = Color.ParseColor("#18B818");
-    public static readonly Color LedOff = Color.ParseColor("#707070");
+    public static Color LedOn => Res(Android.App.Application.Context, Resource.Color.inpa_led_on);
+    public static Color LedOff => Res(Android.App.Application.Context, Resource.Color.inpa_led_off);
     public static Color ErrorText => Res(Android.App.Application.Context, Resource.Color.m_error);
     public static Color ErrorBg => Res(Android.App.Application.Context, Resource.Color.m_error_container);
     public static Color OkText => Res(Android.App.Application.Context, Resource.Color.m_ok);

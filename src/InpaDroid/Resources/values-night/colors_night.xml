@@ -18,6 +18,8 @@
     <color name="m_fault_text">#FFB4A8</color>
     <color name="m_fault_bg">#5A4A00</color>
     <color name="m_info_bg">#2A2E37</color>
+    <color name="inpa_led_on">#4CD44C</color>
+    <color name="inpa_led_off">#8A8F99</color>
     <color name="inpa_series_1">#6FA4F0</color>
     <color name="inpa_series_2">#FF7F5E</color>
     <color name="inpa_series_3">#4CD44C</color>

@@ -11,6 +11,8 @@
     <color name="inpa_subtitle_text">#F2F7FF</color>
     <color name="inpa_badge_grp">#1C69D4</color>
     <color name="inpa_badge_prg">#5F5F5F</color>
+    <color name="inpa_led_on">#18B818</color>
+    <color name="inpa_led_off">#707070</color>
     <color name="inpa_series_1">#1C69D4</color>
     <color name="inpa_series_2">#D4401C</color>
     <color name="inpa_series_3">#18A018</color>
