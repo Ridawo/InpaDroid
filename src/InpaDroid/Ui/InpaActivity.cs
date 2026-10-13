@@ -275,6 +275,7 @@ public abstract class InpaActivity : Activity
         if (_busyButton != null) _busyButton.Text = buttonText ?? GetString(Resource.String.g_abort);
         _busyAction = onButton ?? AbortJob;
         _busy.Visibility = ViewStates.Visible;
+        UpdateKeepScreenOn();
     }
 
     protected void HideBusy()
@@ -282,6 +283,15 @@ public abstract class InpaActivity : Activity
         if (_busy != null)
             _busy.Visibility = ViewStates.Gone;
         _busyAction = null;
+        UpdateKeepScreenOn();
+    }
+
+    /// <summary>Mantiene la pantalla encendida mientras hay un trabajo largo (barra de trabajo visible o sondeo de cabecera en pausa).</summary>
+    void UpdateKeepScreenOn()
+    {
+        bool on = _busy?.Visibility == ViewStates.Visible || PauseHeader;
+        if (on) Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
+        else Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
     }
 
     protected void AbortJob()
@@ -308,6 +318,7 @@ public abstract class InpaActivity : Activity
     protected override void OnPause()
     {
         StopHeaderPolling();
+        Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
         base.OnPause();
     }
 
@@ -324,6 +335,7 @@ public abstract class InpaActivity : Activity
         _headerCts = cts;
         while (!cts.IsCancellationRequested)
         {
+            UpdateKeepScreenOn();
             double? ubatt = null;
             bool? ignition = null;
             bool failed = false;
