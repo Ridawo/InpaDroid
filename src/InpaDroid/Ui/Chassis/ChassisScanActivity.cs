@@ -92,10 +92,11 @@ public class ChassisScanActivity : InpaActivity
         StartActivity(intent);
     }
 
+    // Detail guarda el texto técnico (es lo que va al CSV); en pantalla se muestra traducido.
     void ShowRows()
     {
         _list.Adapter = new TwoLineAdapter(this, _entries.Select((e, i) => new TwoLineAdapter.Row(
-            e.Title, StateText(e) + (e.Detail.Length > 0 ? " - " + e.Detail : ""), BadgeText(e), BadgeColor(e.State), i)));
+            e.Title, StateText(e) + (e.Detail.Length > 0 ? " - " + UiUtil.Friendly(this, e.Detail) : ""), BadgeText(e), BadgeColor(e.State), i)));
     }
 
     string StateText(ScanEntry e) => e.State switch
@@ -184,7 +185,7 @@ public class ChassisScanActivity : InpaActivity
         }
         catch (Exception ex)
         {
-            return new ScanEntry(ecu.Title, ecu.Sgbd, "", ScanState.NoResponse, 0, UiUtil.Describe(ex));
+            return new ScanEntry(ecu.Title, ecu.Sgbd, "", ScanState.NoResponse, 0, ex.GetBaseException().Message);
         }
     }
 
