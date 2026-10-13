@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="en_err_host">Enter «auto», an IP address such as 169.254.12.34 (optionally :HSFZ or :DoIP) or «auto:all». Host names are not supported.</string>
+  <string name="en_help">What you need for ENET (F/G series):\n• An OBD to RJ45 (ENET) cable with the activation line, or an ENET WiFi bridge.\n• Phone and car on the same network: join the phone\'s WiFi to the ENET bridge or use a USB Ethernet adapter.\n• The car\'s IP is usually 169.254.x.x (link-local). Leave it on «auto», which finds it by itself.\n• The ignition must be on.</string>
+  <string name="en_net_ok">Phone network: connected to a WiFi or Ethernet network. If the car does not answer, check that it is the ENET bridge network.</string>
+  <string name="en_net_mobile">Phone network: mobile data only. Join the ENET bridge WiFi (or plug in the Ethernet adapter) and, if Android asks, agree to stay connected even without internet.</string>
+  <string name="en_net_none">Phone network: no connection. Join the ENET bridge WiFi or plug in the Ethernet adapter.</string>
+  <string name="en_net_unknown">Phone network: could not be checked.</string>
+  <string name="en_test_nonet">The network is the problem: the phone is not on a WiFi or Ethernet network, so it cannot reach the car. Connect it to the ENET bridge or the Ethernet adapter and test again.</string>
+  <string name="en_test_noreply">The car does not answer over ENET. Check that the ignition is on, that the ENET cable has the activation line, that the phone is on the same network as the car and that the IP is «auto» or 169.254.x.x.</string>
+</resources>

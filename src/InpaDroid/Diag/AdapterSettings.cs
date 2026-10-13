@@ -10,7 +10,7 @@ public sealed class AdapterSettings
 
     public AdapterType Type { get; set; } = AdapterType.UsbKDcan;
     public string BluetoothAddress { get; set; } = "";        // MAC del ELM327
-    public string EnetHost { get; set; } = "auto";            // IP o "auto"
+    public string EnetHost { get; set; } = EnetHostRule.Default;   // "auto", IP o nombre de host
     public string ElmWifiHost { get; set; } = "192.168.0.10:35000";
     public string EcuPath { get; set; } = "";
 
@@ -25,7 +25,7 @@ public sealed class AdapterSettings
                 settings.Type = type;
             }
             settings.BluetoothAddress = prefs.GetString(nameof(BluetoothAddress), settings.BluetoothAddress) ?? "";
-            settings.EnetHost = prefs.GetString(nameof(EnetHost), settings.EnetHost) ?? "";
+            settings.EnetHost = EnetHostRule.Normalize(prefs.GetString(nameof(EnetHost), settings.EnetHost));
             settings.ElmWifiHost = prefs.GetString(nameof(ElmWifiHost), settings.ElmWifiHost) ?? "";
             settings.EcuPath = prefs.GetString(nameof(EcuPath), "") ?? "";
         }

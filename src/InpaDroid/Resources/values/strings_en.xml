@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="en_err_host">Escribe «auto», una dirección IP como 169.254.12.34 (opcional :HSFZ o :DoIP) o «auto:all». No se admiten nombres de host.</string>
+  <string name="en_help">Qué necesitas para ENET (series F/G):\n• Un cable OBD a RJ45 (ENET) con línea de activación, o un puente ENET por WiFi.\n• El móvil y el coche en la misma red: une el WiFi del móvil al puente ENET o usa un adaptador Ethernet USB.\n• La IP del coche suele ser 169.254.x.x (enlace local). Lo normal es dejar «auto», que la busca sola.\n• El contacto tiene que estar dado.</string>
+  <string name="en_net_ok">Red del móvil: conectado a una red WiFi o Ethernet. Si el coche no contesta, comprueba que es la red del puente ENET.</string>
+  <string name="en_net_mobile">Red del móvil: solo hay datos móviles. Conéctate al WiFi del puente ENET (o conecta el adaptador Ethernet) y, si Android pregunta, acepta mantener la conexión aunque no tenga internet.</string>
+  <string name="en_net_none">Red del móvil: sin conexión. Conéctate al WiFi del puente ENET o conecta el adaptador Ethernet.</string>
+  <string name="en_net_unknown">Red del móvil: no se pudo comprobar.</string>
+  <string name="en_test_nonet">Falla la red: el móvil no está en una red WiFi o Ethernet, así que no puede llegar al coche. Conéctalo al puente ENET o al adaptador Ethernet y vuelve a probar.</string>
+  <string name="en_test_noreply">El coche no contesta por ENET. Comprueba que el contacto está dado, que el cable ENET tiene la línea de activación, que el móvil está en la misma red que el coche y que la IP es «auto» o 169.254.x.x.</string>
+</resources>
