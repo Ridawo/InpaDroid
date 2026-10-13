@@ -25,8 +25,14 @@ public class MainActivity : InpaActivity
         base.OnCreate(savedInstanceState);
         InitInpa(Resource.Layout.activity_main, "InpaDroid");
         FindViewById(Resource.Id.inpa_back)!.Visibility = ViewStates.Gone;
-        FindViewById(Resource.Id.inpa_title)!.SetPadding(UiUtil.Dp(this, 16), 0, 0, 0);
-        SetSubtitle("EDIABAS: ediabaslib");
+        var title = FindViewById<TextView>(Resource.Id.inpa_title)!;
+        title.SetPadding(UiUtil.Dp(this, 16), 0, 0, 0);
+        // El título nunca se parte a media palabra: una línea, y con letra muy grande el subtítulo cede su sitio.
+        title.SetMaxLines(1);
+        if ((Resources?.Configuration?.FontScale ?? 1f) >= 1.5f)
+            FindViewById(Resource.Id.inpa_subtitle)!.Visibility = ViewStates.Gone;
+        else
+            SetSubtitle("EDIABAS: ediabaslib");
         _results = new ResultPanel(FindViewById<LinearLayout>(Resource.Id.main_results)!);
     }
 
@@ -42,7 +48,7 @@ public class MainActivity : InpaActivity
         var s = DiagHolder.LoadSettings(this);
         string iface = s.Type switch
         {
-            AdapterType.UsbKDcan => "Cable USB K+DCAN",
+            AdapterType.UsbKDcan => GetString(Resource.String.hm_adapter_usb)!,
             AdapterType.Enet => $"WiFi ENET ({s.EnetHost})",
             AdapterType.Elm327Bluetooth => s.BluetoothAddress.Length > 0
                 ? $"ELM327 Bluetooth ({s.BluetoothAddress})" : "",   // sin dispositivo: lo cubre la tarjeta "Empezar"
@@ -139,6 +145,9 @@ public class MainActivity : InpaActivity
             (Resource.String.main_card_e46, Resource.String.main_card_e46_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e46")),
             (Resource.String.main_card_e60, Resource.String.main_card_e60_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e60")),
             (Resource.String.main_card_e90, Resource.String.main_card_e90_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e90")),
+            (Resource.String.fs_card_f30, Resource.String.fs_card_f30_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "f30")),
+            (Resource.String.fs_card_f10, Resource.String.fs_card_f10_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "f10")),
+            (Resource.String.hm_card_history, Resource.String.hm_card_history_desc, Resource.Drawable.ic_refresh, false, () => HistoryActivity.Start(this)),
             (Resource.String.main_card_settings, Resource.String.main_card_settings_desc, Resource.Drawable.ic_tune, false,
                 () => StartActivity(new Intent(this, typeof(SettingsActivity)))),
             (Resource.String.main_card_info, Resource.String.main_card_info_desc, Resource.Drawable.ic_info, false, ShowInfo),
