@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="hs_title">Histórico</string>
+  <string name="hs_empty">Nenhuma leitura salva ainda. Cada leitura da memória de falhas é salva aqui.</string>
+  <string name="hs_kind_read">LEITURA</string>
+  <string name="hs_kind_backup">CÓPIA</string>
+  <string name="hs_row_sub">%1$s · %2$s falhas</string>
+  <string name="hs_key_compare">Comparar</string>
+  <string name="hs_key_delete">Apagar tudo</string>
+  <string name="hs_delete_title">Apagar histórico</string>
+  <string name="hs_delete_message">Todas as leituras salvas serão apagadas. Esta ação não pode ser desfeita.</string>
+  <string name="hs_delete_yes">Apagar</string>
+  <string name="hs_detail_head">%1$s\n%2$s · %3$s</string>
+  <string name="hs_no_faults">Nenhuma falha nesta leitura.</string>
+  <string name="hs_fault_line">%1$s  %2$s</string>
+  <string name="hs_fault_state">[%1$s]</string>
+  <string name="hs_state_active">ativa</string>
+  <string name="hs_state_history">histórico</string>
+  <string name="hs_state_unknown">sem estado</string>
+  <string name="hs_no_previous">Não há leitura anterior desta ECU para comparar.</string>
+  <string name="hs_compare_head">Comparação com a leitura de %1$s</string>
+  <string name="hs_cmp_new">Nova (%1$s)</string>
+  <string name="hs_cmp_fixed">Sumiu (%1$s)</string>
+  <string name="hs_cmp_persistent">Persistente (%1$s)</string>
+  <string name="hs_cmp_none">nenhuma</string>
+</resources>

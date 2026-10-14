@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="cd_title">Codificação</string>
+  <string name="cd_key_coding">Codificação</string>
+  <string name="cd_key_read">Ler codificação</string>
+  <string name="cd_key_share">Compartilhar CSV</string>
+  <string name="cd_key_compare">Comparar</string>
+  <string name="cd_key_snapshots">Cópias salvas</string>
+  <string name="cd_safety_title">Somente leitura</string>
+  <string name="cd_safety_msg">Esta tela lê a codificação da ECU e os dados do pedido do veículo (FA, FG, AIF, ZIF) e salva uma cópia que você pode exportar e comparar com leituras anteriores. Ela nunca grava nem restaura nada: a codificação real exige os arquivos de dados do NCS Expert, que o app não inclui, e uma codificação errada pode deixar a ECU inutilizável.\n\nSe realmente precisar gravar a codificação, faça isso de forma deliberada pela lista de todos os jobs. Lá cada gravação pede uma confirmação em vermelho e avisa quando a bateria está fraca, e antes de apagar falhas o app salva uma cópia automática da memória de falhas.</string>
+  <string name="cd_no_jobs">%1$s não tem jobs que leiam a codificação ou os dados do pedido do veículo.</string>
+  <string name="cd_saved">Cópia salva (%1$s valores).</string>
+  <string name="cd_save_failed">Não foi possível salvar a cópia no celular. Você ainda pode compartilhá-la como CSV.</string>
+  <string name="cd_not_saved">O job não terminou corretamente, por isso nenhuma cópia foi salva.</string>
+  <string name="cd_none">Leia a codificação primeiro ou abra uma cópia salva.</string>
+  <string name="cd_no_previous">Não há cópia anterior de %1$s / %2$s para comparar.</string>
+  <string name="cd_compare_head">Comparado com a cópia de %1$s</string>
+  <string name="cd_cmp_changed">Alterado (%1$s)</string>
+  <string name="cd_cmp_added">Novo (%1$s)</string>
+  <string name="cd_cmp_removed">Removido (%1$s)</string>
+  <string name="cd_cmp_none">nenhum</string>
+  <string name="cd_snapshots_empty">Nenhuma cópia de codificação salva ainda.</string>
+  <string name="cd_snapshot_sub">%1$s · %2$s · %3$s valores</string>
+  <string name="cd_share_title">Compartilhar codificação</string>
+</resources>

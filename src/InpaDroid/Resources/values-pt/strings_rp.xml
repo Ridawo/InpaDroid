@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="rp_lang">pt</string>
+  <string name="rp_title">Relatório de falhas</string>
+  <string name="rp_date">Data</string>
+  <string name="rp_chassis">Chassi</string>
+  <string name="rp_ecu">Central</string>
+  <string name="rp_sgbd">SGBD</string>
+  <string name="rp_vin">VIN</string>
+  <string name="rp_workshop">Oficina</string>
+  <string name="rp_code">Código</string>
+  <string name="rp_description">Descrição</string>
+  <string name="rp_state">Estado</string>
+  <string name="rp_counter">Contador</string>
+  <string name="rp_conditions">Condições de operação</string>
+  <string name="rp_active">Ativa</string>
+  <string name="rp_history">Histórico</string>
+  <string name="rp_unknown">Desconhecido</string>
+  <string name="rp_no_faults">Nenhuma falha armazenada.</string>
+  <string name="rp_disclaimer">Relatório gerado pelo InpaDroid. Informação apenas indicativa; deve ser confirmada por um profissional.</string>
+  <string name="rp_subject">Relatório de falhas InpaDroid %1$s</string>
+  <string name="rp_chooser">Compartilhar relatório</string>
+</resources>

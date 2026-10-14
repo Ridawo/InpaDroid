@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="er_technical">Detalhe técnico: %1$s</string>
+  <string name="er_no_ecu_response">A ECU não responde. Verifique se a ignição está ligada e se o adaptador está bem encaixado na tomada OBD. Carros mais antigos (K-line) precisam de um cabo K+DCAN ou similar; um ELM327 genérico não funciona.</string>
+  <string name="er_ecu_connection">Não foi possível conectar à ECU. Se o carro for um modelo K-line mais antigo, o tipo de adaptador está errado: use um cabo K+DCAN ou similar.</string>
+  <string name="er_adapter_lost">A conexão com o adaptador foi perdida. Verifique se ele continua conectado e tente novamente.</string>
+  <string name="er_interface_not_found">O adaptador não foi encontrado ou não pôde ser inicializado. Verifique o cabo USB ou o pareamento Bluetooth e o tipo de adaptador escolhido em Configurações.</string>
+  <string name="er_usb_permission">Falta a permissão para usar o dispositivo. Reconecte o cabo e aceite a permissão USB quando o Android pedir.</string>
+  <string name="er_port_open">Não foi possível abrir a porta do adaptador. Verifique se nenhum outro app a está usando e se o adaptador está bem conectado.</string>
+  <string name="er_timeout">O adaptador não responde. Verifique se está conectado e se a ignição do carro está ligada.</string>
+  <string name="er_sgbd_not_found">O arquivo SGBD (.prg/.grp) desta ECU não foi encontrado. Verifique a pasta de ECU em Configurações.</string>
+  <string name="er_sgbd_invalid">O arquivo SGBD está danificado ou é incompatível. Verifique os arquivos da pasta de ECU em Configurações.</string>
+  <string name="er_job_not_found">Este SGBD não tem esse job. Os arquivos da ECU podem não corresponder à versão da central.</string>
+  <string name="er_service_closed">O serviço de diagnóstico está fechado. Reabra a tela.</string>
+</resources>

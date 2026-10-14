@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sc_key_scan">Escaneamento rápido</string>
+  <string name="sc_key_export">Exportar CSV</string>
+  <string name="sc_heading_start">Toque em Escaneamento rápido para ler a memória de falhas de %1$s ECUs</string>
+  <string name="sc_heading_progress">Lendo %1$s de %2$s</string>
+  <string name="sc_busy">%1$s (%2$s de %3$s)…</string>
+  <string name="sc_heading_partial">Escaneamento concluído: %1$s de %2$s ECUs com falhas, %3$s não lidas</string>
+  <string name="sc_heading_done">Escaneamento concluído: %1$s de %2$s ECUs com falhas</string>
+  <string name="sc_heading_cancelled">Escaneamento cancelado (%1$s de %2$s lidas)</string>
+  <string name="sc_state_pending">Não lida</string>
+  <string name="sc_state_ok">Sem falhas</string>
+  <string name="sc_state_faults">%1$s falhas</string>
+  <string name="sc_state_no_response">Sem resposta</string>
+  <string name="sc_state_not_found">Não encontrada (falta .prg/.grp)</string>
+  <string name="sc_export_none">Ainda não há resultados para exportar</string>
+  <string name="sc_export_title">Resumo do escaneamento</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="fs_card_f30">BMW F30 · não verificado</string>
+  <string name="fs_card_f30_desc">Série 3 F30/F31 (ENET), ainda não testado em um carro</string>
+  <string name="fs_card_f10">BMW F10 · não verificado</string>
+  <string name="fs_card_f10_desc">Série 5 F10/F11 (ENET), ainda não testado em um carro</string>
+</resources>

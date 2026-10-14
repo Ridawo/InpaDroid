@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="im_button">Importar arquivos de ECU</string>
+  <string name="im_legal">Escolha arquivos .prg/.grp soltos ou um ZIP. Eles devem vir da sua própria instalação do INPA/EDIABAS: o app não inclui nenhum nem oferece links de download. Todo o resto é ignorado.</string>
+  <string name="im_busy">Importando %1$s</string>
+  <string name="im_result">Importados: %1$s, ignorados: %2$s, com falha: %3$s</string>
+  <string name="im_cancelled">Importação cancelada.</string>
+  <string name="im_first_error">Primeiro erro: %1$s</string>
+  <string name="im_picker_error">Não foi possível abrir o seletor de arquivos: %1$s</string>
+</resources>

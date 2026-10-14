@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="ax_hint_all">todos</string>
+  <string name="ax_export_subject">InpaDroid %1$s</string>
+  <string name="ax_unknown">sem dados</string>
+  <string name="ax_chart_empty">Gráfico ao vivo, sem dados</string>
+  <string name="ax_chart_series">%1$s: último %2$s, mínimo %3$s, máximo %4$s</string>
+</resources>

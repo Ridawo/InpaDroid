@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="ws_card_title">Primeiros passos</string>
+  <string name="ws_card_desc_adapter">O adaptador ainda não está configurado. Vamos guiar você passo a passo.</string>
+  <string name="ws_card_desc_files">Faltam os arquivos de ECU (.prg/.grp). Vamos guiar você passo a passo.</string>
+  <string name="ws_title">Primeiros passos</string>
+  <string name="ws_subtitle">Adaptador, arquivos e teste</string>
+  <string name="ws_intro">Três passos para deixar o app pronto. Cada passo se atualiza sozinho quando você volta das configurações.</string>
+  <string name="ws_step1">1. Adaptador</string>
+  <string name="ws_step2">2. Arquivos de ECU</string>
+  <string name="ws_step3">3. Testar a conexão</string>
+  <string name="ws_adapter_ready">Interface: %1$s</string>
+  <string name="ws_adapter_bt_none">Bluetooth: ainda falta escolher o dispositivo ELM327 nas configurações.</string>
+  <string name="ws_open_settings">Abrir configurações</string>
+  <string name="ws_files_folder">Pasta de ECU: %1$s</string>
+  <string name="ws_files_count">Encontrados %1$s arquivos .prg/.grp.</string>
+  <string name="ws_files_none">Não há arquivos .prg/.grp na pasta.</string>
+  <string name="ws_files_need">Mínimo para os menus E39 e E46:</string>
+  <string name="ws_file_ok">OK: %1$s</string>
+  <string name="ws_file_missing">Falta: %1$s</string>
+  <string name="ws_files_legal">Copie os arquivos da sua própria instalação do INPA/EDIABAS para essa pasta. O app não os inclui nem oferece downloads.</string>
+  <string name="ws_test_button">Testar conexão</string>
+  <string name="ws_test_hint">Lê a bateria e a ignição sem alterar nada no carro. Conecte o cabo ao carro e ligue a ignição.</string>
+  <string name="ws_test_busy">Testando a conexão…</string>
+  <string name="ws_test_ok">A conexão funciona. Bateria: %1$s V, ignição: %2$s.</string>
+  <string name="ws_ign_on">ligada</string>
+  <string name="ws_ign_unknown">sem dados</string>
+  <string name="ws_test_adapter">O problema é o adaptador: ele não está pronto. Verifique o passo 1.</string>
+  <string name="ws_test_files">O problema são os arquivos: nem UTILITY.prg nem UTILITY.grp estão na pasta de ECU. Verifique o passo 2.</string>
+  <string name="ws_test_noreply">O problema é o carro ou o cabo: o adaptador está pronto e os arquivos estão lá, mas nada responde. Verifique se o cabo está na tomada OBD, se a ignição está ligada e se o cabo é o certo para o seu carro.</string>
+  <string name="ws_test_ign_off">Há comunicação (bateria %1$s V), mas a ignição está desligada. Ligue-a e teste novamente.</string>
+  <string name="ws_card_cd">%1$s. %2$s</string>
+</resources>
