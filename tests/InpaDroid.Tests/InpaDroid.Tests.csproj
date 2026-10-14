@@ -26,6 +26,11 @@
     <Compile Include="..\..\src\InpaDroid\Diag\BatteryGuard.cs" Link="Linked\BatteryGuard.cs" />
     <Compile Include="..\..\src\InpaDroid\Diag\FaultInfo.cs" Link="Linked\FaultInfo.cs" />
     <Compile Include="..\..\src\InpaDroid\Diag\SetupCheck.cs" Link="Linked\SetupCheck.cs" />
+    <Compile Include="..\..\src\InpaDroid\Diag\ReportBuilder.cs" Link="Linked\ReportBuilder.cs" />
+    <Compile Include="..\..\src\InpaDroid\Diag\SessionRecord.cs" Link="Linked\SessionRecord.cs" />
+    <Compile Include="..\..\src\InpaDroid\Diag\EcuImport.cs" Link="Linked\EcuImport.cs" />
+    <Compile Include="..\..\src\InpaDroid\Diag\LiveLog.cs" Link="Linked\LiveLog.cs" />
+    <Compile Include="..\..\src\InpaDroid\Diag\CodingBackup.cs" Link="Linked\CodingBackup.cs" />
     <Compile Include="..\..\src\InpaDroid\Diag\InactivityWatchdog.cs" Link="Linked\InactivityWatchdog.cs" />
     <Compile Include="..\..\src\InpaDroid\Ui\Live\LiveSeriesData.cs" Link="Linked\LiveSeriesData.cs" />
     <Compile Include="..\..\src\InpaDroid\Ui\Chassis\ChassisModel.cs" Link="Linked\ChassisModel.cs" />
