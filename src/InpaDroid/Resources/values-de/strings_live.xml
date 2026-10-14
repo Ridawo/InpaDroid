@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="live_title">Live-Monitor</string>
+  <string name="live_pause">Pause</string>
+  <string name="live_resume">Fortsetzen</string>
+  <string name="live_clear">Leeren</string>
+  <string name="live_export">Sitzung als CSV exportieren</string>
+  <string name="live_export_title">Sitzung exportieren</string>
+  <string name="live_export_empty">Keine Messwerte zum Exportieren</string>
+  <string name="live_export_failed">Teilen nicht möglich: %1$s</string>
+  <string name="live_interval">Intervall: %1$s s</string>
+  <string name="live_window">Fenster: %1$s Messwerte</string>
+  <string name="live_series_stats">%1$s\nAkt %2$s   Min %3$s   Max %4$s</string>
+  <string name="live_waiting">Warte auf Daten…</string>
+  <string name="live_no_numeric">Keine numerischen Werte</string>
+  <string name="live_error">Fehler: %1$s</string>
+  <string name="live_status">%1$s : %2$s   Messwerte: %3$s</string>
+</resources>

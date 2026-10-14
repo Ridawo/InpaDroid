@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="fx_variant_failed_enet">Não foi possível identificar a variante da central. Verifique o cabo ENET, se o telefone e o carro estão na mesma rede, a ignição e se o arquivo está na pasta ECU.</string>
+</resources>

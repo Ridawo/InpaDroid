@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="set_title">Configurações</string>
+  <string name="set_subtitle">Interface e pasta de ECU</string>
+  <string name="set_sec_connection">Tipo de conexão</string>
+  <string name="set_sec_details">Detalhes da interface</string>
+  <string name="set_sec_ecu">Pasta de ECU</string>
+  <string name="set_adapter_usb">Cabo USB K+DCAN (FTDI)</string>
+  <string name="set_adapter_enet">ENET (cabo Ethernet, série F/G)</string>
+  <string name="set_adapter_elmbt">ELM327 Bluetooth</string>
+  <string name="set_adapter_elmwifi">ELM327 WiFi</string>
+  <string name="set_bt_device">Dispositivo Bluetooth pareado</string>
+  <string name="set_bt_search">Buscar dispositivos pareados</string>
+  <string name="set_enet_host">Host ENET (IP ou «auto»)</string>
+  <string name="set_wifi_host">Host ELM327 WiFi (IP:porta)</string>
+  <string name="set_ecu_pick">Escolher pasta</string>
+  <string name="set_ecu_default">Padrão</string>
+  <string name="set_save">Salvar</string>
+  <string name="set_err_enet">Host ENET inválido: use um IP, um nome de host ou «auto».</string>
+  <string name="set_err_wifi">Formato inválido. Use host:porta, por exemplo 192.168.0.10:35000 (porta 1-65535).</string>
+  <string name="set_job_search_hint">Buscar job…</string>
+  <string name="set_job_args_label">Argumentos (separados por ;)</string>
+  <string name="set_job_results_label">Resultados (opcional, separados por ;)</string>
+</resources>

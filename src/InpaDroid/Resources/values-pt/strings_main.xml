@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="main_greeting">Olá</string>
+  <string name="main_adapter_none">Adaptador não configurado</string>
+  <string name="main_card_identify">Identificar veículo</string>
+  <string name="main_card_identify_desc">Lê VIN, bateria e ignição</string>
+  <string name="main_card_ecu">ECU (genérica)</string>
+  <string name="main_card_ecu_desc">Escolha qualquer ECU e seus jobs</string>
+  <string name="main_card_e39">BMW E39</string>
+  <string name="main_card_e39_desc">Menu de diagnóstico da Série 5</string>
+  <string name="main_card_e46">BMW E46</string>
+  <string name="main_card_e46_desc">Menu de diagnóstico da Série 3</string>
+  <string name="main_card_e60">BMW E60 · não verificado</string>
+  <string name="main_card_e60_desc">Série 5, ainda não testado em um carro</string>
+  <string name="main_card_e90">BMW E90 · não verificado</string>
+  <string name="main_card_e90_desc">Série 3, ainda não testado em um carro</string>
+  <string name="main_card_settings">Configurações</string>
+  <string name="main_card_settings_desc">Adaptador, pasta de ECU e conexão</string>
+  <string name="main_card_exit">Sair</string>
+  <string name="main_card_exit_desc">Fecha a conexão com o adaptador</string>
+  <string name="main_card_info">Informações</string>
+  <string name="main_card_info_desc">Versão e detalhes do EDIABAS</string>
+</resources>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="hs_title">Verlauf</string>
+  <string name="hs_empty">Noch keine gespeicherten Auslesungen. Jede Auslesung des Fehlerspeichers wird hier gespeichert.</string>
+  <string name="hs_kind_read">LESEN</string>
+  <string name="hs_kind_backup">SICHERUNG</string>
+  <string name="hs_row_sub">%1$s · %2$s Fehler</string>
+  <string name="hs_key_compare">Vergleichen</string>
+  <string name="hs_key_delete">Alle löschen</string>
+  <string name="hs_delete_title">Verlauf löschen</string>
+  <string name="hs_delete_message">Alle gespeicherten Auslesungen werden gelöscht. Dies kann nicht rückgängig gemacht werden.</string>
+  <string name="hs_delete_yes">Löschen</string>
+  <string name="hs_detail_head">%1$s\n%2$s · %3$s</string>
+  <string name="hs_no_faults">Keine Fehler in dieser Auslesung.</string>
+  <string name="hs_fault_line">%1$s  %2$s</string>
+  <string name="hs_fault_state">[%1$s]</string>
+  <string name="hs_state_active">aktiv</string>
+  <string name="hs_state_history">Historie</string>
+  <string name="hs_state_unknown">kein Status</string>
+  <string name="hs_no_previous">Es gibt keine frühere Auslesung dieses Steuergeräts zum Vergleichen.</string>
+  <string name="hs_compare_head">Vergleich mit der Auslesung vom %1$s</string>
+  <string name="hs_cmp_new">Neu (%1$s)</string>
+  <string name="hs_cmp_fixed">Entfallen (%1$s)</string>
+  <string name="hs_cmp_persistent">Bestehend (%1$s)</string>
+  <string name="hs_cmp_none">keine</string>
+</resources>

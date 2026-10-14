@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sf_jobs_title">Jobs</string>
+  <string name="sf_job_heading">Job: %1$s</string>
+  <string name="sf_status_heading">Status: %1$s</string>
+  <string name="sf_write_title">⚠ Job de gravação ou ativação</string>
+  <string name="sf_write_msg">Este job não é somente leitura: ele pode gravar ou codificar a ECU, apagar dados ou ativar componentes do veículo.\n\nVerifique os argumentos e continue apenas se souber exatamente o que ele faz.</string>
+  <string name="sf_clear_save_hint">Antes de apagar, salve as falhas atuais: toque em \"Salvar falhas\" (ele as lê e abre Compartilhar CSV) e depois volte para Apagar falhas.\n\nSe a causa da falha continuar presente, a falha será armazenada novamente e a luz de aviso poderá voltar a acender.</string>
+  <string name="sf_save_faults">Salvar falhas</string>
+  <string name="sf_batt_low">⚠ BATERIA FRACA: %1$s V (mínimo %2$s V)\nCom tensão baixa, uma gravação pode ficar pela metade e danificar a ECU, além de surgirem falhas falsas. Conecte um carregador antes de continuar.</string>
+  <string name="sf_batt_unknown">⚠ TENSÃO DA BATERIA DESCONHECIDA\nNão foi possível lê-la. Com tensão baixa, uma gravação pode ficar pela metade e danificar a ECU, além de surgirem falhas falsas. Certifique-se de que haja pelo menos %1$s V (idealmente com um carregador) antes de continuar.</string>
+</resources>

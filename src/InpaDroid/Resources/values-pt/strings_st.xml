@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="st_back">Voltar</string>
+  <string name="st_kline_note">E39 e carros anteriores a 2007 (K-line): use o cabo USB K+DCAN com o interruptor dos pinos 7/8 na posição antiga (ligado). ELM327 e ENET não funcionam com esses carros. No E39 anterior a 09/2000 pode ser necessário o adaptador para o conector redondo de 20 pinos no compartimento do motor.</string>
+  <string name="st_warn_enet">Atenção: o ENET só funciona com a série F/G (conexão Ethernet). Não funciona para um E39.</string>
+  <string name="st_warn_elm">Atenção: o ELM327 só funciona com carros D-CAN (aprox. de 2007 em diante). Não funciona para um E39.</string>
+  <string name="st_folder_picker_error">Não é possível abrir o seletor de pastas: %1$s</string>
+  <string name="st_folder_unusable">Essa pasta não pode ser usada como caminho. Escolha uma no armazenamento interno ou no cartão SD, ou use a pasta padrão.</string>
+  <string name="st_folder_chosen">Pasta selecionada. Se depois nenhum arquivo aparecer, o Android não permite lê-la: use a pasta padrão do app.</string>
+  <string name="st_folder_invalid">Pasta inválida: %1$s</string>
+  <string name="st_ecu_default_searching">Padrão: %1$s\nProcurando .prg/.grp…</string>
+  <string name="st_ecu_default_count">Padrão: %1$s\nEm %2$s: %3$s .prg, %4$s .grp</string>
+  <string name="st_ecu_default_error">Padrão: %1$s\nErro: %2$s</string>
+  <string name="st_check_red_field">Verifique o campo marcado em vermelho.</string>
+  <string name="st_saving">Salvando e reiniciando a interface…</string>
+  <string name="st_saved_no_bt">Salvo, mas nenhum dispositivo Bluetooth foi selecionado.</string>
+  <string name="st_saved">Configurações salvas.</string>
+  <string name="st_save_error">Erro ao salvar: %1$s</string>
+  <string name="st_bt_selected_none">Selecionado: (nenhum)</string>
+  <string name="st_bt_selected">Selecionado: %1$s</string>
+  <string name="st_bt_none">Este dispositivo não tem Bluetooth.</string>
+  <string name="st_bt_disabled">O Bluetooth está desligado. Ligue-o e toque novamente.</string>
+  <string name="st_bt_no_paired">Nenhum dispositivo pareado. Pareie o ELM327 nas configurações do Android (PIN habitual 1234 ou 0000).</string>
+  <string name="st_bt_unnamed">(sem nome)</string>
+  <string name="st_bt_error">Erro de Bluetooth: %1$s</string>
+  <string name="st_bt_denied">Permissão de Bluetooth negada. Se você marcou \"Não perguntar novamente\", ative-a manualmente:</string>
+  <string name="st_open_android_settings">Abrir configurações do Android</string>
+  <string name="st_usb_detect">Detectar cabo</string>
+  <string name="st_usb_no_host">Este dispositivo não é compatível com USB host.</string>
+  <string name="st_usb_not_detected">Cabo FTDI: não detectado. Conecte-o com um adaptador OTG e toque em \"Detectar cabo\".</string>
+  <string name="st_usb_granted">Cabo FTDI: detectado. Permissão USB: concedida.</string>
+  <string name="st_usb_pending">Cabo FTDI: detectado. Permissão USB: pendente (aceite o aviso do Android; se não aparecer, desconecte e reconecte o cabo).</string>
+  <string name="st_usb_error">Erro de USB: %1$s</string>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="cd_title">Codierung</string>
+  <string name="cd_key_coding">Codierung</string>
+  <string name="cd_key_read">Codierung lesen</string>
+  <string name="cd_key_share">CSV teilen</string>
+  <string name="cd_key_compare">Vergleichen</string>
+  <string name="cd_key_snapshots">Gespeicherte Kopien</string>
+  <string name="cd_safety_title">Nur Lesen</string>
+  <string name="cd_safety_msg">Dieser Bildschirm liest die Codierung des Steuergeräts und die Fahrzeugauftragsdaten (FA, FG, AIF, ZIF) und speichert eine Kopie, die Sie exportieren und mit früheren Auslesungen vergleichen können. Es wird nichts geschrieben oder wiederhergestellt: Eine echte Codierung benötigt die Datendateien von NCS Expert, die die App nicht mitliefert, und eine falsche Codierung kann das Steuergerät unbrauchbar machen.\n\nWenn Sie wirklich codieren müssen, tun Sie das bewusst über die Liste aller Jobs. Dort verlangt jeder Schreibvorgang eine rote Bestätigung und warnt bei niedriger Batteriespannung. Vor dem Löschen von Fehlern speichert die App automatisch eine Kopie des Fehlerspeichers.</string>
+  <string name="cd_no_jobs">%1$s hat keine Jobs zum Lesen von Codierungs- oder Fahrzeugauftragsdaten.</string>
+  <string name="cd_saved">Kopie gespeichert (%1$s Werte).</string>
+  <string name="cd_save_failed">Die Kopie konnte nicht auf dem Telefon gespeichert werden. Sie können sie weiterhin als CSV teilen.</string>
+  <string name="cd_not_saved">Der Job wurde nicht korrekt beendet, daher wird keine Kopie gespeichert.</string>
+  <string name="cd_none">Lesen Sie zuerst die Codierung oder öffnen Sie eine gespeicherte Kopie.</string>
+  <string name="cd_no_previous">Es gibt keine frühere Kopie von %1$s / %2$s zum Vergleichen.</string>
+  <string name="cd_compare_head">Vergleich mit der Kopie vom %1$s</string>
+  <string name="cd_cmp_changed">Geändert (%1$s)</string>
+  <string name="cd_cmp_added">Neu (%1$s)</string>
+  <string name="cd_cmp_removed">Entfallen (%1$s)</string>
+  <string name="cd_cmp_none">keine</string>
+  <string name="cd_snapshots_empty">Noch keine Codierungskopien gespeichert.</string>
+  <string name="cd_snapshot_sub">%1$s · %2$s · %3$s Werte</string>
+  <string name="cd_share_title">Codierung teilen</string>
+</resources>

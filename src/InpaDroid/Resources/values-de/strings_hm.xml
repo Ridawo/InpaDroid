@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="hm_adapter_usb">K+DCAN-USB-Kabel</string>
+  <string name="hm_card_history">Verlauf</string>
+  <string name="hm_card_history_desc">Gespeicherte Sitzungen</string>
+  <string name="hm_key_info">Info</string>
+  <string name="hm_key_scan">Scan</string>
+</resources>

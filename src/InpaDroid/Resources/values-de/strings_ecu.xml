@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="ecu_pick_cancel">Abbrechen</string>
+  <string name="ecu_choose_function">Funktion wählen</string>
+  <string name="ecu_choose_hint">Tippen Sie auf eine Karte, um zu starten. Um eine laufende Messung zu beenden, tippen Sie auf Stopp.</string>
+  <string name="ecu_search_chassis_hint">Steuergerät suchen</string>
+  <string name="ecu_search_hint">Steuergerät suchen (z. B. D_MOTOR, DME, EGS…)</string>
+  <string name="ecu_busy_job">Ein Job läuft: bitte warten oder auf Abbrechen tippen</string>
+  <string name="ecu_retry_hint">Tippen Sie erneut auf eine Funktion, um es noch einmal zu versuchen.</string>
+  <string name="ecu_retry">Wiederholen</string>
+  <string name="ecu_open_settings">Einstellungen</string>
+  <string name="ecu_reread_faults">Tippen Sie auf Fehler, um erneut zu lesen.</string>
+  <string name="ecu_polling_hint">Aktualisierung jede Sekunde. Zum Beenden auf Stopp tippen.</string>
+</resources>

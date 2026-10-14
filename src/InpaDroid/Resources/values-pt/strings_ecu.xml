@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="ecu_pick_cancel">Cancelar</string>
+  <string name="ecu_choose_function">Escolha uma função</string>
+  <string name="ecu_choose_hint">Toque em um cartão para começar. Para parar uma leitura contínua, toque em Parar.</string>
+  <string name="ecu_search_chassis_hint">Buscar ECU</string>
+  <string name="ecu_search_hint">Buscar ECU (ex.: D_MOTOR, DME, EGS…)</string>
+  <string name="ecu_busy_job">Um job está em execução: aguarde ou toque em Abortar</string>
+  <string name="ecu_retry_hint">Toque em uma função novamente para tentar de novo.</string>
+  <string name="ecu_retry">Tentar de novo</string>
+  <string name="ecu_open_settings">Configurações</string>
+  <string name="ecu_reread_faults">Toque em Falhas para ler novamente.</string>
+  <string name="ecu_polling_hint">Atualiza a cada segundo. Toque em Parar para interromper.</string>
+</resources>

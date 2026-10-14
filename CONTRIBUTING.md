@@ -19,8 +19,8 @@ If the problem is a crash, the Android logcat output (`adb logcat -d`) is the fa
 
 Chassis are data-driven: one JSON file plus one menu entry. The generic `ChassisMenuActivity` and `ChassisEcuActivity` (in `src/InpaDroid/Ui/Chassis/`) do the rest.
 
-1. Create `src/InpaDroid/Ui/Chassis/<id>_catalog.json` (for example `e61_catalog.json`). It is embedded automatically by `InpaDroid.csproj`. Use `e46_catalog.json` as a template: an object with `id`, `name`, `subtitle`, `infoTitle`, `info` (may use `{iface}` and `{ecupath}`), `verified` and `ecus` (each with `title`, `sgbd`, `statusPages`, `actions`). Set `"verified": false` (chassis and/or ECU) for anything you have not checked, as in `e60_catalog.json` and `e90_catalog.json`. The app only shows the chassis-level flag ("sin verificar" in the menu); the per-ECU one is a note for reviewers.
-2. Add the menu entry in `MainActivity.cs`: one `SetKey(n, "E61", () => ChassisMenuActivity.Start(this, "e61"))` line and its text in `BuildMenu`.
+1. Create `src/InpaDroid/Ui/Chassis/<id>_catalog.json` (for example `e61_catalog.json`). It is embedded automatically by `InpaDroid.csproj`. Use `e46_catalog.json` as a template: an object with `id`, `name`, `subtitle`, `infoTitle`, `info` (may use `{iface}` and `{ecupath}`), `verified` and `ecus` (each with `title`, `sgbd`, `statusPages`, `actions`). Set `"verified": false` (chassis and/or ECU) for anything you have not checked, as in `e60_catalog.json`, `e90_catalog.json`, `f30_catalog.json` and `f10_catalog.json` (the F-series ones are skeletons for ENET and have not been tested on a car). The app only shows the chassis-level flag ("sin verificar" in the menu); the per-ECU one is a note for reviewers.
+2. Add the menu card in `MainActivity.cs`: one entry in the `cards` array of `BuildMenu`, such as `(Resource.String.main_card_e61, Resource.String.main_card_e61_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e61"))`, and its two strings.
 3. Optional: users can override any chassis without recompiling by putting `<id>_catalog.json` in their ECU folder (see [Catalog format](#catalog-format) for the field details).
 
 Before adding a chassis, check that you have tested the ECU `.prg`/`.grp` files and confirmed which jobs and result names actually work for that car. The catalog should only contain values that have been verified against a real vehicle or a known-good EDIABAS trace.
@@ -88,10 +88,12 @@ The format is described by [docs/catalog.schema.json](docs/catalog.schema.json) 
 - Do not add comments that explain what the code does — use clear names instead. Only add a comment when the *why* is non-obvious: a hidden constraint, a workaround, or an invariant that would surprise a reader.
 - Do not add error handling or fallbacks for scenarios that cannot happen. Validate at system boundaries (user input, file I/O, external APIs); trust internal code.
 - Any new dependency must be GPL-compatible. ediabaslib is GPLv3 and that license propagates.
+- Anything that writes to an ECU or activates something must go through `JobDialogs.ConfirmJob` (shows SGBD/JOB/ARGS and the battery warning). `JobPolicy` decides which jobs count as read-only. Coding writes are intentionally not implemented; do not add them without discussing it first.
+- User-visible text goes in `Resources/values*/strings_*.xml`, never in the code. Spanish is the default (`values`) and English is `values-en`; if you add a string, add it to both (and to `values-de` / `values-pt` when those exist). Give custom views a content description for TalkBack.
 
 ## Running the tests and the catalog check
 
-- `dotnet test tests/InpaDroid.Tests` runs the unit tests (no Android device needed). They link the pure-logic sources (`DiagModels.cs`, `ChassisModel.cs`, `ChassisCatalog.cs`) and the embedded catalogs, so a broken catalog JSON fails here.
+- `dotnet test tests/InpaDroid.Tests` runs the unit tests (no Android device needed). They link the pure-logic sources in `Diag/` (for example `DiagModels.cs`, `DiagLogic.cs`, `FaultInfo.cs`, `BatteryGuard.cs`, `JobPolicy.cs`, `EcuImport.cs`), `ChassisModel.cs` and `ChassisCatalog.cs` and the embedded catalogs, so a broken catalog JSON fails here.
 - `python3 tools/catalog_check.py` needs the PRG dumps from the proprietary BMW files (`datos_bmw/`), so it only runs locally; CI just checks that it compiles.
 - CI (`.github/workflows/ci.yml`) runs the unit tests, the JSON check of `src/**/*.json` and an Android build on every push and pull request. Releases are described in [docs/RELEASING.md](docs/RELEASING.md).
 
@@ -99,7 +101,7 @@ The format is described by [docs/catalog.schema.json](docs/catalog.schema.json) 
 
 1. Fork the repository and create a branch from `main`.
 2. Keep PRs focused: one logical change per PR.
-3. Test against a real car or, for UI changes, on a device/emulator with the actual APK installed.
+3. Test against a real car or, for UI changes, on a device/emulator with the actual APK installed. Say in the PR whether it was tested on a car; the F-series and E60/E90 catalogs are still unverified.
 4. The PR description should explain *why* the change is needed, not just what it does.
 
 ---
@@ -127,8 +129,8 @@ Si el problema es un cierre inesperado de la app, el log de Android (`adb logcat
 
 Los chasis se definen con datos: un archivo JSON y una entrada de menú. Las activities genéricas `ChassisMenuActivity` y `ChassisEcuActivity` (en `src/InpaDroid/Ui/Chassis/`) hacen el resto.
 
-1. Crear `src/InpaDroid/Ui/Chassis/<id>_catalog.json` (por ejemplo `e61_catalog.json`). `InpaDroid.csproj` lo incrusta solo. Usa `e46_catalog.json` como plantilla: un objeto con `id`, `name`, `subtitle`, `infoTitle`, `info` (admite `{iface}` y `{ecupath}`), `verified` y `ecus` (cada una con `title`, `sgbd`, `statusPages`, `actions`). Pon `"verified": false` (en el chasis o en la centralita) en lo que no hayas comprobado, como en `e60_catalog.json` y `e90_catalog.json`. La app solo muestra la marca del chasis ("sin verificar" en el menú); la de cada centralita es una nota para quien revise.
-2. Añadir la entrada en `MainActivity.cs`: una línea `SetKey(n, "E61", () => ChassisMenuActivity.Start(this, "e61"))` y su texto en `BuildMenu`.
+1. Crear `src/InpaDroid/Ui/Chassis/<id>_catalog.json` (por ejemplo `e61_catalog.json`). `InpaDroid.csproj` lo incrusta solo. Usa `e46_catalog.json` como plantilla: un objeto con `id`, `name`, `subtitle`, `infoTitle`, `info` (admite `{iface}` y `{ecupath}`), `verified` y `ecus` (cada una con `title`, `sgbd`, `statusPages`, `actions`). Pon `"verified": false` (en el chasis o en la centralita) en lo que no hayas comprobado, como en `e60_catalog.json`, `e90_catalog.json`, `f30_catalog.json` y `f10_catalog.json` (los de la serie F son esqueletos para ENET y no se han probado en un coche). La app solo muestra la marca del chasis ("sin verificar" en el menú); la de cada centralita es una nota para quien revise.
+2. Añadir la tarjeta del menú en `MainActivity.cs`: una entrada en el array `cards` de `BuildMenu`, como `(Resource.String.main_card_e61, Resource.String.main_card_e61_desc, Resource.Drawable.ic_car, false, () => ChassisMenuActivity.Start(this, "e61"))`, y sus dos textos.
 3. Opcional: cualquier usuario puede sustituir un chasis sin recompilar copiando `<id>_catalog.json` a su carpeta ECU (los campos se explican en [Formato del catálogo](#formato-del-catálogo)).
 
 Antes de añadir un chasis, comprueba que los archivos `.prg`/`.grp` funcionan y verifica qué jobs y nombres de resultado existen de verdad en ese coche. El catálogo solo debe incluir valores comprobados contra un vehículo real o una traza EDIABAS conocida.
@@ -196,10 +198,12 @@ El formato lo describe [docs/catalog.schema.json](docs/catalog.schema.json) (JSO
 - No añadas comentarios que expliquen qué hace el código: usa nombres claros. Añade un comentario solo cuando el *porqué* no sea obvio: una restricción oculta, un parche, o una invariante que sorprendería al lector.
 - No añadas manejo de errores ni alternativas para situaciones que no pueden ocurrir. Valida en los límites del sistema (entrada del usuario, E/S de archivos, APIs externas); confía en el código interno.
 - Cualquier dependencia nueva debe ser compatible con la GPL. ediabaslib tiene licencia GPLv3 y esa licencia se propaga.
+- Todo lo que escriba en una centralita o active algo debe pasar por `JobDialogs.ConfirmJob` (muestra SGBD/JOB/ARGS y el aviso de batería). `JobPolicy` decide qué jobs cuentan como de solo lectura. La escritura de codificación no está implementada a propósito; no la añadas sin hablarlo antes.
+- El texto visible va en `Resources/values*/strings_*.xml`, nunca en el código. El español es el idioma por defecto (`values`) y el inglés está en `values-en`; si añades un texto, ponlo en ambos (y en `values-de` / `values-pt` cuando existan). Da una descripción de contenido a las vistas propias para TalkBack.
 
 ## Pruebas y comprobación del catálogo
 
-- `dotnet test tests/InpaDroid.Tests` pasa las pruebas unitarias (no hace falta un dispositivo Android). Enlazan el código sin dependencias de Android (`DiagModels.cs`, `ChassisModel.cs`, `ChassisCatalog.cs`) y los catálogos incrustados, así que un JSON de catálogo roto falla aquí.
+- `dotnet test tests/InpaDroid.Tests` pasa las pruebas unitarias (no hace falta un dispositivo Android). Enlazan el código sin dependencias de Android de `Diag/` (por ejemplo `DiagModels.cs`, `DiagLogic.cs`, `FaultInfo.cs`, `BatteryGuard.cs`, `JobPolicy.cs`, `EcuImport.cs`), `ChassisModel.cs` y `ChassisCatalog.cs` y los catálogos incrustados, así que un JSON de catálogo roto falla aquí.
 - `python3 tools/catalog_check.py` necesita los volcados de los PRG sacados de los archivos propietarios de BMW (`datos_bmw/`), por eso solo se ejecuta en local; la CI solo comprueba que compila.
 - La CI (`.github/workflows/ci.yml`) pasa las pruebas unitarias, valida los `src/**/*.json` y compila la app en cada push y pull request. Las releases se explican en [docs/RELEASING.md](docs/RELEASING.md).
 
@@ -207,5 +211,5 @@ El formato lo describe [docs/catalog.schema.json](docs/catalog.schema.json) (JSO
 
 1. Haz un fork del repositorio y crea una rama desde `main`.
 2. Mantén los PRs centrados: un cambio lógico por PR.
-3. Prueba contra un coche real o, para cambios de UI, en un dispositivo o emulador con la APK instalada.
+3. Prueba contra un coche real o, para cambios de UI, en un dispositivo o emulador con la APK instalada. Indica en el PR si se probó en un coche; los catálogos de la serie F y los del E60 y E90 siguen sin verificar.
 4. La descripción del PR debe explicar *por qué* es necesario el cambio, no solo qué hace.

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sc_key_scan">Schnellscan</string>
+  <string name="sc_key_export">CSV exportieren</string>
+  <string name="sc_heading_start">Tippen Sie auf Schnellscan, um den Fehlerspeicher von %1$s Steuergeräten zu lesen</string>
+  <string name="sc_heading_progress">Lese %1$s von %2$s</string>
+  <string name="sc_busy">%1$s (%2$s von %3$s)…</string>
+  <string name="sc_heading_partial">Scan abgeschlossen: %1$s von %2$s Steuergeräten mit Fehlern, %3$s nicht gelesen</string>
+  <string name="sc_heading_done">Scan abgeschlossen: %1$s von %2$s Steuergeräten mit Fehlern</string>
+  <string name="sc_heading_cancelled">Scan abgebrochen (%1$s von %2$s gelesen)</string>
+  <string name="sc_state_pending">Nicht gelesen</string>
+  <string name="sc_state_ok">Keine Fehler</string>
+  <string name="sc_state_faults">%1$s Fehler</string>
+  <string name="sc_state_no_response">Keine Antwort</string>
+  <string name="sc_state_not_found">Nicht gefunden (.prg/.grp fehlt)</string>
+  <string name="sc_export_none">Noch keine Ergebnisse zum Exportieren</string>
+  <string name="sc_export_title">Scan-Zusammenfassung</string>
+</resources>

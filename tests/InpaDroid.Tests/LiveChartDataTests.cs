@@ -1,4 +1,5 @@
 using InpaDroid.Ui.Live;
+using InpaDroid.Ui.Chassis;
 
 namespace InpaDroid.Tests;
 
@@ -121,5 +122,56 @@ public class LiveChartDataTests
     public void Csv_of_empty_session_is_only_header()
     {
         Assert.Equal("timestamp\r\n", new LiveSeriesData().ToCsv(Id));
+    }
+}
+
+public class LiveJobTests
+{
+    static ChassisValue V(string job, string result, string args = "") => new(job, result, result.ToLowerInvariant(), "", args);
+
+    [Fact]
+    public void Results_of_the_same_job_are_polled_together()
+    {
+        var plan = LiveJob.Group([V("STATUS_A", "R1"), V("STATUS_B", "R2"), V(" status_a ", "R3")]);
+        Assert.Equal(2, plan.Count);
+        Assert.Equal("STATUS_A", plan[0].Job);
+        Assert.Equal(["R1", "R3"], plan[0].Results);
+        Assert.Equal(["R1", "R3"], plan[0].Series);
+        Assert.Equal(["R2"], plan[1].Results);
+    }
+
+    [Fact]
+    public void Different_args_are_separate_jobs()
+    {
+        var plan = LiveJob.Group([V("STATUS_A", "R1", "1"), V("STATUS_A", "R2", "2")]);
+        Assert.Equal(2, plan.Count);
+        Assert.Equal("1", plan[0].Args);
+        Assert.Equal("2", plan[1].Args);
+    }
+
+    [Fact]
+    public void Shared_result_names_are_prefixed_with_job()
+    {
+        var plan = LiveJob.Group([V("STATUS_A", "WERT"), V("STATUS_B", "wert"), V("STATUS_C", "WERT", "7"), V("STATUS_A", "OTRO")]);
+        Assert.Equal(["STATUS_A/WERT", "OTRO"], plan[0].Series);
+        Assert.Equal(["STATUS_B/wert"], plan[1].Series);
+        Assert.Equal(["STATUS_C(7)/WERT"], plan[2].Series);
+    }
+
+    [Fact]
+    public void Duplicate_values_are_requested_once()
+    {
+        var plan = LiveJob.Group([V("STATUS_A", "R1"), V("status_a", "r1")]);
+        Assert.Single(plan);
+        Assert.Single(plan[0].Results);
+    }
+
+    [Fact]
+    public void SeriesOf_maps_requested_results_and_passes_all_without_list()
+    {
+        var job = new LiveJob("STATUS_A", "", ["R1", "R2"], ["S1", "S2"]);
+        Assert.Equal("S2", job.SeriesOf("r2"));
+        Assert.Null(job.SeriesOf("R3"));
+        Assert.Equal("ANY", new LiveJob("STATUS_A", "", [], []).SeriesOf("ANY"));
     }
 }

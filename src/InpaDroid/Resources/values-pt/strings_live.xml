@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="live_title">Monitor ao vivo</string>
+  <string name="live_pause">Pausar</string>
+  <string name="live_resume">Retomar</string>
+  <string name="live_clear">Limpar</string>
+  <string name="live_export">Exportar sessão em CSV</string>
+  <string name="live_export_title">Exportar sessão</string>
+  <string name="live_export_empty">Não há amostras para exportar</string>
+  <string name="live_export_failed">Não foi possível compartilhar: %1$s</string>
+  <string name="live_interval">Intervalo: %1$s s</string>
+  <string name="live_window">Janela: %1$s amostras</string>
+  <string name="live_series_stats">%1$s\nAtual %2$s   Mín %3$s   Máx %4$s</string>
+  <string name="live_waiting">Aguardando dados…</string>
+  <string name="live_no_numeric">Sem valores numéricos</string>
+  <string name="live_error">Erro: %1$s</string>
+  <string name="live_status">%1$s : %2$s   amostras: %3$s</string>
+</resources>

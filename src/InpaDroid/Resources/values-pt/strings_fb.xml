@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="fb_key_report">Relatório</string>
+  <string name="fb_clear_hint">Antes de apagar, o InpaDroid lê a memória de falhas e a salva no histórico como cópia de segurança. \"Salvar falhas\" a lê e também a compartilha como CSV.\n\nSe a causa da falha continuar presente, a falha será armazenada novamente e a luz de aviso poderá voltar a acender.</string>
+  <string name="fb_backup_saved">Cópia de segurança da memória de falhas salva no histórico.</string>
+  <string name="fb_backup_none">Apagado sem cópia de segurança: não foi possível ler a memória de falhas.</string>
+  <string name="fb_backup_failed_title">⚠ Sem cópia de segurança</string>
+  <string name="fb_backup_failed_msg">Não foi possível ler a memória de falhas para fazer a cópia de segurança antes de apagar (o erro aparece na tela).\n\nSe apagar agora, as falhas armazenadas serão perdidas sem nenhuma cópia. Apagar mesmo assim?</string>
+  <string name="fb_clear_anyway">Apagar sem cópia</string>
+</resources>

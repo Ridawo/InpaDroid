@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="lv_channels">Werte wählen</string>
+  <string name="lv_channels_title">Darzustellende Werte (max. %1$s)</string>
+  <string name="lv_channels_max">Höchstens %1$s Werte gleichzeitig</string>
+  <string name="lv_channels_apply">Übernehmen</string>
+  <string name="lv_channels_default">Standard</string>
+  <string name="lv_cancel">Abbrechen</string>
+  <string name="lv_record_start">In Datei aufzeichnen</string>
+  <string name="lv_record_stop">Aufzeichnung beenden</string>
+  <string name="lv_record_started">Aufzeichnung in %1$s</string>
+  <string name="lv_record_failed">Aufzeichnung fehlgeschlagen: %1$s</string>
+  <string name="lv_record_saved">Aufzeichnung gespeichert</string>
+  <string name="lv_record_saved_at">Gespeichert unter:\n%1$s</string>
+  <string name="lv_record_saved_big">Größer als 1 MB, daher wird sie von hier nicht geteilt. Kopieren Sie sie von:\n%1$s</string>
+  <string name="lv_record_share">Teilen</string>
+  <string name="lv_record_close">Schließen</string>
+  <string name="lv_record_share_title">Aufzeichnung teilen</string>
+</resources>
