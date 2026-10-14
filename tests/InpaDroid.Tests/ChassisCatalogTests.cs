@@ -26,6 +26,8 @@ public sealed class ChassisCatalogTests : IDisposable
     [InlineData("e46")]
     [InlineData("e60")]
     [InlineData("e90")]
+    [InlineData("f30")]
+    [InlineData("f10")]
     public void EmbeddedCatalog_IsWellFormed(string id)
     {
         ChassisInfo c = ChassisCatalog.Get(id);
