@@ -4,7 +4,7 @@
 
 Android app that mimics BMW INPA using [ediabaslib](https://github.com/uholeschak/ediabaslib) — a free EDIABAS implementation — as its diagnostic engine. It talks to ECUs the same way INPA or Tool32 does: load a `.prg`, run its jobs, read the results.
 
-The app ships with no BMW files. You supply your own `.prg` and `.grp`, copied from your EDIABAS installation.
+The app ships with no BMW files. You supply your own `.prg` and `.grp`, copied from your EDIABAS installation. You can copy them over from a PC or import them from the phone in Settings.
 
 > **Disclaimer:** INPA and EDIABAS are trademarks of BMW AG. This project is not affiliated with or endorsed by BMW AG in any way.
 
