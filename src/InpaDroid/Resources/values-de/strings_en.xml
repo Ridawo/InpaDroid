@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="en_err_host">Geben Sie «auto», eine IP-Adresse wie 169.254.12.34 (optional :HSFZ oder :DoIP) oder «auto:all» ein. Hostnamen werden nicht unterstützt.</string>
+  <string name="en_help">Was Sie für ENET (F-/G-Reihe) benötigen:\n• Ein OBD-auf-RJ45-Kabel (ENET) mit Aktivierungsleitung oder eine ENET-WLAN-Bridge.\n• Telefon und Fahrzeug im selben Netzwerk: Verbinden Sie das WLAN des Telefons mit der ENET-Bridge oder verwenden Sie einen USB-Ethernet-Adapter.\n• Die IP des Fahrzeugs lautet meist 169.254.x.x (Link-Local). Lassen Sie «auto» eingestellt, das findet sie selbst.\n• Die Zündung muss eingeschaltet sein.</string>
+  <string name="en_net_ok">Telefonnetz: mit einem WLAN- oder Ethernet-Netzwerk verbunden. Wenn das Fahrzeug nicht antwortet, prüfen Sie, ob es das Netzwerk der ENET-Bridge ist.</string>
+  <string name="en_net_mobile">Telefonnetz: nur mobile Daten. Verbinden Sie sich mit dem WLAN der ENET-Bridge (oder schließen Sie den Ethernet-Adapter an) und stimmen Sie, falls Android fragt, zu, auch ohne Internet verbunden zu bleiben.</string>
+  <string name="en_net_none">Telefonnetz: keine Verbindung. Verbinden Sie sich mit dem WLAN der ENET-Bridge oder schließen Sie den Ethernet-Adapter an.</string>
+  <string name="en_net_unknown">Telefonnetz: konnte nicht geprüft werden.</string>
+  <string name="en_test_nonet">Das Netzwerk ist das Problem: Das Telefon ist nicht in einem WLAN- oder Ethernet-Netzwerk und kann das Fahrzeug daher nicht erreichen. Verbinden Sie es mit der ENET-Bridge oder dem Ethernet-Adapter und testen Sie erneut.</string>
+  <string name="en_test_noreply">Das Fahrzeug antwortet nicht über ENET. Prüfen Sie, ob die Zündung eingeschaltet ist, das ENET-Kabel die Aktivierungsleitung hat, das Telefon im selben Netzwerk wie das Fahrzeug ist und die IP «auto» oder 169.254.x.x lautet.</string>
+</resources>

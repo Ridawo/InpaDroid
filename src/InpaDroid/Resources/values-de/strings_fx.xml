@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="fx_variant_failed_enet">Die Steuergerätevariante konnte nicht erkannt werden. Prüfen Sie das ENET-Kabel, ob Telefon und Fahrzeug im selben Netzwerk sind, die Zündung und ob die Datei im ECU-Ordner liegt.</string>
+</resources>

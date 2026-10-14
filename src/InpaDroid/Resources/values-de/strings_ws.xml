@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="ws_card_title">Erste Schritte</string>
+  <string name="ws_card_desc_adapter">Der Adapter ist noch nicht eingerichtet. Wir führen Sie Schritt für Schritt.</string>
+  <string name="ws_card_desc_files">Die ECU-Dateien (.prg/.grp) fehlen. Wir führen Sie Schritt für Schritt.</string>
+  <string name="ws_title">Erste Schritte</string>
+  <string name="ws_subtitle">Adapter, Dateien und Test</string>
+  <string name="ws_intro">Drei Schritte, um die App startklar zu machen. Jeder Schritt aktualisiert sich selbst, wenn Sie aus den Einstellungen zurückkehren.</string>
+  <string name="ws_step1">1. Adapter</string>
+  <string name="ws_step2">2. ECU-Dateien</string>
+  <string name="ws_step3">3. Verbindung testen</string>
+  <string name="ws_adapter_ready">Schnittstelle: %1$s</string>
+  <string name="ws_adapter_bt_none">Bluetooth: Sie müssen in den Einstellungen noch das ELM327-Gerät wählen.</string>
+  <string name="ws_open_settings">Einstellungen öffnen</string>
+  <string name="ws_files_folder">ECU-Ordner: %1$s</string>
+  <string name="ws_files_count">%1$s .prg/.grp-Dateien gefunden.</string>
+  <string name="ws_files_none">Im Ordner befinden sich keine .prg/.grp-Dateien.</string>
+  <string name="ws_files_need">Mindestens erforderlich für die Menüs E39 und E46:</string>
+  <string name="ws_file_ok">OK: %1$s</string>
+  <string name="ws_file_missing">Fehlt: %1$s</string>
+  <string name="ws_files_legal">Kopieren Sie die Dateien aus Ihrer eigenen INPA/EDIABAS-Installation in diesen Ordner. Die App enthält sie nicht und bietet keine Downloads an.</string>
+  <string name="ws_test_button">Verbindung testen</string>
+  <string name="ws_test_hint">Liest Batterie und Zündung, ohne etwas am Fahrzeug zu verändern. Stecken Sie das Kabel ins Fahrzeug und schalten Sie die Zündung ein.</string>
+  <string name="ws_test_busy">Verbindung wird getestet…</string>
+  <string name="ws_test_ok">Verbindung funktioniert. Batterie: %1$s V, Zündung: %2$s.</string>
+  <string name="ws_ign_on">ein</string>
+  <string name="ws_ign_unknown">keine Daten</string>
+  <string name="ws_test_adapter">Der Adapter ist das Problem: Er ist nicht bereit. Prüfen Sie Schritt 1.</string>
+  <string name="ws_test_files">Die Dateien sind das Problem: Weder UTILITY.prg noch UTILITY.grp liegt im ECU-Ordner. Prüfen Sie Schritt 2.</string>
+  <string name="ws_test_noreply">Das Fahrzeug oder das Kabel ist das Problem: Der Adapter ist bereit und die Dateien sind vorhanden, aber nichts antwortet. Prüfen Sie, ob das Kabel in der OBD-Buchse steckt, die Zündung eingeschaltet ist und das Kabel für Ihr Fahrzeug geeignet ist.</string>
+  <string name="ws_test_ign_off">Es besteht Kommunikation (Batterie %1$s V), aber die Zündung ist aus. Schalten Sie sie ein und testen Sie erneut.</string>
+  <string name="ws_card_cd">%1$s. %2$s</string>
+</resources>

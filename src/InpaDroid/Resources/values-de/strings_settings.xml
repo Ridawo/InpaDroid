@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="set_title">Einstellungen</string>
+  <string name="set_subtitle">Schnittstelle und ECU-Ordner</string>
+  <string name="set_sec_connection">Verbindungsart</string>
+  <string name="set_sec_details">Schnittstellendetails</string>
+  <string name="set_sec_ecu">ECU-Ordner</string>
+  <string name="set_adapter_usb">K+DCAN-USB-Kabel (FTDI)</string>
+  <string name="set_adapter_enet">ENET (Ethernet-Kabel, F-/G-Reihe)</string>
+  <string name="set_adapter_elmbt">ELM327 Bluetooth</string>
+  <string name="set_adapter_elmwifi">ELM327 WLAN</string>
+  <string name="set_bt_device">Gekoppeltes Bluetooth-Gerät</string>
+  <string name="set_bt_search">Gekoppelte Geräte suchen</string>
+  <string name="set_enet_host">ENET-Host (IP oder «auto»)</string>
+  <string name="set_wifi_host">ELM327-WLAN-Host (IP:Port)</string>
+  <string name="set_ecu_pick">Ordner wählen</string>
+  <string name="set_ecu_default">Standard</string>
+  <string name="set_save">Speichern</string>
+  <string name="set_err_enet">Ungültiger ENET-Host: Verwenden Sie eine IP, einen Hostnamen oder «auto».</string>
+  <string name="set_err_wifi">Ungültiges Format. Verwenden Sie Host:Port, zum Beispiel 192.168.0.10:35000 (Port 1-65535).</string>
+  <string name="set_job_search_hint">Job suchen…</string>
+  <string name="set_job_args_label">Argumente (getrennt durch ;)</string>
+  <string name="set_job_results_label">Ergebnisse (optional, getrennt durch ;)</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="main_greeting">Hallo</string>
+  <string name="main_adapter_none">Adapter nicht konfiguriert</string>
+  <string name="main_card_identify">Fahrzeug identifizieren</string>
+  <string name="main_card_identify_desc">Liest FIN, Batterie und Zündung</string>
+  <string name="main_card_ecu">Steuergerät (generisch)</string>
+  <string name="main_card_ecu_desc">Beliebiges Steuergerät und seine Jobs wählen</string>
+  <string name="main_card_e39">BMW E39</string>
+  <string name="main_card_e39_desc">Diagnosemenü 5er</string>
+  <string name="main_card_e46">BMW E46</string>
+  <string name="main_card_e46_desc">Diagnosemenü 3er</string>
+  <string name="main_card_e60">BMW E60 · ungeprüft</string>
+  <string name="main_card_e60_desc">5er, noch nicht am Fahrzeug getestet</string>
+  <string name="main_card_e90">BMW E90 · ungeprüft</string>
+  <string name="main_card_e90_desc">3er, noch nicht am Fahrzeug getestet</string>
+  <string name="main_card_settings">Einstellungen</string>
+  <string name="main_card_settings_desc">Adapter, ECU-Ordner und Verbindung</string>
+  <string name="main_card_exit">Beenden</string>
+  <string name="main_card_exit_desc">Schließt die Verbindung zum Adapter</string>
+  <string name="main_card_info">Information</string>
+  <string name="main_card_info_desc">Version und EDIABAS-Details</string>
+</resources>

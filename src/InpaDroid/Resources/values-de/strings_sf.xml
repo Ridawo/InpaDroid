@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="sf_jobs_title">Jobs</string>
+  <string name="sf_job_heading">Job: %1$s</string>
+  <string name="sf_status_heading">Status: %1$s</string>
+  <string name="sf_write_title">⚠ Schreib- oder Ansteuerjob</string>
+  <string name="sf_write_msg">Dieser Job ist nicht schreibgeschützt: Er kann das Steuergerät beschreiben oder codieren, Daten löschen oder Fahrzeugkomponenten ansteuern.\n\nPrüfen Sie die Argumente und fahren Sie nur fort, wenn Sie genau wissen, was er tut.</string>
+  <string name="sf_clear_save_hint">Speichern Sie vor dem Löschen die aktuellen Fehler: Tippen Sie auf \"Fehler speichern\" (liest sie und öffnet CSV teilen) und kehren Sie dann zu Fehler löschen zurück.\n\nWenn die Ursache des Fehlers weiterhin besteht, wird der Fehler erneut gespeichert und die Warnleuchte kann wieder aufleuchten.</string>
+  <string name="sf_save_faults">Fehler speichern</string>
+  <string name="sf_batt_low">⚠ BATTERIESPANNUNG ZU NIEDRIG: %1$s V (Minimum %2$s V)\nBei niedriger Spannung kann ein Schreibvorgang unvollständig bleiben und das Steuergerät beschädigen; außerdem treten falsche Fehler auf. Schließen Sie ein Ladegerät an, bevor Sie fortfahren.</string>
+  <string name="sf_batt_unknown">⚠ BATTERIESPANNUNG UNBEKANNT\nSie konnte nicht gelesen werden. Bei niedriger Spannung kann ein Schreibvorgang unvollständig bleiben und das Steuergerät beschädigen; außerdem treten falsche Fehler auf. Stellen Sie sicher, dass mindestens %1$s V anliegen (idealerweise mit Ladegerät), bevor Sie fortfahren.</string>
+</resources>

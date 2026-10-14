@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="fb_key_report">Bericht</string>
+  <string name="fb_clear_hint">Vor dem Löschen liest InpaDroid den Fehlerspeicher und sichert ihn im Verlauf. \"Fehler speichern\" liest ihn und teilt ihn zusätzlich als CSV.\n\nWenn die Ursache des Fehlers weiterhin besteht, wird der Fehler erneut gespeichert und die Warnleuchte kann wieder aufleuchten.</string>
+  <string name="fb_backup_saved">Sicherung des Fehlerspeichers im Verlauf gespeichert.</string>
+  <string name="fb_backup_none">Ohne Sicherung gelöscht: Der Fehlerspeicher konnte nicht gelesen werden.</string>
+  <string name="fb_backup_failed_title">⚠ Keine Sicherung</string>
+  <string name="fb_backup_failed_msg">Der Fehlerspeicher konnte vor dem Löschen nicht für eine Sicherung gelesen werden (der Fehler wird auf dem Bildschirm angezeigt).\n\nWenn Sie jetzt löschen, gehen die gespeicherten Fehler ohne Kopie verloren. Trotzdem löschen?</string>
+  <string name="fb_clear_anyway">Ohne Sicherung löschen</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="rp_lang">de</string>
+  <string name="rp_title">Fehlerbericht</string>
+  <string name="rp_date">Datum</string>
+  <string name="rp_chassis">Fahrgestell</string>
+  <string name="rp_ecu">Steuergerät</string>
+  <string name="rp_sgbd">SGBD</string>
+  <string name="rp_vin">FIN</string>
+  <string name="rp_workshop">Werkstatt</string>
+  <string name="rp_code">Code</string>
+  <string name="rp_description">Beschreibung</string>
+  <string name="rp_state">Status</string>
+  <string name="rp_counter">Zähler</string>
+  <string name="rp_conditions">Betriebsbedingungen</string>
+  <string name="rp_active">Aktiv</string>
+  <string name="rp_history">Historie</string>
+  <string name="rp_unknown">Unbekannt</string>
+  <string name="rp_no_faults">Keine Fehler gespeichert.</string>
+  <string name="rp_disclaimer">Bericht erstellt von InpaDroid. Nur unverbindliche Information; sie sollte von einem Fachmann bestätigt werden.</string>
+  <string name="rp_subject">InpaDroid-Fehlerbericht %1$s</string>
+  <string name="rp_chooser">Bericht teilen</string>
+</resources>

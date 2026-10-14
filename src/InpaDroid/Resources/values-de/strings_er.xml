@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="er_technical">Technische Details: %1$s</string>
+  <string name="er_no_ecu_response">Das Steuergerät antwortet nicht. Prüfen Sie, ob die Zündung eingeschaltet ist und der Adapter fest in der OBD-Buchse steckt. Ältere Fahrzeuge (K-Line) benötigen ein K+DCAN-Kabel oder ähnlich; ein gewöhnlicher ELM327 funktioniert nicht.</string>
+  <string name="er_ecu_connection">Verbindung zum Steuergerät nicht möglich. Handelt es sich um ein älteres K-Line-Fahrzeug, ist der Adaptertyp falsch: Verwenden Sie ein K+DCAN-Kabel oder ähnlich.</string>
+  <string name="er_adapter_lost">Die Verbindung zum Adapter wurde unterbrochen. Prüfen Sie, ob er noch verbunden ist, und versuchen Sie es erneut.</string>
+  <string name="er_interface_not_found">Der Adapter wurde nicht gefunden oder konnte nicht initialisiert werden. Prüfen Sie das USB-Kabel bzw. die Bluetooth-Kopplung und den in den Einstellungen gewählten Adaptertyp.</string>
+  <string name="er_usb_permission">Die Berechtigung zur Nutzung des Geräts fehlt. Stecken Sie das Kabel neu an und bestätigen Sie die USB-Berechtigung, wenn Android fragt.</string>
+  <string name="er_port_open">Der Adapteranschluss konnte nicht geöffnet werden. Prüfen Sie, ob keine andere App ihn verwendet und der Adapter korrekt angeschlossen ist.</string>
+  <string name="er_timeout">Der Adapter antwortet nicht. Prüfen Sie, ob er angeschlossen und die Zündung des Fahrzeugs eingeschaltet ist.</string>
+  <string name="er_sgbd_not_found">Die SGBD-Datei (.prg/.grp) für dieses Steuergerät wurde nicht gefunden. Prüfen Sie den ECU-Ordner in den Einstellungen.</string>
+  <string name="er_sgbd_invalid">Die SGBD-Datei ist beschädigt oder inkompatibel. Prüfen Sie die Dateien im ECU-Ordner in den Einstellungen.</string>
+  <string name="er_job_not_found">Diese SGBD enthält den Job nicht. Möglicherweise passen die ECU-Dateien nicht zur Version des Steuergeräts.</string>
+  <string name="er_service_closed">Der Diagnosedienst ist geschlossen. Öffnen Sie den Bildschirm erneut.</string>
+</resources>
