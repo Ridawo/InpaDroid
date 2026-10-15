@@ -177,6 +177,13 @@ internal sealed class ResultPanel
             lp.SetMargins(0, m, 0, m);
             _root.AddView(tv, lp);
         }
+        // En apaisado las tarjetas ocupan el principio del scroll y el error quedaría fuera de pantalla.
+        if (blocks.Any(b => b.Kind == Kind.Error))
+            _root.Post(() =>
+            {
+                var last = _root.GetChildAt(_root.ChildCount - 1);
+                last?.RequestRectangleOnScreen(new Rect(0, 0, last.Width, last.Height), false);
+            });
     }
 
     sealed class TableTag(Block block) : Java.Lang.Object

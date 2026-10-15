@@ -33,7 +33,7 @@ public class HistoryActivity : InpaActivity
         _detail = FindViewById<TextView>(Resource.Id.history_detail)!;
         _detailScroll = FindViewById(Resource.Id.history_detail_scroll)!;
         _list.ItemClick += (_, e) => ShowDetail(e.Position);
-        SetKey(4, GetString(Resource.String.hs_key_delete), ConfirmDeleteAll, Resource.Drawable.ic_delete);
+        SetShiftKey(4, GetString(Resource.String.hs_key_delete), ConfirmDeleteAll, Resource.Drawable.ic_delete);
         ShowList();
     }
 
