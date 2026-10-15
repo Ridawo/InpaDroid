@@ -74,7 +74,7 @@ public class ChassisEcuActivity : InpaActivity
 
         _heading.Text = GetString(Resource.String.ecu_choose_function);
         _results.ShowInfo($"{_ecu.Title} ({_ecu.Sgbd})", GetString(Resource.String.ecu_choose_hint)!);
-        Exclusive(async () => { await EnsureSgbdAsync(); });
+        Exclusive(async () => { await EnsureSgbdAsync(notify: false); });
     }
 
     void UpdateSubtitle() => SetSubtitle($"{_ecu.Sgbd} → {_sgbd ?? "?"}");
@@ -153,7 +153,8 @@ public class ChassisEcuActivity : InpaActivity
         });
 
     // null si falla; se reintenta con la siguiente tecla
-    async Task<string?> EnsureSgbdAsync()
+    // notify: aviso emergente además del panel; sin él, una tecla que falla con el mismo error en pantalla parece no hacer nada.
+    async Task<string?> EnsureSgbdAsync(bool notify = true)
     {
         if (_sgbd != null)
             return _sgbd;
@@ -164,8 +165,10 @@ public class ChassisEcuActivity : InpaActivity
         {
             ShowResults();
             bool enet = DiagHolder.LoadSettings(this).Type == AdapterType.Enet;
-            _results.ShowError($"{_ecu.Title} ({_ecu.Sgbd})",
-                GetString(enet ? Resource.String.fx_variant_failed_enet : Resource.String.ch_variant_failed)!);
+            var message = GetString(enet ? Resource.String.fx_variant_failed_enet : Resource.String.ch_variant_failed)!;
+            _results.ShowError($"{_ecu.Title} ({_ecu.Sgbd})", message);
+            if (notify)
+                UiUtil.Toast(this, message);
             _results.AddActions(
                 (GetString(Resource.String.ecu_retry)!, RetryVariant),
                 (GetString(Resource.String.ecu_open_settings)!, () => StartActivity(new Intent(this, typeof(SettingsActivity)))));

@@ -60,7 +60,7 @@ public class EcuActivity : InpaActivity
         _heading.Text = GetString(Resource.String.ecu_choose_function);
         _results.ShowInfo(_isGroup ? UiUtil.Str(this, Resource.String.g_group_title, _ecuName) : $"SGBD {_ecuName}", GetString(Resource.String.ecu_choose_hint)!);
         if (_isGroup)
-            Exclusive(async () => { await EnsureSgbdAsync(); });
+            Exclusive(async () => { await EnsureSgbdAsync(notify: false); });
     }
 
     void UpdateSubtitle() =>
@@ -128,7 +128,8 @@ public class EcuActivity : InpaActivity
         }
     }
 
-    async Task<string?> EnsureSgbdAsync()
+    // notify: aviso emergente además del panel; sin él, una tecla que falla con el mismo error en pantalla parece no hacer nada.
+    async Task<string?> EnsureSgbdAsync(bool notify = true)
     {
         if (_sgbd != null)
             return _sgbd;
@@ -137,8 +138,10 @@ public class EcuActivity : InpaActivity
         HideBusy();
         if (string.IsNullOrWhiteSpace(variant))
         {
-            _results.ShowError(UiUtil.Str(this, Resource.String.g_group_title, _ecuName),
-                GetString(Resource.String.g_variant_failed) + " " + GetString(Resource.String.ecu_retry_hint));
+            var message = GetString(Resource.String.g_variant_failed) + " " + GetString(Resource.String.ecu_retry_hint);
+            _results.ShowError(UiUtil.Str(this, Resource.String.g_group_title, _ecuName), message);
+            if (notify)
+                UiUtil.Toast(this, message);
             return null;
         }
         _sgbd = variant;
