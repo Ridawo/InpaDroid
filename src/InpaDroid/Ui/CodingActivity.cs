@@ -170,7 +170,7 @@ public class CodingActivity : InpaActivity
                 _results.ShowError(GetString(Resource.String.cd_title)!, GetString(Resource.String.cd_not_saved)!, append: true);
                 return;
             }
-            var snap = CodingBackup.FromResult(DateTime.UtcNow, _chassis, _ecuTitle, sgbd, job, r);
+            var snap = CodingBackup.FromResult(DateTime.UtcNow, _chassis, _ecuTitle, sgbd, job, r, args);
             _current = snap;
             _results.ShowInfo(GetString(Resource.String.cd_title)!, CodingStore.Save(this, snap)
                 ? UiUtil.Str(this, Resource.String.cd_saved, snap.Entries.Count)
