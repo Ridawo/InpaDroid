@@ -23,6 +23,7 @@ internal sealed class ResultPanel
     sealed record Block(ICharSequence Text, Kind Kind, string Title = "", IReadOnlyList<KeyValuePair<string, string>>? Rows = null);
 
     readonly LinearLayout _root;
+    bool _showingError;                     // lo mostrado incluye un error (para desplazarse solo al aparecer uno nuevo)
 
     public ResultPanel(LinearLayout root) => _root = root;
 
@@ -32,6 +33,7 @@ internal sealed class ResultPanel
     public void Clear()
     {
         _exports.Clear();
+        _showingError = false;
         _root.RemoveAllViews();
     }
 
@@ -124,6 +126,21 @@ internal sealed class ResultPanel
 
     void Show(List<Block> blocks, bool append)
     {
+        Render(blocks, append);
+        bool hasError = blocks.Any(b => b.Kind == Kind.Error);
+        // En apaisado las tarjetas ocupan el principio del scroll y el error quedaría fuera de pantalla.
+        // Solo al aparecer: un error que se repite (Status cada 1 s) no debe arrastrar la vista una y otra vez.
+        if (hasError && !_showingError && _root.Context is InpaActivity { KeysInScroll: true })
+            _root.Post(() =>
+            {
+                var last = _root.GetChildAt(_root.ChildCount - 1);
+                last?.RequestRectangleOnScreen(new Rect(0, 0, last.Width, last.Height), false);
+            });
+        _showingError = hasError || (append && _showingError);
+    }
+
+    void Render(List<Block> blocks, bool append)
+    {
         if (!append && blocks.Count > 0 && blocks[0].Kind != Kind.Header)
             _exports.Clear();
         var ctx = _root.Context!;
@@ -177,13 +194,6 @@ internal sealed class ResultPanel
             lp.SetMargins(0, m, 0, m);
             _root.AddView(tv, lp);
         }
-        // En apaisado las tarjetas ocupan el principio del scroll y el error quedaría fuera de pantalla.
-        if (blocks.Any(b => b.Kind == Kind.Error))
-            _root.Post(() =>
-            {
-                var last = _root.GetChildAt(_root.ChildCount - 1);
-                last?.RequestRectangleOnScreen(new Rect(0, 0, last.Width, last.Height), false);
-            });
     }
 
     sealed class TableTag(Block block) : Java.Lang.Object

@@ -93,8 +93,14 @@ public abstract class InpaActivity : Activity
                 else OnBackPressed();
             };
         SetTitleText(title);
+        FitSubtitle();
         BuildKeyGrid();
     }
+
+    // El subtítulo comparte fila con el título: un tope proporcional al ancho de la ventana (no fijo) le deja sitio en tablet,
+    // en apaisado y en pantalla dividida.
+    void FitSubtitle() =>
+        _subtitle?.SetMaxWidth(UiUtil.Dp(this, (int)((Resources?.Configuration?.ScreenWidthDp ?? 0) * 0.4f)));
 
     protected void SetTitleText(string title)
     {
@@ -138,6 +144,9 @@ public abstract class InpaActivity : Activity
         int h = Resources?.Configuration?.ScreenHeightDp ?? 0;
         return w > h && h > 0;
     }
+
+    /// <summary>Las tarjetas están dentro del ScrollView de resultados (apaisado, ver PlaceKeyBar).</summary>
+    internal bool KeysInScroll => _scrollContent != null && _keyBar?.Parent == _scrollContent;
 
     int KeyColumns()
     {
@@ -264,6 +273,7 @@ public abstract class InpaActivity : Activity
     public override void OnConfigurationChanged(Configuration newConfig)
     {
         base.OnConfigurationChanged(newConfig);
+        FitSubtitle();
         BuildKeyGrid();
     }
 

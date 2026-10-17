@@ -63,7 +63,7 @@ public static class HistoryStore
                     if (SessionRecord.FromJson(File.ReadAllText(f)) is { } r)
                         result.Add(r);
                 }
-                catch (IOException)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
                 }
             }

@@ -17,7 +17,7 @@ public static class ScanSummary
     {
         if (DiagLogic.StatusError(r, failedText) is string err)
             return (ScanState.NoResponse, 0, err);
-        int faults = r.Sets.Count(s => s.ContainsKey("F_ORT_NR"));
+        int faults = r.Sets.Count(FaultInfo.IsFault);
         return faults == 0 ? (ScanState.Ok, 0, "") : (ScanState.Faults, faults, "");
     }
 

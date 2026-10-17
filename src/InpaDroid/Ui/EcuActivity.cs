@@ -87,6 +87,9 @@ public class EcuActivity : InpaActivity
     }
 
     // Abortar de la barra de trabajo: además de cancelar el job, corta la operación (p. ej. el borrado tras la copia).
+    // Operación abortada o pantalla cerrándose: no se avisa ni se encadena nada más.
+    bool Stopped => _abortRequested || IsFinishing || IsDestroyed;
+
     void AbortFlow()
     {
         _abortRequested = true;
@@ -133,9 +136,12 @@ public class EcuActivity : InpaActivity
     {
         if (_sgbd != null)
             return _sgbd;
-        ShowBusy(UiUtil.Str(this, Resource.String.g_variant_resolving, _ecuName));
+        ShowBusy(UiUtil.Str(this, Resource.String.g_variant_resolving, _ecuName), null, AbortFlow);
         var variant = await Diag.ResolveVariantAsync(_ecuName);
         HideBusy();
+        // Abortado o pantalla cerrada: la variante vacía no es un fallo que haya que avisar.
+        if (Stopped)
+            return null;
         if (string.IsNullOrWhiteSpace(variant))
         {
             var message = GetString(Resource.String.g_variant_failed) + " " + GetString(Resource.String.ecu_retry_hint);
@@ -211,7 +217,7 @@ public class EcuActivity : InpaActivity
                 // Copia de seguridad automática: la memoria de errores se lee y se guarda en el historial antes de borrarla.
                 var backup = await ReadFaultsCore(sgbd, HistoryStore.KindBackup);
                 // Abortado o pantalla cerrada (atrás del sistema, Abortar justo al acabar la lectura): no se borra nada.
-                if (_abortRequested || IsFinishing || IsDestroyed)
+                if (Stopped)
                     return;
                 if (backup != null)
                     await ClearFaultsCore(sgbd, GetString(Resource.String.fb_backup_saved)!);

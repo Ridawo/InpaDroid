@@ -21,6 +21,7 @@ public class HistoryActivity : InpaActivity
     View _detailScroll = null!;
     List<SessionRecord> _sessions = [];
     int _selected = -1;   // índice en _sessions de la sesión abierta; -1 = se ve la lista
+    int _loadGen;         // descarta lecturas sustituidas por otra carga o por el borrado
 
     public static void Start(Context ctx) => ctx.StartActivity(new Intent(ctx, typeof(HistoryActivity)));
 
@@ -47,8 +48,13 @@ public class HistoryActivity : InpaActivity
 
     async void Load()
     {
+        int gen = ++_loadGen;
         var ctx = ApplicationContext!;
-        _sessions = await Task.Run(() => HistoryStore.Load(ctx));
+        var sessions = await Task.Run(() => HistoryStore.Load(ctx));
+        // Borrado o detalle abierto mientras se leía: cambiar _sessions ahora devolvería lo borrado o movería los índices.
+        if (gen != _loadGen || _selected >= 0 || IsDestroyed)
+            return;
+        _sessions = sessions;
         var kindRead = GetString(Resource.String.hs_kind_read);
         var kindBackup = GetString(Resource.String.hs_kind_backup);
         var readColor = UiUtil.Res(this, Resource.Color.inpa_badge_prg);
@@ -98,7 +104,8 @@ public class HistoryActivity : InpaActivity
         _empty.Visibility = ViewStates.Gone;
         _detailScroll.Visibility = ViewStates.Visible;
         SetKey(5, GetString(Resource.String.hs_key_compare), Compare, Resource.Drawable.ic_list);
-        SetKey(10, GetString(Resource.String.g_key_back), ShowList);
+        // Al volver se recarga: una carga que terminó con el detalle abierto se descartó.
+        SetKey(10, GetString(Resource.String.g_key_back), () => { ShowList(); Load(); });
         RefreshKeys();
     }
 
@@ -158,6 +165,7 @@ public class HistoryActivity : InpaActivity
             GetString(Resource.String.hs_delete_yes), () =>
             {
                 HistoryStore.DeleteAll(this);
+                _loadGen++;
                 _sessions = [];
                 _list.Adapter = null;
                 ShowList();

@@ -38,7 +38,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:ellipsize="start"
-            android:maxWidth="180dp"
             android:gravity="end"
             android:maxLines="1"
             android:textColor="@color/inpa_subtitle_text"
