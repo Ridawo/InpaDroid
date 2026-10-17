@@ -32,6 +32,7 @@
     <Compile Include="..\..\src\InpaDroid\Diag\LiveLog.cs" Link="Linked\LiveLog.cs" />
     <Compile Include="..\..\src\InpaDroid\Diag\CodingBackup.cs" Link="Linked\CodingBackup.cs" />
     <Compile Include="..\..\src\InpaDroid\Diag\InactivityWatchdog.cs" Link="Linked\InactivityWatchdog.cs" />
+    <Compile Include="..\..\src\InpaDroid\Diag\EcuFolderPath.cs" Link="Linked\EcuFolderPath.cs" />
     <Compile Include="..\..\src\InpaDroid\Ui\Live\LiveSeriesData.cs" Link="Linked\LiveSeriesData.cs" />
     <Compile Include="..\..\src\InpaDroid\Ui\Chassis\ChassisModel.cs" Link="Linked\ChassisModel.cs" />
     <Compile Include="..\..\src\InpaDroid\Ui\Chassis\ScanSummary.cs" Link="Linked\ScanSummary.cs" />
