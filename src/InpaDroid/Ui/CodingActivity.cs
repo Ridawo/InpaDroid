@@ -17,19 +17,24 @@ namespace InpaDroid.Ui;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden
                            | ConfigChanges.UiMode | ConfigChanges.Locale)]
-public class CodingActivity : InpaActivity
+public class CodingActivity : EcuScreenActivity
 {
     const string ExtraChassis = "cd_chassis", ExtraEcuTitle = "cd_ecu_title", ExtraSgbd = "cd_sgbd";
 
     string _chassis = "", _ecuTitle = "", _ecuName = "";
-    string? _sgbd;                          // variante real (.prg) una vez resuelta
-    IReadOnlyList<JobInfo>? _jobs;
     CodingBackup.Snapshot? _current;        // copia mostrada: la recién leída o la abierta de la lista
-    ResultPanel _results = null!;
-    TextView _heading = null!;
-    bool _busyJob;                          // operación en curso (bloquea otras teclas salvo F10)
 
-    protected override bool PauseHeader => _busyJob;
+    protected override string EcuSgbd => _ecuName;
+
+    protected override string VariantBusyText => UiUtil.Str(this, Resource.String.g_variant_resolving, _ecuName);
+
+    protected override void OnVariantFailed(bool notify)
+    {
+        var message = GetString(Resource.String.g_variant_failed)!;
+        _results.ShowError(_ecuName, message);
+        if (notify)
+            UiUtil.Toast(this, message);
+    }
 
     public static void Start(Context ctx, string chassis, string ecuTitle, string sgbd)
     {
@@ -56,80 +61,11 @@ public class CodingActivity : InpaActivity
         SetKey(2, GetString(Resource.String.cd_key_share)!, ShareCsv, Resource.Drawable.ic_copy);
         SetKey(3, GetString(Resource.String.cd_key_compare)!, Compare, Resource.Drawable.ic_list);
         SetKey(4, GetString(Resource.String.cd_key_snapshots)!, Snapshots, Resource.Drawable.ic_info);
-        SetKey(10, GetString(Resource.String.g_key_back)!, Back);
+        SetKey(10, GetString(Resource.String.g_key_back)!, Finish);
         RefreshKeys();
 
         _heading.Text = GetString(Resource.String.cd_title);
         _results.ShowInfo(GetString(Resource.String.cd_safety_title)!, GetString(Resource.String.cd_safety_msg)!);
-    }
-
-    protected override bool BeforeKey(int f, bool shift)
-    {
-        if (_busyJob && !(f == 10 && !shift))
-        {
-            UiUtil.Toast(this, GetString(Resource.String.ecu_busy_job)!);
-            return false;
-        }
-        return true;
-    }
-
-    void Back()
-    {
-        if (_busyJob)
-            AbortJob();
-        Finish();
-    }
-
-    async void Exclusive(Func<Task> work)
-    {
-        if (_busyJob)
-            return;
-        _busyJob = true;
-        try
-        {
-            await work();
-        }
-        catch (Exception ex)
-        {
-            _results.ShowError(_sgbd ?? _ecuName, "ERROR: " + UiUtil.Describe(ex));
-        }
-        finally
-        {
-            _busyJob = false;
-            HideBusy();
-        }
-    }
-
-    async Task<string?> EnsureSgbdAsync()
-    {
-        if (_sgbd != null)
-            return _sgbd;
-        ShowBusy(UiUtil.Str(this, Resource.String.g_variant_resolving, _ecuName));
-        var variant = await Diag.ResolveVariantAsync(_ecuName);
-        HideBusy();
-        if (string.IsNullOrWhiteSpace(variant))
-        {
-            _results.ShowError(_ecuName, GetString(Resource.String.g_variant_failed)!);
-            return null;
-        }
-        _sgbd = variant;
-        return _sgbd;
-    }
-
-    async Task<IReadOnlyList<JobInfo>?> EnsureJobsAsync(string sgbd)
-    {
-        if (_jobs is { Count: > 0 })
-            return _jobs;
-        ShowBusy(UiUtil.Str(this, Resource.String.g_jobs_reading, sgbd));
-        var jobs = await Diag.GetJobsAsync(sgbd);
-        HideBusy();
-        if (jobs.Count == 0)
-        {
-            _results.ShowError(sgbd, UiUtil.Str(this, Resource.String.g_jobs_failed, sgbd));
-            return null;
-        }
-        _jobs = jobs;
-        return jobs;
     }
 
     // Solo se ofrecen los jobs que CodingBackup reconoce como lectura (sin marca de escritura).
@@ -161,10 +97,9 @@ public class CodingActivity : InpaActivity
     void RunRead(string sgbd, string job, string args, string results) =>
         Exclusive(async () =>
         {
-            _heading.Text = UiUtil.Str(this, Resource.String.sf_job_heading, job);
-            ShowBusy($"{sgbd} : {job}…");
-            var r = await Diag.RunJobAsync(sgbd, job, args, results);
-            _results.ShowResult(sgbd, job, r);
+            var r = await RunJobCore(sgbd, job, UiUtil.Str(this, Resource.String.sf_job_heading, job), args, results);
+            if (r == null)
+                return;
             if (DiagLogic.StatusError(r, "") != null)
             {
                 _results.ShowError(GetString(Resource.String.cd_title)!, GetString(Resource.String.cd_not_saved)!, append: true);

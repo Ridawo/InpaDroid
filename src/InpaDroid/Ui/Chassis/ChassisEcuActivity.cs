@@ -13,7 +13,7 @@ namespace InpaDroid.Ui.Chassis;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden
                            | ConfigChanges.UiMode | ConfigChanges.Locale)]
-public class ChassisEcuActivity : InpaActivity
+public class ChassisEcuActivity : FaultScreenActivity
 {
     public const string ExtraChassisId = "chassis_id";
     public const string ExtraEcuIndex = "chassis_ecu_index";
@@ -24,17 +24,26 @@ public class ChassisEcuActivity : InpaActivity
 
     ChassisInfo _chassis = null!;
     ChassisEcu _ecu = null!;
-    string? _sgbd;                          // variante real (.prg) una vez resuelta
-    ResultPanel _results = null!;
-    TextView _heading = null!;
     TextView _status = null!;
-    bool _busyJob;                          // job puntual en curso (bloquea otras teclas salvo F10)
-    bool _abortRequested;                   // el usuario ha abortado la operación en curso (Exclusive lo limpia)
     bool _pollInFlight;
-    int _generation;                        // descarta resultados de operaciones ya sustituidas
     readonly PollRunner _poll = new();
 
     protected override bool PauseHeader => _busyJob || _poll.Running;
+    protected override bool KeepBusyBar => _poll.Running;   // si la operación ha arrancado el Status, su barra "Parar" se queda
+    protected override bool InFlight => _busyJob || _pollInFlight;
+
+    protected override string EcuSgbd => _ecu.Sgbd;
+    protected override string VariantBusyText => UiUtil.Str(this, Resource.String.ch_identifying_variant, _ecu.Sgbd);
+
+    protected override string ChassisName => _chassis.Name;
+    protected override string EcuTitle => _ecu.Title;
+    protected override string FaultReadJob => _ecu.FsReadJob;
+    protected override string FaultClearJob => _ecu.FsClearJob;
+    protected override string FaultsTitle => GetString(Resource.String.ch_faults_title)!;
+    protected override string ClearTitle => GetString(Resource.String.ch_clear_title)!;
+    protected override string ClearMessage(string name) =>
+        UiUtil.Str(this, Resource.String.ch_clear_confirm, _ecu.Title, name, _ecu.FsClearJob);
+    protected override string ClearYes => GetString(Resource.String.ch_clear_button)!;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -69,7 +78,7 @@ public class ChassisEcuActivity : InpaActivity
         SetKey(7, GetString(Resource.String.ch_key_all_jobs), OpenAllJobs, Resource.Drawable.ic_list);
         SetKey(8, GetString(Resource.String.ch_key_chart), ChartMenu, Resource.Drawable.ic_chart);
         SetKey(9, GetString(Resource.String.cd_key_coding), () => CodingActivity.Start(this, _chassis.Name, _ecu.Title, _sgbd ?? _ecu.Sgbd), Resource.Drawable.ic_tune);
-        SetKey(10, GetString(Resource.String.ch_key_back), Back);
+        SetKey(10, GetString(Resource.String.ch_key_back), Finish);
         RefreshKeys();
 
         _heading.Text = GetString(Resource.String.ecu_choose_function);
@@ -83,65 +92,17 @@ public class ChassisEcuActivity : InpaActivity
 
     protected override bool BeforeKey(int f, bool shift)
     {
-        bool isBack = f == 10 && !shift;
-        if (_busyJob && !isBack)
-        {
-            UiUtil.Toast(this, GetString(Resource.String.ecu_busy_job)!);
+        if (!base.BeforeKey(f, shift))
             return false;
-        }
-        if (isBack && (_busyJob || _pollInFlight))
-            AbortFlow();
         // Cualquier acción detiene la lectura continua de Status.
         StopPolling();
         return true;
-    }
-
-    void Back() => Finish();
-
-    // Abortar de la barra de trabajo: además de cancelar el job, corta la operación (p. ej. el borrado tras la copia).
-    // Operación abortada o pantalla cerrándose: no se avisa ni se encadena nada más.
-    bool Stopped => _abortRequested || IsFinishing || IsDestroyed;
-
-    void AbortFlow()
-    {
-        _abortRequested = true;
-        AbortJob();
     }
 
     protected override void OnPause()
     {
         StopPolling();
         base.OnPause();
-    }
-
-    // Atrás del sistema o cierre sin pasar por F10: el job en curso no debe seguir ni encadenar otro.
-    protected override void OnDestroy()
-    {
-        if (_busyJob || _pollInFlight)
-            AbortFlow();
-        base.OnDestroy();
-    }
-
-    async void Exclusive(Func<Task> work)
-    {
-        if (_busyJob)
-            return;
-        _busyJob = true;
-        _abortRequested = false;
-        try
-        {
-            await work();
-        }
-        catch (Exception ex)
-        {
-            _results.ShowError(_sgbd ?? _ecu.Sgbd, "ERROR: " + UiUtil.Describe(ex));
-        }
-        finally
-        {
-            _busyJob = false;
-            if (!_poll.Running)   // si la operación ha arrancado el Status, su barra "Parar" se queda
-                HideBusy();
-        }
     }
 
     string? StatusError(JobResult r) => DiagLogic.StatusError(r, GetString(Resource.String.g_rp_job_failed)!);
@@ -155,35 +116,23 @@ public class ChassisEcuActivity : InpaActivity
             await EnsureSgbdAsync();
         });
 
-    // null si falla; se reintenta con la siguiente tecla
-    // notify: aviso emergente además del panel; sin él, una tecla que falla con el mismo error en pantalla parece no hacer nada.
-    async Task<string?> EnsureSgbdAsync(bool notify = true)
+    protected override void OnVariantFailed(bool notify)
     {
-        if (_sgbd != null)
-            return _sgbd;
-        ShowBusy(UiUtil.Str(this, Resource.String.ch_identifying_variant, _ecu.Sgbd), null, AbortFlow);
-        var variant = await Diag.ResolveVariantAsync(_ecu.Sgbd);
-        HideBusy();
-        // Abortado o pantalla cerrada: la variante vacía no es un fallo que haya que avisar.
-        if (Stopped)
-            return null;
-        if (string.IsNullOrWhiteSpace(variant))
-        {
-            ShowResults();
-            bool enet = DiagHolder.LoadSettings(this).Type == AdapterType.Enet;
-            var message = GetString(enet ? Resource.String.fx_variant_failed_enet : Resource.String.ch_variant_failed)!;
-            _results.ShowError($"{_ecu.Title} ({_ecu.Sgbd})", message);
-            if (notify)
-                UiUtil.Toast(this, message);
-            _results.AddActions(
-                (GetString(Resource.String.ecu_retry)!, RetryVariant),
-                (GetString(Resource.String.ecu_open_settings)!, () => StartActivity(new Intent(this, typeof(SettingsActivity)))));
-            return null;
-        }
-        _sgbd = variant;
+        ShowResults();
+        bool enet = DiagHolder.LoadSettings(this).Type == AdapterType.Enet;
+        var message = GetString(enet ? Resource.String.fx_variant_failed_enet : Resource.String.ch_variant_failed)!;
+        _results.ShowError($"{_ecu.Title} ({_ecu.Sgbd})", message);
+        if (notify)
+            UiUtil.Toast(this, message);
+        _results.AddActions(
+            (GetString(Resource.String.ecu_retry)!, RetryVariant),
+            (GetString(Resource.String.ecu_open_settings)!, () => StartActivity(new Intent(this, typeof(SettingsActivity)))));
+    }
+
+    protected override void OnVariantFound()
+    {
         UpdateSubtitle();
         _results.ShowInfo(_ecu.Sgbd, UiUtil.Str(this, Resource.String.ch_variant_ok, _sgbd), append: true);
-        return _sgbd;
     }
 
     // ---------------------------------------------------------------- ejecución de jobs
@@ -196,28 +145,12 @@ public class ChassisEcuActivity : InpaActivity
                 await RunJobCore(sgbd, job, heading, args);
         });
 
-    async Task<JobResult?> RunJobCore(string sgbd, string job, string heading, string args)
+    protected override void BeforeJob() => ShowResults();
+
+    protected override void OnJobResult(JobResult r)
     {
-        int gen = ++_generation;
-        ShowResults();
-        _heading.Text = heading;
-        ShowBusy($"{sgbd} : {job}…", null, AbortFlow);
-        try
-        {
-            var r = await Diag.RunJobAsync(sgbd, job, args);
-            if (gen != _generation)
-                return null;
-            _results.ShowResult(sgbd, job, r);
-            if (r.Ok && StatusError(r) is string err)
-                _results.ShowError(GetString(Resource.String.ch_ecu_no_okay)!, err, append: true);
-            return r;
-        }
-        catch (Exception ex)
-        {
-            if (gen == _generation)
-                _results.ShowException(sgbd, job, ex);
-            return null;
-        }
+        if (r.Ok && StatusError(r) is string err)
+            _results.ShowError(GetString(Resource.String.ch_ecu_no_okay)!, err, append: true);
     }
 
     void ShowInfo()
@@ -234,65 +167,12 @@ public class ChassisEcuActivity : InpaActivity
         JobDialogs.Message(this, GetString(Resource.String.ch_key_info)!, text);
     }
 
-    // Memoria de errores (ResultPanel destaca F_ORT_NR / F_ORT_TEXT); si la respuesta es correcta se guarda en el historial. null si falla.
-    async Task<JobResult?> ReadFaultsCore(string sgbd, string kind)
+    // Memoria de errores (ResultPanel destaca F_ORT_NR / F_ORT_TEXT): el encabezado muestra cuántos hay.
+    protected override void OnFaultsRead(JobResult r)
     {
-        var r = await RunJobCore(sgbd, _ecu.FsReadJob, GetString(Resource.String.ch_faults_title)!, "");
-        if (r == null || StatusError(r) != null)
-            return null;
         int faults = r.Sets.Count(FaultInfo.IsFault);
         _heading.Text = faults == 0 ? GetString(Resource.String.ch_faults_none) : UiUtil.Str(this, Resource.String.ch_faults_count, faults.ToString());
-        HistoryStore.Save(this, _chassis.Name, _ecu.Title, sgbd, kind, r);
-        return r;
     }
-
-    // F4, «Guardar errores» e Informe: lee la memoria de errores y, si se ha leído bien, pasa la respuesta a then.
-    void ReadFaults(Action<string, JobResult>? then = null) =>
-        Exclusive(async () =>
-        {
-            var sgbd = await EnsureSgbdAsync();
-            if (sgbd != null && await ReadFaultsCore(sgbd, HistoryStore.KindRead) is { } r)
-                then?.Invoke(sgbd, r);
-        });
-
-    void ConfirmClearFaults()
-    {
-        var name = _sgbd ?? _ecu.Sgbd;
-        JobDialogs.ConfirmJob(this, GetString(Resource.String.ch_clear_title)!,
-            UiUtil.Str(this, Resource.String.ch_clear_confirm, _ecu.Title, name, _ecu.FsClearJob) + "\n\n" + GetString(Resource.String.fb_clear_hint),
-            name, _ecu.FsClearJob, "",
-            GetString(Resource.String.ch_clear_button)!,
-            onYes: () => Exclusive(async () =>
-            {
-                var sgbd = await EnsureSgbdAsync();
-                if (sgbd == null)
-                    return;
-                // Copia de seguridad automática: la memoria de errores se lee y se guarda en el historial antes de borrarla.
-                var backup = await ReadFaultsCore(sgbd, HistoryStore.KindBackup);
-                // Abortado o pantalla cerrada (atrás del sistema, Abortar justo al acabar la lectura): no se borra nada.
-                if (Stopped)
-                    return;
-                if (backup != null)
-                    await ClearFaultsCore(sgbd, GetString(Resource.String.fb_backup_saved)!);
-                else
-                    JobDialogs.Confirm(this, GetString(Resource.String.fb_backup_failed_title)!, GetString(Resource.String.fb_backup_failed_msg)!,
-                        GetString(Resource.String.fb_clear_anyway)!,
-                        () => Exclusive(() => ClearFaultsCore(sgbd, GetString(Resource.String.fb_backup_none)!)));
-            }),
-            extra: (GetString(Resource.String.sf_save_faults)!, SaveFaults));
-    }
-
-    async Task ClearFaultsCore(string sgbd, string backupStatus)
-    {
-        await RunJobCore(sgbd, _ecu.FsClearJob, GetString(Resource.String.ch_clear_title)!, "");
-        _results.ShowInfo(GetString(Resource.String.ch_faults_title)!,
-            backupStatus + "\n" + GetString(Resource.String.ecu_reread_faults), append: true);
-    }
-
-    // "Guardar errores" del aviso de borrado: lee la memoria de errores y la comparte en CSV.
-    void SaveFaults() => ReadFaults((_, _) => _results.Share());
-
-    void ShareReport() => ReadFaults((sgbd, r) => ReportExporter.Share(this, _chassis.Name, _ecu.Title, sgbd, r));
 
     void PickItem(string title, IReadOnlyList<string> items, Action<int> onPick)
     {
