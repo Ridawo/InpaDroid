@@ -19,7 +19,6 @@ public class EcuActivity : FaultScreenActivity
     string _ecuName = "";
     string _chassis = "";                   // chasis de origen (para el historial y el informe); vacío desde la lista de SGBD
     bool _isGroup;
-    readonly PollRunner _poll = new();
 
     protected override string EcuSgbd => _ecuName;
     protected override string VariantBusyText => UiUtil.Str(this, Resource.String.g_variant_resolving, _ecuName);
@@ -31,8 +30,6 @@ public class EcuActivity : FaultScreenActivity
     protected override string ClearTitle => GetString(Resource.String.g_clear_title)!;
     protected override string ClearMessage(string name) => UiUtil.Str(this, Resource.String.g_clear_msg, name);
     protected override string ClearYes => GetString(Resource.String.g_clear_yes)!;
-
-    protected override bool PauseHeader => _busyJob || _poll.Running;
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -83,21 +80,6 @@ public class EcuActivity : FaultScreenActivity
         UpdateSubtitle();
         _results.ShowInfo(UiUtil.Str(this, Resource.String.g_group_title, _ecuName),
             UiUtil.Str(this, Resource.String.g_variant_found, _sgbd), append: true);
-    }
-
-    protected override bool BeforeKey(int f, bool shift)
-    {
-        if (!base.BeforeKey(f, shift))
-            return false;
-        // Cualquier acción detiene la lectura continua de Status.
-        StopPolling();
-        return true;
-    }
-
-    protected override void OnPause()
-    {
-        StopPolling();
-        base.OnPause();
     }
 
     void RunOnce(string job, string heading, string args = "", string results = "") =>
@@ -185,14 +167,6 @@ public class EcuActivity : FaultScreenActivity
             _results.ShowResult(sgbd, job, r, note: $"#{++count}");
             return true;
         }, ex => _results.ShowException(sgbd, job, ex), StatusPollMs, 100);
-    }
-
-    void StopPolling()
-    {
-        if (!_poll.Stop())
-            return;
-        HideBusy();
-        _heading.Text += " " + GetString(Resource.String.g_stopped);
     }
 
     void CopyResults()

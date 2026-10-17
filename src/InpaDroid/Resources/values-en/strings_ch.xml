@@ -41,7 +41,6 @@
   <string name="ch_status_heading">Status: %1$s</string>
   <string name="ch_reading">Reading…</string>
   <string name="ch_stop">Stop</string>
-  <string name="ch_stopped">(stopped)</string>
   <string name="ch_no_result">ERROR no result %1$s</string>
   <string name="ch_menu_empty">%1$s catalog is empty</string>
   <string name="ch_menu_pick">Pick an ECU (%1$s)</string>
