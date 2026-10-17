@@ -240,7 +240,7 @@ public class ChassisEcuActivity : InpaActivity
         var r = await RunJobCore(sgbd, _ecu.FsReadJob, GetString(Resource.String.ch_faults_title)!, "");
         if (r == null || StatusError(r) != null)
             return null;
-        int faults = r.Sets.Count(s => s.ContainsKey("F_ORT_NR"));
+        int faults = r.Sets.Count(FaultInfo.IsFault);
         _heading.Text = faults == 0 ? GetString(Resource.String.ch_faults_none) : UiUtil.Str(this, Resource.String.ch_faults_count, faults.ToString());
         HistoryStore.Save(this, _chassis.Name, _ecu.Title, sgbd, kind, r);
         return r;
