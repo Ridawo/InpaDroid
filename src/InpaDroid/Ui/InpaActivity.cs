@@ -139,6 +139,9 @@ public abstract class InpaActivity : Activity
         return w > h && h > 0;
     }
 
+    /// <summary>Las tarjetas están dentro del ScrollView de resultados (apaisado, ver PlaceKeyBar).</summary>
+    internal bool KeysInScroll => _scrollContent != null && _keyBar?.Parent == _scrollContent;
+
     int KeyColumns()
     {
         int w = Resources?.Configuration?.ScreenWidthDp ?? 0;
