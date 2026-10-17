@@ -243,25 +243,21 @@ public class SettingsActivity : InpaActivity
         try
         {
             // El selector devuelve un URI de documento; EDIABAS necesita una ruta de archivo.
-            // "primary:Carpeta" -> /storage/emulated/0/Carpeta ; "XXXX-XXXX:Carpeta" -> /storage/XXXX-XXXX/Carpeta
-            var docId = DocumentsContract.GetTreeDocumentId(data.Data) ?? "";
-            int colon = docId.IndexOf(':');
-            string volume = colon >= 0 ? docId[..colon] : docId;
-            string rel = colon >= 0 ? docId[(colon + 1)..] : "";
-            // Solo "primary" o un volumen tipo "1A2B-3C4D" se pueden pasar a ruta; Descargas, Documentos, etc. no.
-            bool isVolume = volume.Equals("primary", StringComparison.OrdinalIgnoreCase)
-                            || System.Text.RegularExpressions.Regex.IsMatch(volume, "^[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}$");
-            if (data.Data.Authority != "com.android.externalstorage.documents" || !isVolume)
+            if (data.Data.Authority != "com.android.externalstorage.documents")
             {
                 ShowStatus(GetString(Resource.String.st_folder_unusable), true);
                 return;
             }
-            string root = volume.Equals("primary", StringComparison.OrdinalIgnoreCase)
 #pragma warning disable CS0618, CA1422 // ExternalStorageDirectory obsoleto, pero es la ruta que ve EDIABAS
-                ? Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? "/storage/emulated/0"
+            string primaryRoot = Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? EcuFolderPath.DefaultPrimaryRoot;
 #pragma warning restore CS0618, CA1422
-                : "/storage/" + volume;
-            _ecuPath.Text = rel.Length > 0 ? Path.Combine(root, rel) : root;
+            string? path = EcuFolderPath.FromTreeDocumentId(DocumentsContract.GetTreeDocumentId(data.Data), primaryRoot);
+            if (path == null)
+            {
+                ShowStatus(GetString(Resource.String.st_folder_unusable), true);
+                return;
+            }
+            _ecuPath.Text = path;
             ShowStatus(GetString(Resource.String.st_folder_chosen), false);
         }
         catch (Exception ex)
