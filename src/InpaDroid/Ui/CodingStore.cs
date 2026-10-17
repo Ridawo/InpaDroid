@@ -59,7 +59,7 @@ public static class CodingStore
                     if (CodingBackup.FromJson(File.ReadAllText(f)) is { } s)
                         result.Add(s);
                 }
-                catch (IOException)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
                 }
             }
