@@ -10,6 +10,12 @@ The app ships with no BMW files. You supply your own `.prg` and `.grp`, copied f
 
 ---
 
+## Why this exists
+
+I had INPA on a Windows laptop and used it for diagnostics. It worked fine, but every time I wanted to check something, even just to read the fault memory, I had to get the laptop out, boot it up and plug in the cable. I wanted to do it from my phone, which I always have on me, so I decided to port the program to Android with the help of AI. It keeps INPA's screens and F keys, so anyone who already knows INPA can use it without learning anything new.
+
+---
+
 ## What it does
 
 This version is generic: it does not parse `.ipo` scripts; instead, it builds screens from the jobs inside each `.prg`. This means it works with any ECU you have files for, even if the screens do not look exactly like an INPA script.
