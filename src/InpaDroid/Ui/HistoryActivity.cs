@@ -60,7 +60,7 @@ public class HistoryActivity : InpaActivity
         var readColor = UiUtil.Res(this, Resource.Color.inpa_badge_prg);
         var backupColor = UiUtil.Res(this, Resource.Color.inpa_badge_grp);
         _list.Adapter = new TwoLineAdapter(this, _sessions.Select(s => new TwoLineAdapter.Row(
-            Title(s),
+            Label(s),
             UiUtil.Str(this, Resource.String.hs_row_sub, FormatWhen(s), s.Faults.Count),
             s.Kind == SessionRecord.KindBackup ? kindBackup : kindRead,
             s.Kind == SessionRecord.KindBackup ? backupColor : readColor,
@@ -69,7 +69,7 @@ public class HistoryActivity : InpaActivity
         _empty.Visibility = _sessions.Count == 0 && _selected < 0 ? ViewStates.Visible : ViewStates.Gone;
     }
 
-    static string Title(SessionRecord s) => s.EcuTitle.Length > 0 ? s.EcuTitle : s.Sgbd;
+    static string Label(SessionRecord s) => s.EcuTitle.Length > 0 ? s.EcuTitle : s.Sgbd;
 
     static string FormatWhen(SessionRecord s) => s.WhenUtc?.ToLocalTime().ToString("g") ?? s.When;
 
@@ -92,7 +92,7 @@ public class HistoryActivity : InpaActivity
         _selected = index;
         var s = _sessions[index];
         var sb = new StringBuilder();
-        sb.Append(UiUtil.Str(this, Resource.String.hs_detail_head, Title(s), FormatWhen(s),
+        sb.Append(UiUtil.Str(this, Resource.String.hs_detail_head, Label(s), FormatWhen(s),
             s.Kind == SessionRecord.KindBackup ? GetString(Resource.String.hs_kind_backup) : GetString(Resource.String.hs_kind_read)));
         sb.Append("\n\n");
         if (s.Faults.Count == 0)
