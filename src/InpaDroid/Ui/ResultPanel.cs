@@ -50,7 +50,7 @@ internal sealed class ResultPanel
         var sb = new StringBuilder();
         for (int i = 0; i < _root.ChildCount; i++)
         {
-            var child = _root.GetChildAt(i);
+            var child = _root.GetChildAt(i)!;
             if (child is TextView tv)
                 sb.AppendLine(WithoutLinks(tv.TextFormatted)).AppendLine();
             else if (child.Tag is TableTag tag)
