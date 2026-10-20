@@ -217,7 +217,7 @@ public class SettingsActivity : InpaActivity
         }
         catch (Exception ex)
         {
-            ShowStatus(GetString(Resource.String.st_folder_picker_error, UiUtil.Describe(ex)), true);
+            ShowStatus(UiUtil.Str(this, Resource.String.st_folder_picker_error, UiUtil.Describe(ex)), true);
         }
     }
 
@@ -262,27 +262,27 @@ public class SettingsActivity : InpaActivity
         }
         catch (Exception ex)
         {
-            ShowStatus(GetString(Resource.String.st_folder_invalid, UiUtil.Describe(ex)), true);
+            ShowStatus(UiUtil.Str(this, Resource.String.st_folder_invalid, UiUtil.Describe(ex)), true);
         }
     }
 
     async void ShowEcuCount(string path)
     {
         _ecuInfo.SetTextColor(UiUtil.Res(this, Resource.Color.m_text_secondary));
-        _ecuInfo.Text = GetString(Resource.String.st_ecu_default_searching, _defaultPath);
+        _ecuInfo.Text = UiUtil.Str(this, Resource.String.st_ecu_default_searching, _defaultPath);
         try
         {
             var svc = Diag;
             var files = await Task.Run(() => svc.ScanEcuFolder());
             int groups = files.Count(f => f.IsGroup);
-            _ecuInfo.Text = GetString(Resource.String.st_ecu_default_count, _defaultPath, path, (files.Count - groups).ToString(), groups.ToString());
+            _ecuInfo.Text = UiUtil.Str(this, Resource.String.st_ecu_default_count, _defaultPath, path, (files.Count - groups).ToString(), groups.ToString());
             if (files.Count == 0)
                 _ecuInfo.SetTextColor(UiUtil.ErrorText);
         }
         catch (Exception ex)
         {
             _ecuInfo.SetTextColor(UiUtil.ErrorText);
-            _ecuInfo.Text = GetString(Resource.String.st_ecu_default_error, _defaultPath, UiUtil.Describe(ex));
+            _ecuInfo.Text = UiUtil.Str(this, Resource.String.st_ecu_default_error, _defaultPath, UiUtil.Describe(ex));
         }
     }
 
@@ -332,7 +332,7 @@ public class SettingsActivity : InpaActivity
         }
         catch (Exception ex)
         {
-            ShowStatus(GetString(Resource.String.st_save_error, UiUtil.Describe(ex)), true);
+            ShowStatus(UiUtil.Str(this, Resource.String.st_save_error, UiUtil.Describe(ex)), true);
         }
         finally
         {
