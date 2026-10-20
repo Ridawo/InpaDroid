@@ -16,9 +16,9 @@ internal sealed class ButtonDelegate(Func<bool>? isChecked = null) : View.Access
 {
     public override void OnInitializeAccessibilityNodeInfo(View? host, AccessibilityNodeInfo? info)
     {
-        base.OnInitializeAccessibilityNodeInfo(host, info);
-        if (info == null)
+        if (host == null || info == null)
             return;
+        base.OnInitializeAccessibilityNodeInfo(host, info);
         if (isChecked == null)
         {
             info.ClassName = "android.widget.Button";
@@ -26,7 +26,9 @@ internal sealed class ButtonDelegate(Func<bool>? isChecked = null) : View.Access
         }
         info.ClassName = "android.widget.CheckBox";
         info.Checkable = true;
+#pragma warning disable CA1422 // Checked obsoleto en API 36, pero TalkBack lo sigue leyendo en todas
         info.Checked = isChecked();
+#pragma warning restore CA1422
     }
 }
 
@@ -90,7 +92,9 @@ public abstract class InpaActivity : Activity
             {
                 // Atrás = la tecla "volver" (F10) de la pantalla si existe; si no, el atrás del sistema.
                 if (_keys[9]?.Action != null) PressKey(10, false);
+#pragma warning disable CA1422 // OnBackPressed obsoleto en API 33, pero sigue cerrando la pantalla en todas
                 else OnBackPressed();
+#pragma warning restore CA1422
             };
         SetTitleText(title);
         FitSubtitle();
