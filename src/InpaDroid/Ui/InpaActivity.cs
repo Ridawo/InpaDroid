@@ -361,7 +361,7 @@ public abstract class InpaActivity : Activity
             }
             try
             {
-                (ubatt, ignition) = await Diag.ReadBatteryIgnitionAsync();
+                (ubatt, ignition, _) = await Diag.ReadBatteryIgnitionAsync();
             }
             catch
             {

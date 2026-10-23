@@ -37,5 +37,7 @@ public class ErrorMessageTests
         Assert.Equal(ErrorKind.Timeout, DiagLogic.Classify(DiagLogic.TimeoutText(60)));
         Assert.Equal(ErrorKind.Cancelled, DiagLogic.Classify(DiagLogic.CancelledText));
         Assert.Equal(ErrorKind.ServiceClosed, DiagLogic.Classify(DiagLogic.ServiceClosedText));
+        // The prefix wins over the IFH-0018 code that follows it.
+        Assert.Equal(ErrorKind.UsbPermission, DiagLogic.Classify(DiagLogic.UsbPermissionText + ": Error occurred: EDIABAS_IFH_0018"));
     }
 }
