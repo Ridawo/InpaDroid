@@ -51,7 +51,7 @@ public class SettingsActivity : InpaActivity
         _wifiError = FindViewById<TextView>(Resource.Id.set_wifi_error)!;
         AddAdapterHelpViews();
 
-        _defaultPath = DiagHolder.DefaultEcuPath(this);
+        _defaultPath = AdapterSettings.DefaultEcuPath(this);
         var s = DiagHolder.LoadSettings(this);
         _adapterGroup.Check(s.Type switch
         {
@@ -180,9 +180,7 @@ public class SettingsActivity : InpaActivity
     {
         var parent = (ViewGroup)_adapterGroup.Parent!;
         int index = parent.IndexOfChild(_adapterGroup) + 1;
-        int p = UiUtil.Dp(this, 4);
-
-        p = UiUtil.Dp(this, 12);
+        int p = UiUtil.Dp(this, 12);
         _klineNote = new TextView(this) { Text = GetString(Resource.String.st_kline_note) };
         var note = _klineNote;
         note.SetPadding(p, p, p, p);
@@ -312,7 +310,7 @@ public class SettingsActivity : InpaActivity
             string wifiRaw = _wifiHost.Text?.Trim() ?? "";
 
             s.EnetHost = EnetHostRule.Normalize(_enetHost.Text);
-            s.ElmWifiHost = wifiRaw.Length == 0 ? "192.168.0.10:35000" : wifiRaw;
+            s.ElmWifiHost = wifiRaw.Length == 0 ? AdapterSettings.DefaultElmWifiHost : wifiRaw;
             s.EcuPath = string.IsNullOrWhiteSpace(_ecuPath.Text) ? _defaultPath : _ecuPath.Text.Trim();
             _ecuPath.Text = s.EcuPath;
             DiagHolder.TryCreateDirectory(s.EcuPath);
