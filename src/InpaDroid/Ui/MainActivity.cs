@@ -79,23 +79,13 @@ public class MainActivity : InpaActivity
         return (cfg?.ScreenWidthDp ?? 0) >= 600 ? 3 : 2;
     }
 
-    // Foco y TalkBack ven la tarjeta como un único botón con título y descripción; el icono es decorativo.
-    sealed class ButtonDelegate : View.AccessibilityDelegate
-    {
-        public override void OnInitializeAccessibilityNodeInfo(View? host, Android.Views.Accessibility.AccessibilityNodeInfo? info)
-        {
-            base.OnInitializeAccessibilityNodeInfo(host, info);
-            if (info != null)
-                info.ClassName = "android.widget.Button";
-        }
-    }
-
     LinearLayout MakeCard(string titleText, string descText, int iconRes, bool primary, Action act)
     {
         var card = new LinearLayout(this) { Orientation = Orientation.Vertical, Clickable = true, Focusable = true };
         card.SetBackgroundResource(primary ? Resource.Drawable.bg_card_primary : Resource.Drawable.bg_card);
         card.ImportantForAccessibility = ImportantForAccessibility.Yes;
         card.ContentDescription = UiUtil.Str(this, Resource.String.ws_card_cd, titleText, descText);
+        // Foco y TalkBack ven la tarjeta como un único botón con título y descripción; el icono es decorativo.
         card.SetAccessibilityDelegate(new ButtonDelegate());
         int pad = UiUtil.Dp(this, 14);
         card.SetPadding(pad, pad, pad, pad);

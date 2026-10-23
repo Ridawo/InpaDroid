@@ -115,20 +115,23 @@ public sealed class DiagService : IDisposable
             return Path.GetFileNameWithoutExtension(_ediabas.SgbdFileName ?? "").ToUpperInvariant();
         }, _ => "");
 
-    public Task<(double? Ubatt, bool? Ignition)> ReadBatteryIgnitionAsync() =>
-        Enqueue<(double?, bool?)>(() =>
+    // Error: texto técnico de la primera lectura que lanzó excepción (null si ninguna), para distinguir un
+    // adaptador que no abre de un coche que no contesta.
+    public Task<(double? Ubatt, bool? Ignition, string? Error)> ReadBatteryIgnitionAsync() =>
+        Enqueue<(double?, bool?, string?)>(() =>
         {
+            string? error = null;
             double? ubatt = null;
-            double? mv = FindNumber(TryRunUtilityJob("STATUS_UBATT"), "STAT_UBATT_WERT", "STAT_UBATT");
+            double? mv = FindNumber(TryRunUtilityJob("STATUS_UBATT", ref error), "STAT_UBATT_WERT", "STAT_UBATT");
             if (mv != null)
             {
                 // UTILITY devuelve mV; si el valor ya parece estar en voltios se deja tal cual.
                 ubatt = mv > 100 ? mv / 1000.0 : mv;
             }
 
-            double? ignition = FindNumber(TryRunUtilityJob("STATUS_ZUENDUNG"), "STAT_ZUENDUNG");
-            return (ubatt, ignition == null ? (bool?)null : ignition != 0);
-        }, _ => (null, null));
+            double? ignition = FindNumber(TryRunUtilityJob("STATUS_ZUENDUNG", ref error), "STAT_ZUENDUNG");
+            return (ubatt, ignition == null ? (bool?)null : ignition != 0, error);
+        }, error => (null, null, error));
 
     // Cancela el job en curso y los encolados hasta ahora; los que se encolen después no se ven afectados.
     // No toca _abort: el hilo de trabajo lo pone a false al empezar cada job y, si coincidiera con este Abort,
@@ -272,7 +275,30 @@ public sealed class DiagService : IDisposable
         DiagLogic.TimeoutText((int)limit.TotalSeconds);
 
     // Texto técnico de EDIABAS; la UI lo traduce con DiagLogic.Classify.
-    private static string DescribeError(Exception ex) => EdiabasNet.GetExceptionText(ex, false, false);
+    // Sin permiso USB, EDIABAS solo dice que no pudo inicializar la interfaz (IFH-0018); se antepone la causa real.
+    private string DescribeError(Exception ex)
+    {
+        string text = EdiabasNet.GetExceptionText(ex, false, false);
+        return DiagLogic.Classify(text) == ErrorKind.InterfaceNotFound && UsbPermissionMissing()
+            ? DiagLogic.UsbPermissionText + ": " + text
+            : text;
+    }
+
+    private bool UsbPermissionMissing()
+    {
+        if (_settings.Type != AdapterType.UsbKDcan || _context.GetSystemService(Context.UsbService) is not UsbManager usb)
+        {
+            return false;
+        }
+        try
+        {
+            return EdFtdiInterface.GetDriverList(usb).Any(d => !usb.HasPermission(d.Device));
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 
     // Cancelado por el watchdog o por un Abort posterior a encolar el job en curso. Se lee en el hilo de trabajo.
     private bool IsAborted => _abort || _jobGeneration != Volatile.Read(ref _abortGeneration);
@@ -438,7 +464,7 @@ public sealed class DiagService : IDisposable
         return ScanEcuFolder().Any(f => f.IsGroup && f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
-    private List<Dictionary<string, EdiabasNet.ResultData>>? TryRunUtilityJob(string job)
+    private List<Dictionary<string, EdiabasNet.ResultData>>? TryRunUtilityJob(string job, ref string? error)
     {
         try
         {
@@ -456,8 +482,9 @@ public sealed class DiagService : IDisposable
             }
             return sets;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            error ??= IsAborted ? DiagLogic.CancelledText : DescribeError(ex);
             return null;
         }
     }

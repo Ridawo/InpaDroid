@@ -33,7 +33,7 @@ class BluetoothPanel
     {
         _selected.Text = Address.Length == 0
             ? _activity.GetString(Resource.String.st_bt_selected_none)
-            : _activity.GetString(Resource.String.st_bt_selected, Address) + (string.IsNullOrEmpty(name) ? "" : $"  ({name})");
+            : UiUtil.Str(_activity, Resource.String.st_bt_selected, Address) + (string.IsNullOrEmpty(name) ? "" : $"  ({name})");
     }
 
     bool HasPermission() =>
@@ -99,7 +99,7 @@ class BluetoothPanel
         }
         catch (Exception ex)
         {
-            AddMessage(_activity.GetString(Resource.String.st_bt_error, UiUtil.Describe(ex)), true);
+            AddMessage(UiUtil.Str(_activity, Resource.String.st_bt_error, UiUtil.Describe(ex)), true);
         }
     }
 

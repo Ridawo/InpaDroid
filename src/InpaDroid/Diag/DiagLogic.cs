@@ -29,6 +29,8 @@ internal static class DiagLogic
     public const string CancelledText = "Cancelled";
     public const string ServiceClosedText = "Diagnostic service closed";
     public static string TimeoutText(int seconds) => $"Timeout: no response after {seconds} s";
+    // Prefijo que DiagService antepone al error de EDIABAS si el cable USB está conectado pero sin permiso.
+    public const string UsbPermissionText = "USB permission not granted";
 
     // Solo códigos EDIABAS cuyo significado consta en la tabla de EdiabasNet (ErrorDescription).
     private static readonly Dictionary<string, ErrorKind> CodeKinds = new(StringComparer.Ordinal)
@@ -74,6 +76,8 @@ internal static class DiagLogic
             return ErrorKind.ServiceClosed;
         if (raw.StartsWith("Timeout:", StringComparison.Ordinal))
             return ErrorKind.Timeout;
+        if (raw.StartsWith(UsbPermissionText, StringComparison.Ordinal))
+            return ErrorKind.UsbPermission;
         foreach (Match m in CodeRegex.Matches(raw))
         {
             if (CodeKinds.TryGetValue(m.Groups[1].Value.ToUpperInvariant() + "-" + m.Groups[2].Value, out var kind))

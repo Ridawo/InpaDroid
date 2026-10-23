@@ -148,7 +148,7 @@ public class CodingActivity : EcuScreenActivity
             Section(sb, Resource.String.cd_cmp_changed, d.Changed.Select(c => $"{c.Key} : {c.Before} → {c.After}").ToList());
             Section(sb, Resource.String.cd_cmp_added, d.Added.Select(Line).ToList());
             Section(sb, Resource.String.cd_cmp_removed, d.Removed.Select(Line).ToList());
-            _heading.Text = $"{Title(cur)} · {cur.Job}";
+            _heading.Text = $"{Label(cur)} · {cur.Job}";
             _results.ShowInfo(UiUtil.Str(this, Resource.String.cd_compare_head, FormatWhen(prev)), sb.ToString().TrimEnd());
         });
     }
@@ -174,7 +174,7 @@ public class CodingActivity : EcuScreenActivity
                 return;
             }
             var adapter = new TwoLineAdapter(this, all.Select(s => new TwoLineAdapter.Row(
-                Title(s), UiUtil.Str(this, Resource.String.cd_snapshot_sub, FormatWhen(s), JobLabel(s), s.Entries.Count), null, default, s)));
+                Label(s), UiUtil.Str(this, Resource.String.cd_snapshot_sub, FormatWhen(s), JobLabel(s), s.Entries.Count), null, default, s)));
             new AlertDialog.Builder(this)
                 .SetTitle(GetString(Resource.String.cd_key_snapshots))!
                 .SetAdapter(adapter, (_, e) => ShowSnapshot((CodingBackup.Snapshot)adapter.GetRow(e.Which).Tag))!
@@ -185,7 +185,7 @@ public class CodingActivity : EcuScreenActivity
     void ShowSnapshot(CodingBackup.Snapshot s)
     {
         _current = s;
-        _heading.Text = $"{Title(s)} · {s.Job}";
+        _heading.Text = $"{Label(s)} · {s.Job}";
         _results.ShowInfo($"{s.Sgbd} : {s.Job}   {FormatWhen(s)}",
             s.Entries.Count == 0 ? GetString(Resource.String.g_rp_no_results)! : string.Join("\n", s.Entries.Select(Line)));
     }
@@ -194,7 +194,7 @@ public class CodingActivity : EcuScreenActivity
 
     static string JobLabel(CodingBackup.Snapshot s) => s.Args.Length > 0 ? $"{s.Job} {s.Args}" : s.Job;
 
-    static string Title(CodingBackup.Snapshot s) => s.EcuTitle.Length > 0 ? s.EcuTitle : s.Sgbd;
+    static string Label(CodingBackup.Snapshot s) => s.EcuTitle.Length > 0 ? s.EcuTitle : s.Sgbd;
 
     static string FormatWhen(CodingBackup.Snapshot s) =>
         DateTime.TryParse(s.When, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var t)

@@ -4,7 +4,7 @@ namespace InpaDroid.Ui;
 
 /// <summary>
 /// Pantalla de centralita con memoria de errores (EcuActivity, ChassisEcuActivity): leer y guardar en el historial,
-/// compartir CSV o informe, y borrar con copia de seguridad previa. Cada pantalla pone sus jobs y sus textos.
+/// compartir CSV o informe, borrar con copia de seguridad previa y Status continuo. Cada pantalla pone sus jobs y sus textos.
 /// </summary>
 public abstract class FaultScreenActivity : EcuScreenActivity
 {
@@ -24,6 +24,35 @@ public abstract class FaultScreenActivity : EcuScreenActivity
 
     /// <summary>Se llama con una lectura de errores correcta, antes de guardarla.</summary>
     protected virtual void OnFaultsRead(JobResult r) { }
+
+    /// <summary>Lectura continua de Status; cada pantalla la arranca a su manera.</summary>
+    protected readonly PollRunner _poll = new();
+
+    protected override bool PauseHeader => _busyJob || _poll.Running;
+    protected override bool KeepBusyBar => _poll.Running;   // si la operación ha arrancado el Status, su barra "Parar" se queda
+
+    protected override bool BeforeKey(int f, bool shift)
+    {
+        if (!base.BeforeKey(f, shift))
+            return false;
+        // Cualquier acción detiene la lectura continua de Status.
+        StopPolling();
+        return true;
+    }
+
+    protected override void OnPause()
+    {
+        StopPolling();
+        base.OnPause();
+    }
+
+    protected void StopPolling()
+    {
+        if (!_poll.Stop())
+            return;
+        HideBusy();
+        _heading.Text += " " + GetString(Resource.String.g_stopped);
+    }
 
     protected void ConfirmClearFaults()
     {

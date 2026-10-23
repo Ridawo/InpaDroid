@@ -58,7 +58,7 @@ public class ExportProvider : ContentProvider
         if (file == null)
             return null;
         var cursor = new MatrixCursor([IOpenableColumns.DisplayName, IOpenableColumns.Size]);
-        cursor.AddRow([file.Name, file.Length()]);
+        cursor.AddRow([new Java.Lang.String(file.Name ?? ""), file.Length()]);
         return cursor;
     }
 

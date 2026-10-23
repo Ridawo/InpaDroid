@@ -26,10 +26,7 @@ public class ChassisEcuActivity : FaultScreenActivity
     ChassisEcu _ecu = null!;
     TextView _status = null!;
     bool _pollInFlight;
-    readonly PollRunner _poll = new();
 
-    protected override bool PauseHeader => _busyJob || _poll.Running;
-    protected override bool KeepBusyBar => _poll.Running;   // si la operación ha arrancado el Status, su barra "Parar" se queda
     protected override bool InFlight => _busyJob || _pollInFlight;
 
     protected override string EcuSgbd => _ecu.Sgbd;
@@ -87,23 +84,6 @@ public class ChassisEcuActivity : FaultScreenActivity
     }
 
     void UpdateSubtitle() => SetSubtitle($"{_ecu.Sgbd} → {_sgbd ?? "?"}");
-
-    // ---------------------------------------------------------------- control de teclas
-
-    protected override bool BeforeKey(int f, bool shift)
-    {
-        if (!base.BeforeKey(f, shift))
-            return false;
-        // Cualquier acción detiene la lectura continua de Status.
-        StopPolling();
-        return true;
-    }
-
-    protected override void OnPause()
-    {
-        StopPolling();
-        base.OnPause();
-    }
 
     string? StatusError(JobResult r) => DiagLogic.StatusError(r, GetString(Resource.String.g_rp_job_failed)!);
 
@@ -336,13 +316,5 @@ public class ChassisEcuActivity : FaultScreenActivity
             _status.TextFormatted = StatusTable.BuildTable(page, cells, ++count);
             return true;
         }, ex => _status.Text = UiUtil.Describe(ex), StatusPollMs, 100);
-    }
-
-    void StopPolling()
-    {
-        if (!_poll.Stop())
-            return;
-        HideBusy();
-        _heading.Text += " " + GetString(Resource.String.ch_stopped);
     }
 }

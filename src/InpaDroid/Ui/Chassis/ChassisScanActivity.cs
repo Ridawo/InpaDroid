@@ -173,13 +173,14 @@ public class ChassisScanActivity : InpaActivity
     {
         try
         {
-            var variant = await Diag.ResolveVariantAsync(ecu.Sgbd);
+            var svc = Diag;
+            var variant = await svc.ResolveVariantAsync(ecu.Sgbd);
             if (string.IsNullOrWhiteSpace(variant))
             {
-                var files = Diag.ScanEcuFolder().Select(f => f.Name);
+                var files = (await Task.Run(svc.ScanEcuFolder)).Select(f => f.Name);
                 return new ScanEntry(ecu.Title, ecu.Sgbd, "", ScanSummary.NoVariantState(ecu.Sgbd, files));
             }
-            var r = await Diag.RunJobAsync(variant, ecu.FsReadJob);
+            var r = await svc.RunJobAsync(variant, ecu.FsReadJob);
             var (state, faults, detail) = ScanSummary.Classify(r, GetString(Resource.String.g_rp_job_failed)!);
             return new ScanEntry(ecu.Title, ecu.Sgbd, variant, state, faults, detail);
         }

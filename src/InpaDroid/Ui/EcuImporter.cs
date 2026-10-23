@@ -152,7 +152,7 @@ public static class EcuImporter
 
     static string DisplayName(ContentResolver resolver, Android.Net.Uri uri)
     {
-        using var c = resolver.Query(uri, [OpenableColumns.DisplayName], null, null, null);
+        using var c = resolver.Query(uri, [IOpenableColumns.DisplayName], null, null, null);
         return c != null && c.MoveToFirst() ? c.GetString(0) ?? "" : "";
     }
 

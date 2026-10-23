@@ -7,11 +7,12 @@ public enum AdapterType { UsbKDcan, Enet, Elm327Bluetooth, Elm327Wifi }
 public sealed class AdapterSettings
 {
     private const string PrefsName = "inpadroid";
+    public const string DefaultElmWifiHost = "192.168.0.10:35000";
 
     public AdapterType Type { get; set; } = AdapterType.UsbKDcan;
     public string BluetoothAddress { get; set; } = "";        // MAC del ELM327
     public string EnetHost { get; set; } = EnetHostRule.Default;   // "auto", IP o nombre de host
-    public string ElmWifiHost { get; set; } = "192.168.0.10:35000";
+    public string ElmWifiHost { get; set; } = DefaultElmWifiHost;
     public string EcuPath { get; set; } = "";
 
     public static AdapterSettings Load(Context ctx)
@@ -54,7 +55,7 @@ public sealed class AdapterSettings
     }
 
     // <almacenamiento externo de la app>/Ecu. Se crea para que el usuario sepa dónde copiar sus .prg/.grp.
-    private static string DefaultEcuPath(Context ctx)
+    public static string DefaultEcuPath(Context ctx)
     {
         string baseDir = ctx.GetExternalFilesDir(null)?.AbsolutePath ?? ctx.FilesDir?.AbsolutePath ?? "";
         string ecuPath = Path.Combine(baseDir, "Ecu");

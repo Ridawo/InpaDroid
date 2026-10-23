@@ -55,7 +55,7 @@ class UsbPanel
         }
         catch (Exception ex)
         {
-            SetInfo(_activity.GetString(Resource.String.st_usb_error, UiUtil.Describe(ex)), UiUtil.ErrorText);
+            SetInfo(UiUtil.Str(_activity, Resource.String.st_usb_error, UiUtil.Describe(ex)), UiUtil.ErrorText);
         }
     }
 

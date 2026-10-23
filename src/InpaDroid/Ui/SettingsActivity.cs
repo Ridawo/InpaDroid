@@ -51,7 +51,7 @@ public class SettingsActivity : InpaActivity
         _wifiError = FindViewById<TextView>(Resource.Id.set_wifi_error)!;
         AddAdapterHelpViews();
 
-        _defaultPath = DiagHolder.DefaultEcuPath(this);
+        _defaultPath = AdapterSettings.DefaultEcuPath(this);
         var s = DiagHolder.LoadSettings(this);
         _adapterGroup.Check(s.Type switch
         {
@@ -180,9 +180,7 @@ public class SettingsActivity : InpaActivity
     {
         var parent = (ViewGroup)_adapterGroup.Parent!;
         int index = parent.IndexOfChild(_adapterGroup) + 1;
-        int p = UiUtil.Dp(this, 4);
-
-        p = UiUtil.Dp(this, 12);
+        int p = UiUtil.Dp(this, 12);
         _klineNote = new TextView(this) { Text = GetString(Resource.String.st_kline_note) };
         var note = _klineNote;
         note.SetPadding(p, p, p, p);
@@ -217,7 +215,7 @@ public class SettingsActivity : InpaActivity
         }
         catch (Exception ex)
         {
-            ShowStatus(GetString(Resource.String.st_folder_picker_error, UiUtil.Describe(ex)), true);
+            ShowStatus(UiUtil.Str(this, Resource.String.st_folder_picker_error, UiUtil.Describe(ex)), true);
         }
     }
 
@@ -243,50 +241,46 @@ public class SettingsActivity : InpaActivity
         try
         {
             // El selector devuelve un URI de documento; EDIABAS necesita una ruta de archivo.
-            // "primary:Carpeta" -> /storage/emulated/0/Carpeta ; "XXXX-XXXX:Carpeta" -> /storage/XXXX-XXXX/Carpeta
-            var docId = DocumentsContract.GetTreeDocumentId(data.Data) ?? "";
-            int colon = docId.IndexOf(':');
-            string volume = colon >= 0 ? docId[..colon] : docId;
-            string rel = colon >= 0 ? docId[(colon + 1)..] : "";
-            // Solo "primary" o un volumen tipo "1A2B-3C4D" se pueden pasar a ruta; Descargas, Documentos, etc. no.
-            bool isVolume = volume.Equals("primary", StringComparison.OrdinalIgnoreCase)
-                            || System.Text.RegularExpressions.Regex.IsMatch(volume, "^[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}$");
-            if (data.Data.Authority != "com.android.externalstorage.documents" || !isVolume)
+            if (data.Data.Authority != "com.android.externalstorage.documents")
             {
                 ShowStatus(GetString(Resource.String.st_folder_unusable), true);
                 return;
             }
-            string root = volume.Equals("primary", StringComparison.OrdinalIgnoreCase)
 #pragma warning disable CS0618, CA1422 // ExternalStorageDirectory obsoleto, pero es la ruta que ve EDIABAS
-                ? Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? "/storage/emulated/0"
+            string primaryRoot = Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? EcuFolderPath.DefaultPrimaryRoot;
 #pragma warning restore CS0618, CA1422
-                : "/storage/" + volume;
-            _ecuPath.Text = rel.Length > 0 ? Path.Combine(root, rel) : root;
+            string? path = EcuFolderPath.FromTreeDocumentId(DocumentsContract.GetTreeDocumentId(data.Data), primaryRoot);
+            if (path == null)
+            {
+                ShowStatus(GetString(Resource.String.st_folder_unusable), true);
+                return;
+            }
+            _ecuPath.Text = path;
             ShowStatus(GetString(Resource.String.st_folder_chosen), false);
         }
         catch (Exception ex)
         {
-            ShowStatus(GetString(Resource.String.st_folder_invalid, UiUtil.Describe(ex)), true);
+            ShowStatus(UiUtil.Str(this, Resource.String.st_folder_invalid, UiUtil.Describe(ex)), true);
         }
     }
 
     async void ShowEcuCount(string path)
     {
         _ecuInfo.SetTextColor(UiUtil.Res(this, Resource.Color.m_text_secondary));
-        _ecuInfo.Text = GetString(Resource.String.st_ecu_default_searching, _defaultPath);
+        _ecuInfo.Text = UiUtil.Str(this, Resource.String.st_ecu_default_searching, _defaultPath);
         try
         {
             var svc = Diag;
             var files = await Task.Run(() => svc.ScanEcuFolder());
             int groups = files.Count(f => f.IsGroup);
-            _ecuInfo.Text = GetString(Resource.String.st_ecu_default_count, _defaultPath, path, (files.Count - groups).ToString(), groups.ToString());
+            _ecuInfo.Text = UiUtil.Str(this, Resource.String.st_ecu_default_count, _defaultPath, path, (files.Count - groups).ToString(), groups.ToString());
             if (files.Count == 0)
                 _ecuInfo.SetTextColor(UiUtil.ErrorText);
         }
         catch (Exception ex)
         {
             _ecuInfo.SetTextColor(UiUtil.ErrorText);
-            _ecuInfo.Text = GetString(Resource.String.st_ecu_default_error, _defaultPath, UiUtil.Describe(ex));
+            _ecuInfo.Text = UiUtil.Str(this, Resource.String.st_ecu_default_error, _defaultPath, UiUtil.Describe(ex));
         }
     }
 
@@ -316,7 +310,7 @@ public class SettingsActivity : InpaActivity
             string wifiRaw = _wifiHost.Text?.Trim() ?? "";
 
             s.EnetHost = EnetHostRule.Normalize(_enetHost.Text);
-            s.ElmWifiHost = wifiRaw.Length == 0 ? "192.168.0.10:35000" : wifiRaw;
+            s.ElmWifiHost = wifiRaw.Length == 0 ? AdapterSettings.DefaultElmWifiHost : wifiRaw;
             s.EcuPath = string.IsNullOrWhiteSpace(_ecuPath.Text) ? _defaultPath : _ecuPath.Text.Trim();
             _ecuPath.Text = s.EcuPath;
             DiagHolder.TryCreateDirectory(s.EcuPath);
@@ -336,7 +330,7 @@ public class SettingsActivity : InpaActivity
         }
         catch (Exception ex)
         {
-            ShowStatus(GetString(Resource.String.st_save_error, UiUtil.Describe(ex)), true);
+            ShowStatus(UiUtil.Str(this, Resource.String.st_save_error, UiUtil.Describe(ex)), true);
         }
         finally
         {

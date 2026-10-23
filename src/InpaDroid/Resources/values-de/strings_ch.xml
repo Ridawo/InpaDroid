@@ -41,7 +41,6 @@
   <string name="ch_status_heading">Status: %1$s</string>
   <string name="ch_reading">Lesen…</string>
   <string name="ch_stop">Stopp</string>
-  <string name="ch_stopped">(gestoppt)</string>
   <string name="ch_no_result">FEHLER kein Ergebnis %1$s</string>
   <string name="ch_menu_empty">Katalog %1$s ist leer</string>
   <string name="ch_menu_pick">Steuergerät wählen (%1$s)</string>

@@ -208,17 +208,23 @@ public class ConnectionCheckActivity : InpaActivity
         bool utility = UpdateFiles();
         double? ubatt = null;
         bool? ignition = null;
+        string? error = null;
+        bool aborted = false;
         if (adapterReady && utility)
         {
             _testing = true;
             _testBtn.Enabled = false;
             _importBtn.Enabled = false;
             _testResult.Text = "";
-            ShowBusy(GetString(Resource.String.ws_test_busy)!, GetString(Resource.String.g_abort), AbortJob);
+            ShowBusy(GetString(Resource.String.ws_test_busy)!, GetString(Resource.String.g_abort), () =>
+            {
+                aborted = true;
+                AbortJob();
+            });
             try
             {
                 // Misma lectura de solo lectura que la cabecera, por la cola de DiagService.
-                (ubatt, ignition) = await Diag.ReadBatteryIgnitionAsync();
+                (ubatt, ignition, error) = await Diag.ReadBatteryIgnitionAsync();
             }
             catch (Exception)
             {
@@ -232,6 +238,16 @@ public class ConnectionCheckActivity : InpaActivity
                 HideBusy();
             }
         }
+        // Un job abortado no dice nada del coche: diagnosticarlo daría "no contesta".
+        if (aborted)
+        {
+            _testResult.SetTextColor(UiUtil.WarnText);
+            _testResult.Text = GetString(Resource.String.g_cancelled);
+            return;
+        }
+        // Si el adaptador ni se abrió (sin permiso USB, puerto ocupado), el fallo es suyo y no del coche.
+        if (ubatt == null && DiagLogic.Classify(error) is ErrorKind.InterfaceNotFound or ErrorKind.UsbPermission or ErrorKind.PortOpen)
+            adapterReady = false;
         string volts = ubatt?.ToString("0.0", CultureInfo.InvariantCulture) ?? "";
         bool enet = DiagHolder.LoadSettings(this).Type == AdapterType.Enet;
         // Solo importa saber si el móvil está en una red local (WiFi/Ethernet); no se pudo comprobar -> null.
@@ -240,7 +256,7 @@ public class ConnectionCheckActivity : InpaActivity
         _testResult.SetTextColor(fault == ConnectionFault.None ? UiUtil.OkText : UiUtil.ErrorText);
         _testResult.Text = fault switch
         {
-            ConnectionFault.Adapter => GetString(Resource.String.ws_test_adapter),
+            ConnectionFault.Adapter => GetString(Resource.String.ws_test_adapter) + (error == null ? "" : "\n" + UiUtil.Friendly(this, error)),
             ConnectionFault.EcuFiles => GetString(Resource.String.ws_test_files),
             ConnectionFault.NoReply => GetString(Resource.String.ws_test_noreply),
             ConnectionFault.EnetNoNetwork => GetString(Resource.String.en_test_nonet),

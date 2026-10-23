@@ -5,7 +5,7 @@ https://github.com/uholeschak/ediabaslib) como motor EDIABAS. No incluye ningún
 el usuario copia sus `.prg`/`.grp` a una carpeta del móvil.
 
 ## Rutas
-- Proyecto: `/home/ridao/Desktop/Pruevas antibraviti/InpaDroid/`
+- Proyecto: la raíz de este repositorio
 - App: `InpaDroid/src/InpaDroid/InpaDroid.csproj` (namespace raíz `InpaDroid`)
 - ediabaslib: `InpaDroid/external/ediabaslib/` (ya copiado, sin `.git`)
 - Datos BMW de referencia (NO van dentro de la APK, están en `.gitignore`):

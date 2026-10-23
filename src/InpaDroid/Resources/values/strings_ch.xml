@@ -41,7 +41,6 @@
   <string name="ch_status_heading">Status: %1$s</string>
   <string name="ch_reading">Leyendo…</string>
   <string name="ch_stop">Parar</string>
-  <string name="ch_stopped">(detenido)</string>
   <string name="ch_no_result">ERROR sin resultado %1$s</string>
   <string name="ch_menu_empty">Catálogo %1$s vacío</string>
   <string name="ch_menu_pick">Elige una centralita (%1$s)</string>
