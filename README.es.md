@@ -10,6 +10,12 @@ La app no trae ningún archivo de BMW. Los `.prg` y `.grp` los pones tú, copiá
 
 ---
 
+## Por qué existe
+
+Tenía INPA instalado en un portátil con Windows y lo usaba para hacer diagnosis. Funcionaba bien, pero cada vez que quería mirar algo, aunque solo fuera leer los errores, tenía que sacar el portátil, arrancarlo y conectar el cable. Quería hacerlo con el móvil, que siempre llevo encima, así que decidí pasar el programa a Android con ayuda de la IA. Mantiene las pantallas y las teclas F de INPA, para que quien ya lo conoce pueda usarlo sin aprender nada nuevo.
+
+---
+
 ## Qué hace
 
 Esta versión es genérica: no lee los scripts `.ipo` de INPA, sino que monta las pantallas a partir de los jobs que hay dentro de cada `.prg`. Por eso sirve para cualquier centralita que tengas, aunque las pantallas no tengan el diseño específico de cada script de INPA.
